@@ -31,8 +31,8 @@
   .mono{font-family:var(--mono)}
   a{color:inherit}
 
-  /* nav */
-  nav{background:rgba(255,255,255,.8);backdrop-filter:saturate(1.8) blur(12px);
+  /* nav (top bar only - scoped so it doesn't hit the footer's <nav>) */
+  body>nav{background:rgba(255,255,255,.8);backdrop-filter:saturate(1.8) blur(12px);
     border-bottom:1px solid var(--line);position:sticky;top:0;z-index:40}
   .nav-in{max-width:1120px;margin:0 auto;padding:0 24px;height:60px;
     display:flex;align-items:center;justify-content:space-between}
@@ -51,8 +51,10 @@
   .nav-burger.on span:nth-child(2){opacity:0}
   .nav-burger.on span:nth-child(3){transform:translateY(-5.5px) rotate(-45deg)}
   .mobile-menu{display:none;position:fixed;inset:60px 0 auto 0;z-index:39;
-    background:var(--bg);border-bottom:1px solid var(--line);padding:8px 24px 20px;box-shadow:var(--sh-lg)}
+    background:var(--bg);border-bottom:1px solid var(--line);padding:8px 24px 20px;box-shadow:var(--sh-lg);
+    max-height:calc(100vh - 60px);overflow-y:auto;-webkit-overflow-scrolling:touch}
   .mobile-menu.on{display:block}
+  body.menu-open{overflow:hidden}
   .mobile-menu a{display:block;padding:13px 4px;font-size:1rem;color:var(--ink);
     text-decoration:none;border-bottom:1px solid var(--line-2);font-weight:500}
   .mobile-menu a:last-child{border-bottom:none}
@@ -703,15 +705,14 @@
 <script>
   const burger = document.getElementById('burger');
   const mobileMenu = document.getElementById('mobileMenu');
-  burger.addEventListener('click', () => {
-    const open = burger.classList.toggle('on');
+  const setMenu = open => {
+    burger.classList.toggle('on', open);
     mobileMenu.classList.toggle('on', open);
+    document.body.classList.toggle('menu-open', open);
     burger.setAttribute('aria-expanded', open);
-  });
-  mobileMenu.querySelectorAll('a').forEach(a => a.addEventListener('click', () => {
-    burger.classList.remove('on'); mobileMenu.classList.remove('on');
-    burger.setAttribute('aria-expanded','false');
-  }));
+  };
+  burger.addEventListener('click', () => setMenu(!burger.classList.contains('on')));
+  mobileMenu.querySelectorAll('a').forEach(a => a.addEventListener('click', () => setMenu(false)));
 
   // Placeholder availability check - wire to backend.
   const out = document.getElementById('out');
