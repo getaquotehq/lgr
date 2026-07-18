@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="en-AU">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lead Gen Rentals - Available assets</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;450;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#0D1117; --ink-2:#3A424D; --muted:#656D76; --faint:#98A0A8;
+    --line:#E6E8EB; --line-2:#F0F2F4;
+    --bg:#FFFFFF; --surface:#FBFCFD; --surface-2:#F6F8FA;
+    --blue:#F59E0B; --blue-600:#D97706; --blue-tint:#FEF3C7; --blue-line:#FDE68A;
+    --green:#0E9F6E; --green-tint:#E7F7F1;
+    --red:#DC2626; --red-tint:#FEEBEB;
+    --amber:#9A5A12; --amber-tint:#F4ECDD;
+    --sans:'Inter',-apple-system,system-ui,sans-serif;
+    --mono:'IBM Plex Mono',ui-monospace,monospace;
+    --sh-sm:0 1px 2px rgba(13,17,23,.05);
+    --sh-md:0 2px 8px rgba(13,17,23,.06);
+    --sh-lg:0 8px 28px -12px rgba(13,17,23,.18);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:var(--bg);color:var(--ink);font-family:var(--sans);line-height:1.55;
+    -webkit-font-smoothing:antialiased;font-variant-numeric:tabular-nums;min-height:100vh}
+  .wrap{max-width:1160px;margin:0 auto;padding:0 24px}
+  .mono{font-family:var(--mono)}
+
+  nav{background:rgba(255,255,255,.8);backdrop-filter:saturate(1.8) blur(12px);border-bottom:1px solid var(--line);position:sticky;top:0;z-index:40}
+  .nav-in{max-width:1160px;margin:0 auto;padding:0 24px;height:60px;
+    display:flex;align-items:center;justify-content:space-between}
+  .brand{display:flex;align-items:center;gap:9px;font-weight:700;font-size:.98rem;letter-spacing:-.025em;white-space:nowrap}
+  .pin{width:19px;height:19px;border-radius:50%;background:var(--blue);position:relative;flex-shrink:0}
+  .pin::after{content:"";position:absolute;left:3px;top:3px;width:13px;height:6.5px;
+    border-radius:13px 13px 0 0;background:#fff}
+  .nav-tag{font-family:var(--mono);font-size:.72rem;color:var(--faint);letter-spacing:.05em}
+
+  .btn{font-family:var(--sans);font-weight:600;font-size:.9rem;border:1px solid transparent;
+    padding:10px 16px;border-radius:6px;cursor:pointer;transition:.15s;white-space:nowrap;
+    display:inline-flex;align-items:center;justify-content:center;gap:7px}
+  .btn-primary{background:var(--blue);color:#fff;box-shadow:0 1px 2px rgba(245,158,11,.24)}
+  .btn-primary:hover{background:var(--blue-600)}
+  .btn-ghost{background:var(--bg);color:var(--ink);border-color:var(--line)}
+  .btn-ghost:hover{border-color:var(--faint)}
+  .btn-mute{background:var(--bg);color:var(--muted);border-color:var(--line)}
+  .btn-mute:hover{color:var(--ink)}
+  .btn:disabled{opacity:.55;cursor:default}
+  .btn:focus-visible{outline:2px solid var(--blue);outline-offset:2px}
+
+  .tpl-banner{background:var(--amber-tint);border:1px solid #F5DFBE;border-radius:8px;
+    padding:11px 15px;margin:20px 0 24px;font-family:var(--mono);font-size:.78rem;color:var(--amber)}
+
+  /* header + filters */
+  .head{padding:56px 0 24px}
+  h1{font-size:clamp(2.2rem,4.6vw,3.1rem);letter-spacing:-.038em;line-height:1.02;font-weight:640;margin-bottom:16px;color:var(--ink)}
+  .sub{color:var(--muted);font-size:1.04rem;max-width:52ch;line-height:1.5;font-weight:420}
+  .sub b{color:var(--ink)}
+
+  .filters{background:var(--bg);border:1px solid var(--line);border-radius:10px;
+    box-shadow:var(--sh-sm);margin:22px 0 20px;display:grid;
+    grid-template-columns:1fr 1fr 1fr auto;gap:0;align-items:stretch}
+  .ff{padding:12px 18px;border-right:1px solid var(--line)}
+  .ff:last-of-type{border-right:none}
+  .ff label{display:block;font-family:var(--mono);font-size:.68rem;letter-spacing:.02em;
+    text-transform:uppercase;color:var(--muted);margin-bottom:6px;font-weight:500}
+  .ff select{width:100%;border:none;background:none;font-family:var(--sans);
+    font-size:.96rem;font-weight:600;color:var(--ink);cursor:pointer;padding:2px 0}
+  .ff select:focus{outline:none}
+  .fcount{display:flex;align-items:center;padding:0 20px;border-left:1px solid var(--line);
+    font-size:.86rem;color:var(--muted);white-space:nowrap}
+  .fcount b{color:var(--green);font-weight:600}
+
+  /* fleet grid */
+  .fleet{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;padding-bottom:64px}
+  .card{background:var(--bg);border:1px solid var(--line);border-radius:12px;
+    overflow:hidden;display:flex;flex-direction:column;box-shadow:var(--sh-sm);
+    transition:transform .18s,box-shadow .18s,border-color .18s}
+  .card:hover{transform:translateY(-2px);box-shadow:var(--sh-lg);border-color:var(--blue-line)}
+  .card.taken{opacity:.66}
+  .card.taken:hover{transform:none;box-shadow:var(--sh-sm);border-color:var(--line)}
+
+  /* the "vehicle photo" - a landing page preview in browser chrome */
+  .shot{position:relative;background:var(--bg);border-bottom:1px solid var(--line);
+    padding:18px 18px 0;height:186px;overflow:hidden}
+  .ribbon{position:absolute;top:12px;right:12px;font-family:var(--mono);font-size:.64rem;
+    font-weight:500;padding:4px 9px;border-radius:99px;letter-spacing:.05em;z-index:3}
+  .ribbon.open{color:var(--green);background:var(--green-tint);border:1px solid #BCE9D6}
+  .ribbon.taken{color:var(--red);background:var(--red-tint);border:1px solid #F7CFC6}
+
+  .chrome{background:var(--bg);border:1px solid var(--line);border-radius:8px 8px 0 0;
+    box-shadow:0 -1px 12px -4px rgba(10,37,64,.12);height:100%;overflow:hidden}
+  .chrome-bar{display:flex;align-items:center;gap:6px;padding:8px 10px;
+    border-bottom:1px solid var(--line-2);background:var(--bg)}
+  .dot{width:7px;height:7px;border-radius:50%;background:var(--line)}
+  .url{flex:1;margin-left:6px;background:var(--bg);border:1px solid var(--line-2);
+    border-radius:4px;padding:3px 8px;font-family:var(--mono);font-size:.58rem;color:var(--faint);
+    overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+  .lp{padding:14px}
+  .lp-brand{height:9px;width:38%;border-radius:2px;background:var(--blue);opacity:.85;margin-bottom:12px}
+  .lp-h{font-family:var(--mono);font-size:.66rem;color:var(--blue);background:var(--blue-tint);
+    border:1px dashed var(--blue-line);border-radius:3px;padding:2px 5px;display:inline-block;margin-bottom:9px}
+  .lp-l{height:5px;border-radius:2px;background:var(--line);margin-bottom:5px}
+  .lp-form{margin-top:11px;display:flex;gap:6px}
+  .lp-in{flex:1;height:16px;border:1px solid var(--line);border-radius:3px;background:var(--bg)}
+  .lp-btn{width:52px;height:16px;border-radius:3px;background:var(--blue)}
+
+  .info{padding:18px}
+  .row1{display:flex;justify-content:space-between;align-items:center;margin-bottom:3px;gap:10px}
+  .area{font-weight:600;font-size:1.02rem;letter-spacing:-.01em}
+  .tier-code{font-family:var(--mono);font-size:.66rem;color:var(--faint);
+    border:1px solid var(--line);padding:2px 6px;border-radius:4px;flex-shrink:0}
+  .tier-name{font-size:.72rem;letter-spacing:0;text-transform:none;color:var(--blue);margin-bottom:14px;font-weight:600}
+
+  .specs{border:1px solid var(--line-2);border-radius:8px;overflow:hidden;margin-bottom:14px}
+  .spec{display:flex;justify-content:space-between;padding:8px 11px;font-size:.82rem;
+    border-bottom:1px solid var(--line-2)}
+  .spec:last-child{border-bottom:none}
+  .spec .k{color:var(--muted)}
+  .spec .v{font-weight:600;color:var(--ink)}
+
+  .priceline{display:flex;align-items:baseline;justify-content:space-between;
+    padding-top:12px;border-top:1px solid var(--line-2)}
+  .price{font-size:1.3rem;font-weight:700;letter-spacing:-.03em}
+  .price small{font-family:var(--mono);font-size:.62rem;color:var(--faint);font-weight:400}
+  .actions{display:flex;gap:8px;margin-top:14px}
+  .actions .btn{flex:1}
+
+  /* modal */
+  .modal{position:fixed;inset:0;background:rgba(10,37,64,.42);backdrop-filter:blur(3px);
+    z-index:50;display:none;align-items:center;justify-content:center;padding:24px}
+  .modal.on{display:flex}
+  .modal-in{background:var(--bg);border-radius:14px;max-width:520px;width:100%;
+    overflow:hidden;box-shadow:var(--sh-lg);animation:pop .22s ease}
+  @keyframes pop{from{opacity:0;transform:scale(.97)}to{opacity:1;transform:none}}
+  .modal-shot{background:var(--bg);padding:22px 22px 0;height:210px;border-bottom:1px solid var(--line)}
+  .modal-body{padding:24px}
+  .modal-body .m-meta{font-family:var(--mono);font-size:.68rem;color:var(--faint);
+    letter-spacing:.08em;text-transform:uppercase;margin-bottom:8px}
+  .modal-body h3{font-size:1.2rem;font-weight:700;letter-spacing:-.02em;margin-bottom:8px}
+  .modal-body p{font-size:.88rem;color:var(--ink-2);margin-bottom:14px}
+  .mform{border:1px solid var(--line);border-radius:8px;padding:15px;background:var(--bg)}
+  .mform .t{font-weight:600;font-size:.9rem;margin-bottom:11px}
+  .mform .b{border:1px solid var(--line);border-radius:5px;padding:9px 11px;background:var(--bg);
+    color:var(--faint);font-size:.82rem;margin-bottom:8px}
+  .mform .chk{display:flex;gap:9px;align-items:flex-start;margin-top:11px;padding:11px;
+    background:var(--blue-tint);border:1px solid var(--blue-line);border-radius:6px;font-size:.82rem}
+  .tick{width:15px;height:15px;border-radius:3px;background:var(--blue);flex-shrink:0;
+    display:flex;align-items:center;justify-content:center;margin-top:1px}
+  .slot{font-family:var(--mono);font-size:.78rem;color:var(--blue);font-weight:500;
+    background:var(--bg);padding:1px 4px;border-radius:3px;border:1px solid var(--blue-line)}
+  .modal-actions{display:flex;gap:10px;margin-top:18px}
+  .modal-actions .btn{flex:1}
+  .modal-actions .btn.go{flex:2}
+
+  .empty{grid-column:1/-1;text-align:center;padding:64px 20px;color:var(--muted);
+    border:1px dashed var(--line);border-radius:12px;background:var(--bg)}
+
+  @media(max-width:980px){.fleet{grid-template-columns:repeat(2,1fr)}
+    .filters{grid-template-columns:1fr 1fr}.fcount{grid-column:1/-1;border-left:none;
+    border-top:1px solid var(--line);padding:12px 18px}}
+  @media(max-width:640px){.fleet{grid-template-columns:1fr}.filters{grid-template-columns:1fr}
+    .ff{border-right:none;border-bottom:1px solid var(--line)}.nav-tag{display:none}}
+  @media(prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-in">
+    <div class="brand"><span class="pin"></span>Lead Gen Rentals <span class="nav-tag">/ available assets</span></div>
+    <span class="nav-tag">Installer view</span>
+  </div>
+</nav>
+
+<div class="wrap">
+
+  <div class="tpl-banner">TEMPLATE - all values are placeholder slots. Wire the card data array to your backend for live inventory.</div>
+
+  <div class="head">
+    <h1>Assets available near <span id="regionLabel">—</span></h1>
+    <p class="sub">Each one is a ready-to-run solar lead engine. Rent an asset and it's locked to you - every lead it produces is yours alone, never shared, with your business name on the consent.</p>
+  </div>
+
+  <div class="filters">
+    <div class="ff">
+      <label for="regionSel">Region</label>
+      <select id="regionSel"></select>
+    </div>
+    <div class="ff">
+      <label for="tierSel">Class</label>
+      <select id="tierSel">
+        <option value="all">All classes</option>
+        <option value="Starter">Starter</option>
+        <option value="Growth">Growth</option>
+        <option value="Scale">Scale</option>
+      </select>
+    </div>
+    <div class="ff">
+      <label for="statusSel">Availability</label>
+      <select id="statusSel">
+        <option value="all">All</option>
+        <option value="open">Available only</option>
+        <option value="taken">Taken</option>
+      </select>
+    </div>
+    <div class="fcount" id="countLine"></div>
+  </div>
+
+  <div class="fleet" id="fleet"></div>
+</div>
+
+<!-- PREVIEW MODAL -->
+<div class="modal" id="modal">
+  <div class="modal-in">
+    <div class="modal-shot" id="modalShot"></div>
+    <div class="modal-body">
+      <div class="m-meta" id="modalMeta"></div>
+      <h3 id="modalTitle"></h3>
+      <p>This is the landing page homeowners see. Every lead it captures consents to <b>your business by name</b> - that's how exclusivity is proven at the point of capture, not promised afterwards.</p>
+      <div class="mform">
+        <div class="t">Get your free solar quote</div>
+        <div class="b">Full name</div>
+        <div class="b">Email</div>
+        <div class="b">Phone number</div>
+        <div class="b">Postcode</div>
+        <div class="b">Average quarterly power bill</div>
+        <div class="b">How soon are you looking to install?</div>
+        <div class="chk">
+          <span class="tick"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3.5"><path d="M20 6 9 17l-5-5"/></svg></span>
+          <span>I agree to be contacted about my solar project by <span class="slot">{{installer_business_name}}</span>.</span>
+        </div>
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-ghost" id="modalClose">Close</button>
+        <button class="btn btn-primary go" id="modalClaim">Claim this asset →</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ------------------------------------------------------------------
+   PLACEHOLDER INVENTORY - replace with a backend fetch.
+   Every display string is a {{slot}}. Only enumerable values
+   (tier, status, price band) are real, so the layout renders.
+------------------------------------------------------------------ */
+const TIERS = {
+  Starter: { code:"T1", price:"$1,200", leads:"10–14" },
+  Growth:  { code:"T2", price:"$2,400", leads:"20–28" },
+  Scale:   { code:"T3", price:"$3,600", leads:"30–42" }
+};
+
+const TRADES = ["All Residential Solar", "Residential Solar", "Battery Retrofit"];
+
+const INVENTORY = [
+  { region:"{{region_1}}", area:"{{area_name}}", tier:"Growth",    status:"open"  },
+  { region:"{{region_1}}", area:"{{area_name}}", tier:"Growth",    status:"taken" },
+  { region:"{{region_1}}", area:"{{area_name}}", tier:"Starter", status:"open"  },
+  { region:"{{region_1}}", area:"{{area_name}}", tier:"Starter", status:"open"  },
+  { region:"{{region_1}}", area:"{{area_name}}", tier:"Starter", status:"taken" },
+  { region:"{{region_1}}", area:"{{area_name}}", tier:"Scale",  status:"open"  },
+  { region:"{{region_2}}", area:"{{area_name}}", tier:"Growth",    status:"open"  },
+  { region:"{{region_2}}", area:"{{area_name}}", tier:"Starter", status:"open"  },
+  { region:"{{region_3}}", area:"{{area_name}}", tier:"Growth",    status:"open"  }
+];
+
+const $ = s => document.querySelector(s);
+const regions = [...new Set(INVENTORY.map(i => i.region))];
+let curRegion = regions[0], curTier = "all", curStatus = "all", active = null;
+
+$('#regionSel').innerHTML = regions.map(r => `<option value="${r}">${r}</option>`).join('');
+
+/* the "vehicle photo": a landing page in browser chrome */
+function shot(item, big){
+  return `
+  <div class="chrome">
+    <div class="chrome-bar">
+      <span class="dot"></span><span class="dot"></span><span class="dot"></span>
+      <span class="url">{{brand_domain}}</span>
+    </div>
+    <div class="lp">
+      <div class="lp-brand"></div>
+      <span class="lp-h">{{brand_name}}</span>
+      <div class="lp-l" style="width:92%"></div>
+      <div class="lp-l" style="width:68%"></div>
+      ${big ? '<div class="lp-l" style="width:80%"></div>' : ''}
+      <div class="lp-form">
+        <span class="lp-in"></span><span class="lp-btn"></span>
+      </div>
+    </div>
+  </div>`;
+}
+
+function card(item){
+  const t = TIERS[item.tier];
+  const open = item.status === "open";
+  return `<article class="card ${open ? '' : 'taken'}">
+    <div class="shot">
+      <span class="ribbon ${item.status}">${open ? 'AVAILABLE' : 'TAKEN'}</span>
+      ${shot(item, false)}
+    </div>
+    <div class="info">
+      <div class="row1">
+        <span class="area">${item.area}</span>
+        <span class="tier-code">${t.code}</span>
+      </div>
+      <div class="tier-name">${item.tier}</div>
+      <div class="specs">
+        <div class="spec"><span class="k">Typical leads / 30 days</span><span class="v">${t.leads}</span></div>
+        <div class="spec"><span class="k">Installers per lead</span><span class="v">1</span></div>
+        <div class="spec"><span class="k">Ad spend</span><span class="v">We carry it</span></div>
+      </div>
+      <div class="priceline">
+        <span class="price">${t.price}<small> +GST / 30 days</small></span>
+      </div>
+      <div class="actions">
+        ${open
+          ? `<button class="btn btn-ghost" data-i="${item._i}" data-a="preview">Preview</button>
+             <button class="btn btn-primary" data-i="${item._i}" data-a="claim">Claim</button>`
+          : `<button class="btn btn-mute" data-i="${item._i}" data-a="wait">Join waitlist</button>`}
+      </div>
+    </div>
+  </article>`;
+}
+
+function render(){
+  INVENTORY.forEach((x,i) => x._i = i);
+  const list = INVENTORY.filter(x =>
+    x.region === curRegion &&
+    (curTier === "all" || x.tier === curTier) &&
+    (curStatus === "all" || x.status === curStatus));
+
+  $('#regionLabel').textContent = curRegion;
+  const open = INVENTORY.filter(x => x.region === curRegion && x.status === "open").length;
+  $('#countLine').innerHTML = `<span><b>${open} available</b>&nbsp;in ${curRegion}</span>`;
+
+  $('#fleet').innerHTML = list.length
+    ? list.map(card).join('')
+    : `<div class="empty">Nothing matches that filter in ${curRegion}.<br>Assets get built to order too - tell us the trade and the postcode.</div>`;
+}
+
+$('#regionSel').addEventListener('change', e => { curRegion = e.target.value; render(); });
+$('#tierSel').addEventListener('change',   e => { curTier   = e.target.value; render(); });
+$('#statusSel').addEventListener('change', e => { curStatus = e.target.value; render(); });
+
+document.addEventListener('click', e => {
+  const btn = e.target.closest('[data-a]');
+  if(!btn) return;
+  const item = INVENTORY[+btn.dataset.i];
+  if(btn.dataset.a === 'wait'){ btn.textContent = 'On the list ✓'; btn.disabled = true; return; }
+  openModal(item);
+});
+
+function openModal(item){
+  active = item;
+  const t = TIERS[item.tier];
+  $('#modalShot').innerHTML = shot(item, true);
+  $('#modalMeta').textContent = `${item.area} · ${item.tier} (${t.code}) · ${t.price} +GST / 30 days`;
+  $('#modalTitle').textContent = `{{brand_name}}`;
+  $('#modal').classList.add('on');
+}
+$('#modalClose').addEventListener('click', () => $('#modal').classList.remove('on'));
+$('#modal').addEventListener('click', e => { if(e.target.id === 'modal') $('#modal').classList.remove('on'); });
+$('#modalClaim').addEventListener('click', () => {
+  $('#modal').classList.remove('on');
+  // Wire to checkout / territory-lock flow.
+  console.log('claim', active);
+});
+document.addEventListener('keydown', e => { if(e.key === 'Escape') $('#modal').classList.remove('on'); });
+
+render();
+</script>
+</body>
+</html>
