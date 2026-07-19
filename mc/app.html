@@ -529,6 +529,15 @@ td.mono{font-family:var(--mono);font-size:12px}
       <div class="frow"><label class="flabel">Phone</label><input class="fi" id="mi-phone"></div>
     </div>
     <div class="frow"><label class="flabel">Email *</label><input class="fi" id="mi-email" type="email"></div>
+    <div class="sl" style="margin-top:6px">Lead delivery<div class="sl-line"></div></div>
+    <div class="frow"><label class="flabel">Delivery method</label><select class="fs" id="mi-dmethod" onchange="onDeliveryMethodChange()">
+      <option value="email">Email</option><option value="sms">SMS</option><option value="email_and_sms">Email + SMS</option><option value="webhook">Webhook (CRM)</option>
+    </select></div>
+    <div class="fgrid2">
+      <div class="frow" id="mi-demail-row"><label class="flabel">Delivery email</label><input class="fi" id="mi-demail" placeholder="defaults to email above"></div>
+      <div class="frow" id="mi-dphone-row"><label class="flabel">Delivery SMS #</label><input class="fi" id="mi-dphone" placeholder="defaults to phone above"></div>
+    </div>
+    <div class="frow" id="mi-webhook-row"><label class="flabel">Webhook URL</label><input class="fi" id="mi-webhook" placeholder="https://crm.example.com/hooks/leads"></div>
     <div class="macts"><button class="btn" onclick="closeModal('m-installer')">Cancel</button><button class="btn btn-p" id="mi-save" onclick="saveInstaller()">Save installer</button></div>
   </div>
 </div>
@@ -1085,7 +1094,18 @@ function openInstallerModal(id){
   setVal('mi-contact', i?.contact_name);
   setVal('mi-phone', i?.phone);
   setVal('mi-email', i?.email);
+  $('mi-dmethod').value = i?.delivery_method || 'email';
+  setVal('mi-demail', i?.delivery_email);
+  setVal('mi-dphone', i?.delivery_phone);
+  setVal('mi-webhook', i?.webhook_url);
+  onDeliveryMethodChange();
   openModal('m-installer');
+}
+function onDeliveryMethodChange(){
+  const m=$('mi-dmethod').value;
+  $('mi-demail-row').style.display = (m==='email'||m==='email_and_sms')?'':'none';
+  $('mi-dphone-row').style.display = (m==='sms'||m==='email_and_sms')?'':'none';
+  $('mi-webhook-row').style.display = (m==='webhook')?'':'none';
 }
 async function saveInstaller(){
   const id=$('mi-id').value;
@@ -1094,6 +1114,10 @@ async function saveInstaller(){
     contact_name:$('mi-contact').value.trim()||null,
     phone:$('mi-phone').value.trim()||null,
     email:$('mi-email').value.trim(),
+    delivery_method:$('mi-dmethod').value,
+    delivery_email:$('mi-demail').value.trim()||null,
+    delivery_phone:$('mi-dphone').value.trim()||null,
+    webhook_url:$('mi-webhook').value.trim()||null,
   };
   if(!payload.business_name){ toast('Business name required', true); return; }
   if(!payload.email){ toast('Email required', true); return; }
@@ -1203,6 +1227,9 @@ async function loadLeads(reset){
           <option value="duplicate" ${l.status==='duplicate'?'selected':''}>Duplicate</option>
           <option value="invalid" ${l.status==='invalid'?'selected':''}>Invalid</option>
         </select>
+        ${l.status==='delivered' ? (l.delivered_at
+          ? `<button class="btn btn-xs" title="Pushed ${fmtDateTime(l.delivered_at)}" onclick="deliverLead('${l.id}',this)">↻ Resend</button>`
+          : `<button class="btn btn-xs btn-grn" onclick="deliverLead('${l.id}',this)">Deliver →</button>`) : ''}
       </td>
     </tr>`;
   }).join('') : '<tr><td colspan="10" class="empty">No leads match.</td></tr>';
@@ -1262,6 +1289,23 @@ async function updateLeadStatus(id, status, sel){
   sel.disabled=false;
   if(error){ toast('Update failed: '+error.message, true); return; }
   toast(`Marked ${status} ✓`); loadLeads();
+}
+// Push a lead to its installer via the deliver-lead Edge Function.
+async function deliverLead(id, btn){
+  const old=btn.textContent; btn.disabled=true; btn.textContent='Sending…';
+  try{
+    const { data, error } = await db.functions.invoke('deliver-lead', { body:{ lead_id:id } });
+    if(error){
+      // surface the function's JSON error body when present
+      let msg=error.message;
+      try{ const b=await error.context.json(); if(b.error) msg=b.error; }catch(_){}
+      throw new Error(msg);
+    }
+    if(!data.success){ toast('Delivery failed: '+(data.results?.map(r=>r.channel+' '+r.status).join(', ')||data.error||'see log'), true); }
+    else toast('Delivered → '+data.results.filter(r=>r.status==='sent').map(r=>r.channel).join(', ')+' ✓');
+  }catch(e){ toast('Deliver failed: '+e.message, true); }
+  btn.disabled=false; btn.textContent=old;
+  loadLeads();
 }
 
 /* ── Test lead (real insert_lead RPC) ──────────────────────────────────────── */
