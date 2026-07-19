@@ -513,6 +513,7 @@ td.mono{font-family:var(--mono);font-size:12px}
       <div class="frow" id="ma-rentedby-row"><label class="flabel">Rented by</label><select class="fs" id="ma-rentedby"><option value="">— none —</option></select></div>
       <div class="frow" id="ma-renteduntil-row"><label class="flabel">Rented until</label><input class="fi" id="ma-until" type="date"></div>
     </div>
+    <div class="frow"><label class="flabel">Service postcodes (override)</label><textarea class="fta" id="ma-postcodes" style="font-family:var(--mono);font-size:11px" placeholder="blank = inherit this asset's region"></textarea><div class="fhint">Overrides the region's territory gate for this asset only. Blank = use the region list.</div></div>
     <div class="macts"><button class="btn" onclick="closeModal('m-asset')">Cancel</button><button class="btn btn-p" id="ma-save" onclick="saveAsset()">Save asset</button></div>
   </div>
 </div>
@@ -573,6 +574,7 @@ td.mono{font-family:var(--mono);font-size:12px}
       <div class="frow"><label class="flabel">State</label><input class="fi" id="mr-state" placeholder="QLD"></div>
       <div class="frow"><label class="flabel">Sort order</label><input class="fi" id="mr-sort" type="number" value="0"></div>
     </div>
+    <div class="frow"><label class="flabel">Service postcodes</label><textarea class="fta" id="mr-postcodes" style="font-family:var(--mono);font-size:11px" placeholder="4000, 4005, 4006 …  (blank = no territory gate)"></textarea><div class="fhint">Funnels in this region only accept these postcodes. Blank = accept all.</div></div>
     <div class="macts"><button class="btn" onclick="closeModal('m-region')">Cancel</button><button class="btn btn-p" id="mr-save" onclick="saveRegion()">Save region</button></div>
   </div>
 </div>
@@ -919,6 +921,7 @@ function openAssetModal(id){
   setVal('ma-tmax', a?.typical_max);
   $('ma-rentedby').value = a?.rented_by || '';
   setVal('ma-until', a?.rented_until);
+  setVal('ma-postcodes', (a?.service_postcodes||[]).join(', '));
   onAssetStatusChange();
   openModal('m-asset');
 }
@@ -948,6 +951,7 @@ async function saveAsset(){
     typical_max: $('ma-tmax').value?parseInt($('ma-tmax').value,10):null,
     rented_by: status==='rented' ? rentedBy : null,
     rented_until: status==='rented' ? ($('ma-until').value||null) : null,
+    service_postcodes: (function(){ const p=parsePostcodes($('ma-postcodes').value); return p.length?p:null; })(),
   };
   if(!payload.brand_name){ toast('Brand name required', true); return; }
   if(isNaN(payload.monthly_price_aud)||isNaN(payload.floor_leads)){ toast('Price and floor required', true); return; }
@@ -1446,12 +1450,18 @@ function openRegionModal(id){
   const r=id?_regions.find(x=>x.id===id):null;
   setVal('mr-id', r?r.id:''); setText('mr-title', r?'Edit region':'New region');
   setVal('mr-name', r?.name); setVal('mr-slug', r?.slug); setVal('mr-state', r?.state); setVal('mr-sort', r?.sort_order??0);
+  setVal('mr-postcodes', (r?.postcodes||[]).join(', '));
   openModal('m-region');
+}
+// parse a free-form "4000, 4005 4006" list into a clean, deduped postcode array
+function parsePostcodes(s){
+  return [...new Set(String(s||'').split(/[\s,]+/).map(x=>x.trim()).filter(x=>/^\d{4}$/.test(x)))];
 }
 async function saveRegion(){
   const id=$('mr-id').value;
   const payload={ name:$('mr-name').value.trim(), slug:$('mr-slug').value.trim()||slugify($('mr-name').value),
-    state:$('mr-state').value.trim()||null, sort_order:parseInt($('mr-sort').value,10)||0 };
+    state:$('mr-state').value.trim()||null, sort_order:parseInt($('mr-sort').value,10)||0,
+    postcodes:parsePostcodes($('mr-postcodes').value) };
   if(!payload.name||!payload.slug){ toast('Name and slug required', true); return; }
   const btn=$('mr-save'); btn.disabled=true; btn.textContent='Saving…';
   let error;

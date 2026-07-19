@@ -93,10 +93,36 @@ Deno.serve(async (req: Request) => {
     }
     if (!assetId) return json({ error: "unknown_asset", detail: "provide asset_id or a matching brand_domain" }, 400);
 
+    const { data: asset } = await supabase
+      .from("assets").select("id, region_id, rented_by, service_postcodes, deleted_at")
+      .eq("id", assetId).single();
+    if (!asset || asset.deleted_at) return json({ error: "unknown_asset" }, 404);
+
     // ── pack any extra fields into leads.extra ───────────────────────────────
     const extra: Record<string, unknown> = {};
     for (const [k, v] of Object.entries(body)) {
       if (!CORE.has(k) && v != null && String(v).trim() !== "") extra[k] = v;
+    }
+
+    // ── territory gate ───────────────────────────────────────────────────────
+    // Effective service area = the asset's override, else its region's list.
+    // Empty list = no gate. Out-of-area leads are stored as 'invalid' (flagged),
+    // never delivered, never counted toward floor.
+    let allowed: string[] = (asset.service_postcodes as string[] | null) ?? [];
+    if (!allowed.length && asset.region_id) {
+      const { data: region } = await supabase.from("regions").select("postcodes").eq("id", asset.region_id).single();
+      allowed = (region?.postcodes as string[] | null) ?? [];
+    }
+    if (allowed.length && (!postcode || !allowed.includes(postcode))) {
+      const installerId = asset.rented_by as string | null;
+      if (!installerId) return json({ success: true, status: "out_of_area", stored: false });
+      const { data: inv } = await supabase.from("leads").insert({
+        asset_id: assetId, installer_id: installerId,
+        full_name: name, phone, email, postcode,
+        extra: { ...extra, out_of_area: true },
+        status: "invalid", is_duplicate: false,
+      }).select("id").single();
+      return json({ success: true, status: "out_of_area", lead_id: inv?.id ?? null });
     }
 
     // ── capture via insert_lead() — attribution + 30-day dedup live in the RPC ─
