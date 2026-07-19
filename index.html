@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Lead Gen Rentals - One installer per asset</title>
+<title>Lead Gen Rentals - Australia's exclusive lead rental engine</title>
 <link rel="icon" href="favicon.ico">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -74,6 +74,7 @@
   .btn-ghost:hover{border-color:var(--faint);background:var(--surface)}
   .btn:focus-visible{outline:2px solid var(--blue);outline-offset:2px}
   .btn-sm{padding:8px 14px;font-size:.85rem}
+  .btn[aria-disabled="true"]{opacity:.55;cursor:default;pointer-events:none}
 
   /* hero */
   .hero{padding:96px 24px 24px;text-align:left;position:relative;overflow:hidden;
@@ -91,37 +92,21 @@
     font-weight:640;margin-bottom:24px;max-width:16ch;color:var(--ink)}
   .hero p{font-size:1.14rem;color:var(--muted);max-width:38rem;line-height:1.5;font-weight:420}
 
-  /* SIGNATURE: the rental counter */
-  .counter{background:var(--bg);border:1px solid var(--line);border-radius:var(--r-lg);
-    box-shadow:var(--sh-lg);margin:52px 0 0;max-width:800px;overflow:hidden;text-align:left}
-  .counter-cap{display:flex;align-items:center;gap:8px;padding:11px 20px;
-    border-bottom:1px solid var(--line-2);background:var(--surface-2);
-    font-family:var(--mono);font-size:.68rem;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
-  .counter-cap .dotlive{width:6px;height:6px;border-radius:50%;background:var(--green);
-    box-shadow:0 0 0 3px var(--green-tint)}
-  .counter-top{display:grid;grid-template-columns:1.1fr 1.4fr auto;gap:0}
-  .cf{padding:15px 20px;border-right:1px solid var(--line-2);text-align:left}
-  .cf:nth-child(3){border-right:none;padding:11px}
-  .cf label{display:block;font-size:.72rem;letter-spacing:0;text-transform:none;
-    color:var(--muted);margin-bottom:5px;font-weight:500}
-  .cf select,.cf input{width:100%;border:none;background:none;font-family:var(--sans);
-    font-size:.98rem;font-weight:550;color:var(--ink);padding:2px 0}
-  .cf select:focus,.cf input:focus{outline:none}
-  .cf input::placeholder{color:var(--faint);font-weight:400}
-  .cf .btn{width:100%;height:100%;padding:13px 24px}
-
-  .counter-out{border-top:1px solid var(--line);background:var(--surface);padding:0;display:none}
-  .counter-out.on{display:block}
-  .res{display:flex;align-items:center;gap:16px;padding:14px 20px;border-bottom:1px solid var(--line-2);text-align:left}
-  .res:last-child{border-bottom:none}
-  .res-k{font-size:.72rem;color:var(--muted);letter-spacing:0;
-    width:72px;flex-shrink:0;font-weight:500}
-  .res-v{font-weight:600;font-size:.94rem}
-  .res-v small{display:block;font-weight:420;font-size:.8rem;color:var(--muted)}
-  .res-r{margin-left:auto;display:flex;align-items:center;gap:12px}
+  /* trade picker - niche cards (replaces the solar counter on the home page) */
+  .trades{display:grid;grid-template-columns:repeat(2,1fr);gap:16px;margin:52px 0 0;max-width:800px}
+  .trade{background:var(--bg);border:1px solid var(--line);border-radius:var(--r-lg);
+    padding:24px;display:flex;flex-direction:column;box-shadow:var(--sh-sm);text-align:left;
+    color:var(--ink);text-decoration:none;
+    transition:transform .16s,box-shadow .16s,border-color .16s}
+  a.trade.live:hover{transform:translateY(-2px);box-shadow:var(--sh-lg);border-color:var(--blue-line)}
+  .trade.soon{opacity:.75}
+  .trade-top{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:11px}
+  .trade h3{font-size:1.14rem;font-weight:600;letter-spacing:-.02em;color:var(--ink)}
+  .trade p{font-size:.9rem;color:var(--muted);line-height:1.5;flex:1;margin-bottom:18px}
+  .trade .btn{width:100%}
   .pill{font-size:.72rem;font-weight:550;padding:4px 11px;border-radius:99px;letter-spacing:0}
   .pill.open{color:var(--green);background:var(--green-tint)}
-  .pill.taken{color:var(--red);background:var(--red-tint)}
+  .pill.soon{color:var(--muted);background:var(--surface-2)}
 
   /* metabar - trust stats bar */
   .metabar{border-top:1px solid var(--line);border-bottom:1px solid var(--line);
@@ -145,24 +130,6 @@
     font-weight:640;margin-bottom:20px;color:var(--ink)}
   .lede{font-size:1.06rem;color:var(--muted);max-width:42rem;line-height:1.5;font-weight:420}
 
-  /* compare table */
-  .ctable{margin-top:44px;background:transparent;border:none;overflow:hidden;box-shadow:none}
-  .ctable table{width:100%;border-collapse:collapse}
-  .ctable th{text-align:left;padding:0 24px 20px;font-family:var(--mono);font-size:.7rem;font-weight:500;
-    border-bottom:1px solid var(--line);vertical-align:bottom;
-    letter-spacing:.02em;text-transform:uppercase}
-  .ctable th:first-child{color:var(--muted);width:34%}
-  .ctable th.them{color:var(--muted)}
-  .ctable th.us{color:var(--blue);width:30%;position:relative}
-  .ctable th.us::after{content:"";position:absolute;bottom:-1px;left:0;right:0;height:2px;background:var(--blue)}
-  .ctable td{padding:20px 24px;font-size:.98rem;border-bottom:1px solid var(--line);
-    color:var(--muted);vertical-align:top;letter-spacing:-.005em}
-  .ctable td:first-child{color:var(--ink);font-weight:500}
-  .ctable td.us{color:var(--ink);font-weight:550;position:relative}
-  .ctable td.us::before{content:"";position:absolute;left:0;top:0;bottom:0;width:2px;background:var(--blue);opacity:.14}
-  .ctable tr:last-child td{border-bottom:none}
-  .ctable tbody tr td.us{background:transparent}
-
   /* steps */
   .steps{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:36px}
   .step{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-lg);padding:26px 24px}
@@ -171,114 +138,6 @@
     display:flex;align-items:center;justify-content:center;margin-bottom:16px;flex-shrink:0}
   .step h4{font-size:1.04rem;font-weight:600;margin-bottom:7px;letter-spacing:-.015em;color:var(--ink)}
   .step p{font-size:.9rem;color:var(--muted);line-height:1.55}
-
-  /* proof */
-  .proof-grid{display:grid;grid-template-columns:1fr 1fr;gap:48px;align-items:center;margin-top:12px}
-  .form-card{background:var(--bg);border:1px solid var(--line);border-radius:var(--r-lg);
-    padding:26px;box-shadow:var(--sh-lg)}
-  .fc-title{font-weight:600;font-size:1rem;margin-bottom:18px;letter-spacing:-.015em;color:var(--ink)}
-  .fc-f{margin-bottom:12px}
-  .fc-f span{display:block;font-size:.76rem;color:var(--muted);margin-bottom:5px;font-weight:450}
-  .fc-box{border:1px solid var(--line);border-radius:7px;padding:11px 13px;
-    background:var(--surface);color:var(--faint);font-size:.88rem}
-  .fc-chk{display:flex;gap:11px;align-items:flex-start;margin-top:18px;
-    padding:14px;border:1px solid var(--blue-line);background:var(--blue-tint);border-radius:9px}
-  .tick{width:18px;height:18px;border-radius:5px;background:var(--blue);flex-shrink:0;
-    display:flex;align-items:center;justify-content:center;margin-top:1px}
-  .fc-chk span{font-size:.86rem;color:var(--ink)}
-  .slot{font-family:var(--mono);font-size:.82rem;color:var(--blue);font-weight:500;
-    background:var(--bg);padding:1px 5px;border-radius:4px;border:1px solid var(--blue-line);
-    word-break:break-word;overflow-wrap:anywhere;line-height:1.6;display:inline}
-  .fc-cap{margin-top:16px;font-size:.8rem;color:var(--muted);line-height:1.5}
-
-  /* facts */
-  .facts{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;margin-top:44px;
-    background:var(--line);border:1px solid var(--line);border-radius:var(--r-lg);overflow:hidden}
-  .fact{background:var(--bg);padding:36px 32px;position:relative}
-  .fact-big{font-size:clamp(3.4rem,6.6vw,5rem);font-weight:600;letter-spacing:-.055em;
-    line-height:.9;color:var(--ink);font-variant-numeric:tabular-nums}
-  .fact-big small{font-size:.32em;color:var(--faint);font-weight:500;letter-spacing:-.02em;
-    margin-left:.15em;vertical-align:.15em}
-  .fact-lbl{font-family:var(--mono);font-size:.7rem;letter-spacing:.04em;text-transform:uppercase;
-    color:var(--muted);margin:20px 0 10px;font-weight:500}
-  .fact p{font-size:.9rem;color:var(--muted);line-height:1.55;max-width:26ch}
-
-  /* tiers - rental classes */
-  .tiers{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:36px}
-  .tier{background:var(--bg);border:1px solid var(--line);border-radius:var(--r-lg);
-    padding:28px 26px;display:flex;flex-direction:column;position:relative;box-shadow:var(--sh-sm)}
-  .tier.feature{border-color:var(--blue);box-shadow:0 0 0 1px var(--blue),var(--sh-lg)}
-  .tier-badge{position:absolute;top:-10px;left:26px;font-size:.68rem;
-    letter-spacing:0;text-transform:none;background:var(--blue);color:#fff;
-    padding:3px 10px;border-radius:99px;font-weight:550}
-  .tier-class{display:flex;align-items:baseline;gap:8px;margin-bottom:16px}
-  .tier-code{font-family:var(--mono);font-size:.7rem;color:var(--faint);
-    border:1px solid var(--line);padding:2px 6px;border-radius:5px}
-  .tier-name{font-size:.8rem;letter-spacing:0;text-transform:none;color:var(--blue);font-weight:600}
-  .tier-price{font-size:3.2rem;font-weight:600;letter-spacing:-.045em;line-height:.9;color:var(--ink)}
-  .tier-price small{display:block;font-size:.76rem;color:var(--muted);font-weight:420;
-    margin-top:7px;letter-spacing:0}
-  .tier-range{margin:18px 0 18px;padding:12px 14px;background:var(--surface-2);
-    border:1px solid var(--line-2);border-radius:8px}
-  .tier-range b{font-size:1rem;color:var(--ink);font-weight:600}
-  .tier-range span{display:block;font-size:.76rem;color:var(--muted);margin-top:2px}
-  .tier ul{list-style:none;flex:1}
-  .tier li{padding:6px 0;font-size:.87rem;color:var(--muted);display:flex;gap:9px;align-items:flex-start}
-  .tier li svg{flex-shrink:0;margin-top:4px}
-  .tier .btn{margin-top:22px;width:100%}
-  .tiers-note{margin-top:22px;text-align:center;font-size:.82rem;color:var(--muted);line-height:1.6}
-  .tiers-note a{color:var(--blue);font-weight:550;text-decoration:none}
-
-  /* floor guarantee band */
-  .floor{margin-top:36px;background:var(--ink);color:#fff;
-    border-radius:var(--r-lg);padding:36px;display:grid;grid-template-columns:1fr 1fr;gap:40px;align-items:center;
-    box-shadow:var(--sh-lg)}
-  .floor h3{font-size:1.4rem;font-weight:650;letter-spacing:-.025em;margin-bottom:12px;color:#fff}
-  .floor > div > p{font-size:.94rem;color:rgba(255,255,255,.66);margin-bottom:16px;line-height:1.55}
-  .floor-steps{list-style:none}
-  .floor-steps li{display:flex;gap:12px;align-items:flex-start;padding:8px 0;font-size:.9rem;color:rgba(255,255,255,.9);line-height:1.5}
-  .floor-steps .n{font-family:var(--mono);font-size:.66rem;color:#fff;background:rgba(255,255,255,.1);
-    border:1px solid rgba(255,255,255,.18);border-radius:5px;padding:2px 6px;flex-shrink:0;margin-top:2px}
-  .band{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.14);border-radius:10px;overflow:hidden}
-  .band-h{padding:12px 18px;border-bottom:1px solid rgba(255,255,255,.1);font-family:var(--mono);
-    font-size:.68rem;letter-spacing:.04em;text-transform:uppercase;color:rgba(255,255,255,.55)}
-  .band-r{display:flex;justify-content:space-between;align-items:center;padding:14px 18px;
-    border-bottom:1px solid rgba(255,255,255,.09)}
-  .band-r:last-child{border-bottom:none;background:rgba(255,255,255,.04)}
-  .band-r .k{font-size:.88rem;color:rgba(255,255,255,.72)}
-  .band-r .v{font-size:1.4rem;font-weight:650;letter-spacing:-.03em;color:#fff}
-  .band-r .v small{font-size:.74rem;color:rgba(255,255,255,.55);font-weight:420}
-  .band-r.cap .v{color:#FCD34D}
-
-  /* tier floor rows */
-  .tier-floor{border:1px solid var(--line-2);border-radius:8px;overflow:hidden;margin-bottom:16px}
-  .tf{display:flex;justify-content:space-between;padding:9px 13px;font-size:.82rem;
-    border-bottom:1px solid var(--line-2)}
-  .tf:last-child{border-bottom:none;background:var(--blue-tint)}
-  .tf .k{color:var(--muted)}
-  .tf .v{font-weight:600;color:var(--ink)}
-  .tf:last-child .v{color:var(--blue)}
-
-  /* faq */
-  .faq{max-width:760px;margin:36px auto 0}
-  .faq details{border:1px solid var(--line);border-radius:10px;margin-bottom:12px;
-    background:var(--bg);overflow:hidden;transition:border-color .15s}
-  .faq details[open]{border-color:var(--blue-line);box-shadow:var(--sh-sm)}
-  .faq summary{list-style:none;cursor:pointer;padding:20px 22px;display:flex;
-    align-items:center;justify-content:space-between;gap:16px;
-    font-size:1rem;font-weight:550;color:var(--ink);letter-spacing:-.01em}
-  .faq summary::-webkit-details-marker{display:none}
-  .faq summary:hover{color:var(--blue)}
-  .faq summary .ic{width:20px;height:20px;flex-shrink:0;position:relative}
-  .faq summary .ic::before,.faq summary .ic::after{content:"";position:absolute;
-    background:var(--blue);border-radius:2px;transition:transform .2s}
-  .faq summary .ic::before{top:9px;left:3px;width:14px;height:2px}
-  .faq summary .ic::after{top:3px;left:9px;width:2px;height:14px}
-  .faq details[open] summary .ic::after{transform:rotate(90deg);opacity:0}
-  .faq .a{padding:0 22px 20px;color:var(--muted);font-size:.92rem;line-height:1.6}
-  .faq .a p{margin-bottom:10px}
-  .faq .a p:last-child{margin-bottom:0}
-  .faq .a b{color:var(--ink);font-weight:600}
 
   footer{background:var(--ink);border-top:1px solid var(--ink);padding:56px 0 40px}
   .foot-top{display:flex;justify-content:space-between;align-items:center;
@@ -295,14 +154,10 @@
   @media(max-width:860px){
     .nav-r{display:none}
     .nav-burger{display:block}
-    .counter-top{grid-template-columns:1fr}
-    .cf{border-right:none;border-bottom:1px solid var(--line-2)}
-    .cf:nth-child(3){border-bottom:none}
-    .steps,.facts,.tiers,.proof-grid{grid-template-columns:1fr}
+    .trades{grid-template-columns:1fr}
+    .steps{grid-template-columns:1fr}
     .metabar-in{grid-template-columns:1fr 1fr}
     .mb-cell{padding:18px 20px}
-    .floor{grid-template-columns:1fr;gap:26px;padding:28px}
-    .ctable{overflow-x:auto}
     section{padding:60px 0}
     .hero{padding:48px 24px 40px}
     /* mobile-menu CTA was inheriting nav-link styles (block display, 4px padding,
@@ -311,7 +166,6 @@
       display:flex!important;align-items:center;justify-content:center;
       padding:12px 18px!important;border-bottom:none!important;color:#fff!important;
     }
-    .slot{font-size:.76rem;word-break:break-all}
   }
   @media(prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}html{scroll-behavior:auto}}
 </style>
@@ -320,13 +174,11 @@
 
 <nav>
   <div class="nav-in">
-    <a href="#" class="brand" aria-label="Lead Gen Rentals home"><img src="LeadGen-Rentals-Logo.png" alt="Lead Gen Rentals" class="brand-logo"></a>
+    <a href="/" class="brand" aria-label="Lead Gen Rentals home"><img src="LeadGen-Rentals-Logo.png" alt="Lead Gen Rentals" class="brand-logo"></a>
     <div class="nav-r">
-      <a href="#why" class="nav-l">Why</a>
+      <a href="#trades" class="nav-l">Trades</a>
       <a href="#how" class="nav-l">How it works</a>
-      <a href="#pricing" class="nav-l">Pricing</a>
-      <a href="#faq" class="nav-l">FAQ</a>
-      <a href="#pricing" class="btn btn-primary btn-sm">Check availability</a>
+      <a href="#trades" class="btn btn-primary btn-sm">Browse trades</a>
     </div>
     <button class="nav-burger" id="burger" aria-label="Menu" aria-expanded="false">
       <span></span><span></span><span></span>
@@ -334,58 +186,58 @@
   </div>
 </nav>
 <div class="mobile-menu" id="mobileMenu">
-  <a href="#why">Why</a>
+  <a href="#trades">Trades</a>
   <a href="#how">How it works</a>
-  <a href="#pricing">Pricing</a>
-  <a href="#faq">FAQ</a>
-  <a href="#pricing" class="btn btn-primary">Check availability</a>
+  <a href="#trades" class="btn btn-primary">Browse trades</a>
 </div>
 
 <main>
 
-  <!-- HERO + COUNTER -->
+  <!-- HERO + TRADE PICKER -->
   <div class="hero">
-    <span class="eyebrow">Residential Solar Leads</span>
-    <h1>Plug into an exclusive solar lead engine.</h1>
-    <p>We built the campaign, ran the ads and we carry the spend. The moment a homeowner's ready, the lead passes to one installer - you. Never shared, never resold.</p>
+    <span class="eyebrow">Lead Gen Rentals</span>
+    <h1>Australia's exclusive lead rental engine</h1>
+    <p>Rent a lead engine built for your trade. We run the ads and carry the spend. You get every lead it makes - never shared, never resold.</p>
 
-    <!-- SIGNATURE: availability counter -->
-      <div class="counter">
-        <div class="counter-cap"><span class="dotlive"></span>Live availability · East Coast</div>
-        <div class="counter-top">
-          <div class="cf">
-            <label for="trade">Trade</label>
-            <select id="trade">
-              <option>All Residential Solar</option>
-              <option>Residential Solar</option>
-              <option>Battery Retrofit</option>
-            </select>
-          </div>
-          <div class="cf">
-            <label for="area">Your service area</label>
-            <input id="area" type="text" placeholder="Suburb or postcode" autocomplete="off">
-          </div>
-          <div class="cf">
-            <button class="btn btn-primary" id="checkBtn">Check availability</button>
-          </div>
-        </div>
+    <div class="trades" id="trades">
 
-        <div class="counter-out" id="out">
-          <div class="res">
-            <span class="res-k">Area</span>
-            <span class="res-v" id="rArea">—<small id="rTrade"></small></span>
-            <span class="res-r"><span class="pill open">Assets open</span></span>
-          </div>
-          <div class="res">
-            <span class="res-k">Class</span>
-            <span class="res-v">Starter <small>10 leads guaranteed · typically 10–14 · cancel any time</small></span>
-            <span class="res-r">
-              <span class="res-v">$1,200<small style="text-align:right">per 30 days</small></span>
-              <a href="#pricing" class="btn btn-primary btn-sm">Claim</a>
-            </span>
-          </div>
+      <a href="/solar-leads" class="trade live">
+        <div class="trade-top">
+          <h3>Residential Solar</h3>
+          <span class="pill open">Live</span>
         </div>
+        <p>Homeowners ready to quote solar, matched to one installer per area with named consent on the form.</p>
+        <span class="btn btn-primary">View solar leads →</span>
+      </a>
+
+      <div class="trade soon">
+        <div class="trade-top">
+          <h3>HVAC</h3>
+          <span class="pill soon">Coming soon</span>
+        </div>
+        <p>Split &amp; ducted system installs, exclusive to a single installer in your area.</p>
+        <span class="btn btn-ghost" aria-disabled="true">Coming soon</span>
       </div>
+
+      <div class="trade soon">
+        <div class="trade-top">
+          <h3>Roofing</h3>
+          <span class="pill soon">Coming soon</span>
+        </div>
+        <p>Re-roofs and roof restorations, one trade per area - never shared, never resold.</p>
+        <span class="btn btn-ghost" aria-disabled="true">Coming soon</span>
+      </div>
+
+      <div class="trade soon">
+        <div class="trade-top">
+          <h3>Renovations</h3>
+          <span class="pill soon">Coming soon</span>
+        </div>
+        <p>Bathroom &amp; kitchen renovation projects, delivered to one builder at a time.</p>
+        <span class="btn btn-ghost" aria-disabled="true">Coming soon</span>
+      </div>
+
+    </div>
   </div>
 
   <div class="metabar">
@@ -409,280 +261,29 @@
     </div>
   </div>
 
-  <!-- COMPARE -->
-  <section id="why">
+  <!-- HOW IT WORKS -->
+  <section id="how">
     <div class="wrap">
       <div class="sec-head">
-        <div class="sec-eyebrow">Why this exists</div>
-        <h2>Every lead you buy, someone else is pocketing the spread.</h2>
-        <p class="lede">A reseller buys traffic and sells you the result at a fixed price. When their ad costs drop, that gap is theirs - you never see a cent of it. When their costs rise, your price follows or your lead gets shared harder. You carry the market either way and you never own the upside. Pay-per-lead is a toll, not a partnership.</p>
-      </div>
-
-      <div class="ctable">
-        <table>
-          <thead>
-            <tr><th>&nbsp;</th><th class="them">Pay-per-lead marketplaces</th><th class="us">Lead Gen Rentals</th></tr>
-          </thead>
-          <tbody>
-            <tr><td>Installers per lead</td><td>3–5, simultaneously</td><td class="us">1 - yours</td></tr>
-            <tr><td>Who carries the ad spend</td><td>You, buried in the lead price</td><td class="us">We do</td></tr>
-            <tr><td><b>When ad costs fall</b></td><td>They keep the spread. You pay the same.</td><td class="us">You get more leads. Same fee.</td></tr>
-            <tr><td><b>When ad costs rise</b></td><td>Your price follows the market</td><td class="us">We absorb it. Same fee.</td></tr>
-            <tr><td>How you're billed</td><td>Per lead, dud or not</td><td class="us">Flat, per 30 days</td></tr>
-            <tr><td>Most you can pay per lead</td><td>Whatever they decide</td><td class="us">$120 - capped by the floor</td></tr>
-            <tr><td>Proof of exclusivity</td><td>Their word</td><td class="us">Named consent on the form</td></tr>
-            <tr><td>What you compete on</td><td>Speed of dial, then price</td><td class="us">Nothing - nobody else has it</td></tr>
-          </tbody>
-        </table>
-      </div>
-    </div>
-  </section>
-
-  <!-- SEE / SPEED / SCALE -->
-  <section id="edge" style="background:var(--bg);border-block:1px solid var(--line)">
-    <div class="wrap">
-      <div class="sec-head">
-        <div class="sec-eyebrow">On top of that</div>
-        <h2>You don't know what your leads were promised.</h2>
-        <p class="lede">A marketplace lead comes out of a black box. Some ad you never saw, on a page you'll never see, making a claim you never approved - and then the homeowner lands on your phone expecting free panels and a government grant. That's not a bad lead. That's someone else's promise, and you're the one who has to walk it back.</p>
-      </div>
-      <div class="steps">
-        <div class="step">
-          <div class="step-n"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#0A5FFF" stroke-width="2.2"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg></div>
-          <h4>You see the machine</h4>
-          <p>Open the lot and look at it. The exact page a homeowner lands on, what it produced last month, what it costs us to run. No reseller will ever show you the ad that made your lead - because then you'd know why it doesn't close.</p>
-        </div>
-        <div class="step">
-          <div class="step-n"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#0A5FFF" stroke-width="2.2"><path d="M13 2 3 14h9l-1 8 10-12h-9l1-8Z"/></svg></div>
-          <h4>Sixty seconds, not six hours</h4>
-          <p>The moment they submit, our AI texts them in your name and starts the conversation. The lead is warm when it reaches you - not because we filtered it, because we caught them while they still cared.</p>
-        </div>
-        <div class="step">
-          <div class="step-n"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#0A5FFF" stroke-width="2.2"><path d="M3 3v18h18"/><path d="m7 14 4-4 3 3 5-6"/></svg></div>
-          <h4>Scale without bidding against yourself</h4>
-          <p>Need more than one asset produces? Take a second in the same area. We map the audiences and creative so they don't chase the same homeowner - and when they do overlap, we pay for it, not you.</p>
-        </div>
-      </div>
-      <p class="tiers-note" style="margin-top:24px">Every lead goes to one installer only. Same mobile across two of our assets inside 30 days? First one's delivered, the second is binned - it doesn't count toward anyone's floor. <a href="#pricing">Talk to us about multiple assets →</a></p>
-    </div>
-  </section>
-
-  <!-- HOW -->
-  <section id="how" style="background:var(--bg);border-block:1px solid var(--line)">
-    <div class="wrap">
-      <div class="sec-head">
-        <div class="sec-eyebrow">How it runs</div>
-        <h2>Three steps, then leads land.</h2>
+        <div class="sec-eyebrow">How it works</div>
+        <h2>Three steps to exclusive leads.</h2>
       </div>
       <div class="steps">
         <div class="step">
           <div class="step-n">01</div>
-          <h4>Claim an asset</h4>
-          <p>Tell us where you work. Pick an available asset for your area and it's locked to you the moment you claim it - that asset is yours alone, never shared.</p>
+          <h4>Pick your trade</h4>
+          <p>Choose your niche from the trades above. Each one is a lead engine built and tuned for that trade's homeowners - solar today, more going live soon.</p>
         </div>
         <div class="step">
           <div class="step-n">02</div>
-          <h4>We plug you in</h4>
-          <p>A landing page and paid campaigns go live on our accounts and our budget. Nothing to set up, nothing to connect, live in days.</p>
+          <h4>Rent an available lead engine</h4>
+          <p>Claim an open engine for your area and it's locked to you. A landing page and paid campaigns go live on our accounts and our budget - nothing to set up.</p>
         </div>
         <div class="step">
           <div class="step-n">03</div>
-          <h4>We're texting them in 60 seconds</h4>
-          <p>The moment a homeowner submits, our AI texts them in your name and starts the conversation. Not in six hours, when they've forgotten they enquired. By the time the lead reaches your phone, it's warm.</p>
+          <h4>Get exclusive leads month-to-month</h4>
+          <p>Every lead the engine makes is yours alone, never shared or resold, texted in your name within 60 seconds. Flat monthly fee, cancel any time.</p>
         </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- PROOF -->
-  <section id="proof">
-    <div class="wrap">
-      <div class="proof-grid">
-        <div>
-          <div class="sec-eyebrow">Exclusivity you can verify</div>
-          <h2>"Exclusive" isn't a promise here. It's in the form.</h2>
-          <p class="lede">Most lead companies ask you to trust that a lead is exclusive. We don't. Every homeowner consents to be contacted by your business, by name, at the moment they submit. There's nowhere else the lead can go.</p>
-        </div>
-        <div class="form-card">
-          <div class="fc-title">Get your free solar quote</div>
-          <div class="fc-f"><span>Full name</span><div class="fc-box">&nbsp;</div></div>
-          <div class="fc-f"><span>Email</span><div class="fc-box">&nbsp;</div></div>
-          <div class="fc-f"><span>Phone number</span><div class="fc-box">&nbsp;</div></div>
-          <div class="fc-f"><span>Postcode</span><div class="fc-box">&nbsp;</div></div>
-          <div class="fc-f"><span>Average quarterly power bill</span><div class="fc-box">&nbsp;</div></div>
-          <div class="fc-f"><span>How soon are you looking to install?</span><div class="fc-box">&nbsp;</div></div>
-          <div class="fc-chk">
-            <span class="tick"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3.5"><path d="M20 6 9 17l-5-5"/></svg></span>
-            <span>I agree to be contacted about my solar project by <span class="slot">{{installer_business_name}}</span> at the number provided.</span>
-          </div>
-          <p class="fc-cap">The business name is written into every form we deploy for you, validated at launch and locked. One lead, one installer, on the record.</p>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- HONEST -->
-  <section id="expect" style="background:var(--bg);border-block:1px solid var(--line)">
-    <div class="wrap">
-      <div class="sec-head">
-        <div class="sec-eyebrow">Straight talk</div>
-        <h2>What you're actually buying.</h2>
-        <p class="lede">You're hiring an always-on acquisition engine for your area. Volume moves with your market and the season - so we guarantee the floor, and let everything above it be a range instead of a promise we'd have to weasel out of.</p>
-      </div>
-      <div class="facts">
-        <div class="fact">
-          <div class="fact-big">30<small> days</small></div>
-          <div class="fact-lbl">Fixed period</div>
-          <p>Every cycle is a fixed 30 days. The lead range inside it is typical - some periods run higher, some lower. The window is fixed; the volume is a range, not a guarantee.</p>
-        </div>
-        <div class="fact">
-          <div class="fact-big">100%</div>
-          <div class="fact-lbl">Exclusive</div>
-          <p>Every lead is yours and only yours, verified by the consent on the form. This part is a guarantee.</p>
-        </div>
-        <div class="fact">
-          <div class="fact-big">0<small> lock-in</small></div>
-          <div class="fact-lbl">Cancel any time</div>
-          <p>Month to month. Cancel before your next cycle starts and that's it - no exit fee, no notice period, no contract holding you in.</p>
-        </div>
-      </div>
-
-      <!-- FLOOR GUARANTEE -->
-      <div class="floor">
-        <div>
-          <h3>The floor is a guarantee. The rest is a range.</h3>
-          <p>Every class has a minimum we commit to in writing. Miss it inside the 30 days and you don't chase us for it - one of two things happens, and you pick.</p>
-          <ul class="floor-steps">
-            <li><span class="n">01</span><span>We keep the campaign running at our cost until your floor lands. The clock stops, you don't pay more.</span></li>
-            <li><span class="n">02</span><span>Or you'd rather not wait - pro-rata refund on every lead we came up short, at the floor rate. Your call, not ours.</span></li>
-          </ul>
-        </div>
-        <div class="band">
-          <div class="band-h">What that means per lead</div>
-          <div class="band-r"><span class="k">At your floor</span><span class="v">$120<small> / lead</small></span></div>
-          <div class="band-r"><span class="k">At the top of your range</span><span class="v">$85.71<small> / lead</small></span></div>
-          <div class="band-r cap"><span class="k">Most you can ever pay</span><span class="v">$120<small> / lead</small></span></div>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- PRICING -->
-  <section id="pricing">
-    <div class="wrap">
-      <div class="sec-head">
-        <div class="sec-eyebrow">Claim your territory</div>
-        <h2>One trade. One area. One installer.</h2>
-      </div>
-      <div class="tiers">
-
-        <div class="tier">
-          <div class="tier-class"><span class="tier-code">T1</span><span class="tier-name">Starter</span></div>
-          <div class="tier-price">$1,200<small>per 30 days · flat · +GST</small></div>
-          <div class="tier-range"><b>Typically 10–14 leads</b><span>in a 30-day period</span></div>
-          <div class="tier-floor">
-            <div class="tf"><span class="k">Guaranteed floor</span><span class="v">10 leads</span></div>
-            <div class="tf"><span class="k">Most you'd pay / lead</span><span class="v">$120</span></div>
-          </div>
-          <ul>
-            <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#0A5FFF" stroke-width="3"><path d="M20 6 9 17l-5-5"/></svg>One asset, yours alone - never shared</li>
-            <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#0A5FFF" stroke-width="3"><path d="M20 6 9 17l-5-5"/></svg>Landing page + ads, pre-built capturing leadflow</li>
-            <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#0A5FFF" stroke-width="3"><path d="M20 6 9 17l-5-5"/></svg>We carry 100% of the ad spend</li>
-            <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#0A5FFF" stroke-width="3"><path d="M20 6 9 17l-5-5"/></svg>Named-consent leads, texted in 60 seconds</li>
-            <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#0A5FFF" stroke-width="3"><path d="M20 6 9 17l-5-5"/></svg>Month to month - cancel any time</li>
-          </ul>
-          <button class="btn btn-ghost buyBtn">Claim your asset</button>
-        </div>
-
-        <div class="tier feature">
-          <span class="tier-badge">Most popular</span>
-          <div class="tier-class"><span class="tier-code">T2</span><span class="tier-name">Growth</span></div>
-          <div class="tier-price">$2,400<small>per 30 days · flat · +GST</small></div>
-          <div class="tier-range"><b>Typically 20–28 leads</b><span>roughly 2× the range</span></div>
-          <div class="tier-floor">
-            <div class="tf"><span class="k">Guaranteed floor</span><span class="v">20 leads</span></div>
-            <div class="tf"><span class="k">Most you'd pay / lead</span><span class="v">$120</span></div>
-          </div>
-          <ul>
-            <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#0A5FFF" stroke-width="3"><path d="M20 6 9 17l-5-5"/></svg>Everything in Starter</li>
-            <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#0A5FFF" stroke-width="3"><path d="M20 6 9 17l-5-5"/></svg>Roughly 2× the ad budget behind your area</li>
-            <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#0A5FFF" stroke-width="3"><path d="M20 6 9 17l-5-5"/></svg>Wider exclusive radius</li>
-            <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#0A5FFF" stroke-width="3"><path d="M20 6 9 17l-5-5"/></svg>Lead dashboard + priority delivery</li>
-          </ul>
-          <button class="btn btn-primary buyBtn">Claim your asset</button>
-        </div>
-
-        <div class="tier">
-          <div class="tier-class"><span class="tier-code">T3</span><span class="tier-name">Scale</span></div>
-          <div class="tier-price">$3,600<small>per 30 days · flat · +GST</small></div>
-          <div class="tier-range"><b>Typically 30–42 leads</b><span>roughly 3× the range</span></div>
-          <div class="tier-floor">
-            <div class="tf"><span class="k">Guaranteed floor</span><span class="v">30 leads</span></div>
-            <div class="tf"><span class="k">Most you'd pay / lead</span><span class="v">$120</span></div>
-          </div>
-          <ul>
-            <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#0A5FFF" stroke-width="3"><path d="M20 6 9 17l-5-5"/></svg>Everything in Growth</li>
-            <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#0A5FFF" stroke-width="3"><path d="M20 6 9 17l-5-5"/></svg>Region-wide exclusivity</li>
-            <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#0A5FFF" stroke-width="3"><path d="M20 6 9 17l-5-5"/></svg>Roughly 3× the ad budget</li>
-            <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#0A5FFF" stroke-width="3"><path d="M20 6 9 17l-5-5"/></svg>Fastest delivery + co-invest option</li>
-          </ul>
-          <button class="btn btn-ghost buyBtn">Claim your asset</button>
-        </div>
-
-      </div>
-      <p class="tiers-note">Running multiple trades or states? <a href="#">Book a call for custom →</a><br>
-        The floor is guaranteed. The range above it is typical, not promised. Exclusivity is guaranteed and verified at capture.</p>
-    </div>
-  </section>
-
-  <!-- FAQ -->
-  <section id="faq">
-    <div class="wrap">
-      <div class="sec-head" style="text-align:center;margin-inline:auto">
-        <div class="sec-eyebrow">FAQ</div>
-        <h2>The questions installers actually ask.</h2>
-      </div>
-      <div class="faq">
-
-        <details>
-          <summary>Why isn't it a fixed cost per lead? <span class="ic"></span></summary>
-          <div class="a">
-            <p>Because a fixed cost per lead only ever protects <b>us</b>. Ad platforms don't charge a flat rate - what it costs to reach a homeowner swings with the season, the auction and the rebate cycle. A per-lead reseller pockets the difference when costs fall and quietly shares your lead harder when they rise. Either way you carry the market and never see the upside.</p>
-            <p>So we do it the other way around. You pay one flat fee for the cycle and we run a <b>dynamic cost per lead</b> underneath it. When ad platform CPMs spike, your guaranteed floor still lands - we absorb the extra cost, not you. When conditions are good and costs drop, that same fee buys more leads and the volume climbs. You're insulated on the bad months and you share the good ones. The price is fixed; the value moves in your favour.</p>
-          </div>
-        </details>
-
-        <details>
-          <summary>What does "exclusive" actually mean here? <span class="ic"></span></summary>
-          <div class="a">
-            <p>It means every lead goes to <b>one installer - you - and nobody else. Ever.</b> Not sold to three of your competitors, not resold a week later as an "aged" lead, not shared with a marketplace.</p>
-            <p>And we don't ask you to take that on trust. Every homeowner consents to be contacted by <b>your business, by name</b>, at the moment they submit the form. The exclusivity is built into the capture, not promised afterwards - there's structurally nowhere else the lead can go.</p>
-          </div>
-        </details>
-
-        <details>
-          <summary>How are leads delivered? <span class="ic"></span></summary>
-          <div class="a">
-            <p>However suits how you work. Leads can land as an <b>SMS and email to your phone</b> the moment they come in, and we can push them straight into your <b>CRM</b> if you run one. Most installers take all three so nothing slips.</p>
-            <p>On top of that, our AI texts the homeowner in your name within about 60 seconds of them enquiring - so by the time the lead reaches you, the conversation's already warm.</p>
-          </div>
-        </details>
-
-        <details>
-          <summary>Is there any guarantee I'll get leads? <span class="ic"></span></summary>
-          <div class="a">
-            <p>Yes. Every asset carries a <b>guaranteed floor</b> - a minimum number of leads for the 30-day cycle, committed in writing. If we fall short of it, you don't chase us: you either get the campaign kept running at our cost until the floor lands, or a pro-rata refund on the shortfall at the floor rate. Your call.</p>
-            <p>What we don't dress up: the floor is the guarantee, and the typical range above it is exactly that - typical, not promised. We'd rather set a floor we'll always hit than a number we'd have to weasel out of. What we can't guarantee is that a given homeowner answers or signs - no honest lead company can - which is why speed-to-contact and exclusivity matter as much as volume.</p>
-          </div>
-        </details>
-
-        <details>
-          <summary>Am I locked into a contract? <span class="ic"></span></summary>
-          <div class="a">
-            <p>No. It's <b>month to month</b>, billed in advance. Cancel any time before your next cycle starts - no lock-in, no exit fee, no notice period. If it's not working for you, you leave. The floor and the exclusivity do the work of keeping you, not a contract.</p>
-          </div>
-        </details>
-
       </div>
     </div>
   </section>
@@ -692,7 +293,7 @@
 <footer>
   <div class="wrap">
     <div class="foot-top">
-      <a href="#" class="brand" aria-label="Lead Gen Rentals home"><img src="LeadGen-Rentals-Logo-White.png" alt="Lead Gen Rentals" class="brand-logo"></a>
+      <a href="/" class="brand" aria-label="Lead Gen Rentals home"><img src="LeadGen-Rentals-Logo-White.png" alt="Lead Gen Rentals" class="brand-logo"></a>
       <nav class="foot-nav">
         <a href="#">About</a>
         <a href="#">Blog</a>
@@ -718,27 +319,6 @@
   };
   burger.addEventListener('click', () => setMenu(!burger.classList.contains('on')));
   mobileMenu.querySelectorAll('a').forEach(a => a.addEventListener('click', () => setMenu(false)));
-
-  // Placeholder availability check - wire to backend.
-  const out = document.getElementById('out');
-  document.getElementById('checkBtn').addEventListener('click', function(){
-    const area = document.getElementById('area').value.trim();
-    document.getElementById('rArea').firstChild.textContent = area || '{{area_name}}';
-    document.getElementById('rTrade').textContent = document.getElementById('trade').value;
-    out.classList.add('on');
-  });
-  document.getElementById('area').addEventListener('keydown', e => {
-    if(e.key === 'Enter') document.getElementById('checkBtn').click();
-  });
-
-  // Placeholder claim handler - wire to checkout.
-  document.querySelectorAll('.buyBtn').forEach(b => {
-    b.addEventListener('click', function(){
-      const t = this.textContent;
-      this.textContent = 'Checking availability…';
-      setTimeout(() => { this.textContent = t; }, 1200);
-    });
-  });
 </script>
 </body>
 </html>

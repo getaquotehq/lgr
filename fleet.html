@@ -29,12 +29,16 @@
   .wrap{max-width:1160px;margin:0 auto;padding:0 24px}
   .mono{font-family:var(--mono)}
 
-  nav{background:rgba(255,255,255,.8);backdrop-filter:saturate(1.8) blur(12px);border-bottom:1px solid var(--line);position:sticky;top:0;z-index:40}
+  body>nav{background:rgba(255,255,255,.8);backdrop-filter:saturate(1.8) blur(12px);border-bottom:1px solid var(--line);position:sticky;top:0;z-index:40}
   .nav-in{max-width:1160px;margin:0 auto;padding:0 24px;height:60px;
-    display:flex;align-items:center;justify-content:space-between}
+    display:flex;align-items:center;justify-content:space-between;gap:14px}
   .brand{display:flex;align-items:center;gap:9px;font-weight:700;font-size:.98rem;letter-spacing:-.025em;white-space:nowrap;text-decoration:none;color:var(--ink)}
   .brand-logo{height:46px;width:auto;display:block}
   .nav-tag{font-family:var(--mono);font-size:.72rem;color:var(--faint);letter-spacing:.05em}
+  .nav-r{display:flex;align-items:center;gap:14px}
+  .nav-l{font-size:.86rem;color:var(--muted);text-decoration:none;font-weight:500;
+    padding:8px 12px;border-radius:6px;transition:.12s;white-space:nowrap}
+  .nav-l:hover{color:var(--ink);background:var(--surface-2)}
 
   .btn{font-family:var(--sans);font-weight:600;font-size:.9rem;border:1px solid transparent;
     padding:10px 16px;border-radius:6px;cursor:pointer;transition:.15s;white-space:nowrap;
@@ -156,6 +160,20 @@
   .empty{grid-column:1/-1;text-align:center;padding:64px 20px;color:var(--muted);
     border:1px dashed var(--line);border-radius:12px;background:var(--bg)}
 
+  /* footer (congruent with the rest of the site) */
+  footer{background:var(--ink);border-top:1px solid var(--ink);padding:56px 0 40px;margin-top:24px}
+  footer .wrap{max-width:1160px}
+  .foot-top{display:flex;justify-content:space-between;align-items:center;
+    padding-bottom:32px;margin-bottom:32px;border-bottom:1px solid rgba(255,255,255,.1);
+    gap:24px;flex-wrap:wrap}
+  .foot-top .brand-logo{height:50px}
+  .foot-nav{display:flex;gap:26px;flex-wrap:wrap}
+  .foot-nav a{color:rgba(255,255,255,.6);text-decoration:none;font-size:.88rem;
+    font-weight:450;transition:color .12s}
+  .foot-nav a:hover{color:#fff}
+  .foot{display:flex;justify-content:space-between;gap:28px;flex-wrap:wrap;align-items:flex-start}
+  .fine{font-size:.78rem;color:rgba(255,255,255,.5);max-width:46rem;line-height:1.65}
+
   @media(max-width:980px){.fleet{grid-template-columns:repeat(2,1fr)}
     .filters{grid-template-columns:1fr 1fr}.fcount{grid-column:1/-1;border-left:none;
     border-top:1px solid var(--line);padding:12px 18px}}
@@ -168,8 +186,14 @@
 
 <nav>
   <div class="nav-in">
-    <div class="brand"><a href="index.html" aria-label="Lead Gen Rentals home"><img src="LeadGen-Rentals-Logo.png" alt="Lead Gen Rentals" class="brand-logo"></a> <span class="nav-tag">/ available assets</span></div>
-    <span class="nav-tag">Installer view</span>
+    <div class="brand-wrap" style="display:flex;align-items:center;gap:9px;min-width:0">
+      <a href="/" class="brand" aria-label="Lead Gen Rentals home"><img src="LeadGen-Rentals-Logo.png" alt="Lead Gen Rentals" class="brand-logo"></a>
+      <span class="nav-tag">/ available assets</span>
+    </div>
+    <div class="nav-r">
+      <a href="/solar-leads" class="nav-l">← Solar leads</a>
+      <span class="nav-tag">Installer view</span>
+    </div>
   </div>
 </nav>
 
@@ -371,5 +395,25 @@ document.addEventListener('keydown', e => { if(e.key === 'Escape') $('#modal').c
 
 render();
 </script>
+
+<footer>
+  <div class="wrap">
+    <div class="foot-top">
+      <a href="/" class="brand" aria-label="Lead Gen Rentals home"><img src="LeadGen-Rentals-Logo-White.png" alt="Lead Gen Rentals" class="brand-logo"></a>
+      <nav class="foot-nav">
+        <a href="/">Home</a>
+        <a href="/solar-leads">Solar leads</a>
+        <a href="#">About</a>
+        <a href="#">Contact</a>
+        <a href="#">Terms</a>
+        <a href="#">Privacy</a>
+      </nav>
+    </div>
+    <div class="foot">
+      <p class="fine">© 2026 Lead Gen Rentals. Lead Gen Rentals runs paid advertising on its own accounts and delivers the resulting leads to a single installer per asset. A lead means a form submission containing a name and an Australian mobile number, captured with named consent to be contacted by that installer. Every lead is delivered to one installer only: where the same mobile number is submitted to more than one Lead Gen Rentals asset within 30 days, the first submission is delivered and later ones are discarded and do not count toward any floor. Each class carries a guaranteed floor of leads per 30-day period. Where the floor is not met within the period, Lead Gen Rentals will at the installer's election either continue running the campaign at its own cost until the floor is reached, or refund the shortfall pro-rata at the floor rate (period fee ÷ floor). Volume above the floor is typical and varies with market conditions and season; it is not guaranteed. Lead Gen Rentals does not guarantee that any lead will answer, quote or convert. Where an installer holds multiple assets in one area, Lead Gen Rentals maps audiences and creative to minimise overlap and bears any resulting increase in its own advertising costs. Billed month to month in advance - cancel any time before your next cycle begins, no lock-in and no exit fee.</p>
+    </div>
+  </div>
+</footer>
+
 </body>
 </html>
