@@ -7,7 +7,7 @@
  * session full CRUD. NEVER put the service_role key here - it bypasses RLS and
  * would hand the whole database to anyone who views source.
  *
- * This is a SEPARATE deployment from the public site and from ql-mc. It points
+ * This is a SEPARATE deployment from the public site. It points
  * at the same LGR Supabase project (tgujjtllrrhpwkcmmqap) as the public lgr
  * site - intentional (one business, one database) - but it is its own app, its
  * own hosting, and its own auth (admin users, not anon).

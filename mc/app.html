@@ -12,7 +12,7 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <script src="./supabase-config.js"></script>
 <style>
-/* ═══ TOKENS ═══ (mirrors ql-mc; accent retinted to LGR amber) */
+/* ═══ TOKENS ═══ (LGR admin design tokens) */
 :root{
   --bg:#070708; --bg2:#0c0c0e; --s1:#0f0f12; --s2:#141417; --s3:#19191d; --s4:#1f1f24;
   --bd:#1c1c22; --bd2:#262630; --bd3:#32323e;
@@ -1139,7 +1139,7 @@ async function deleteInstaller(id){
 }
 
 /* ════════════════════════════════════════════════════════════════════════
-   LEAD DISTRIBUTION  (mirrors ql-mc's panel, adapted to LGR's schema)
+   LEAD DISTRIBUTION
    ════════════════════════════════════════════════════════════════════════ */
 const LD_PAGE=50;
 let ldPage=0, ldTotal=0, _leadsView=[], _ldBreakdownOpen=false;

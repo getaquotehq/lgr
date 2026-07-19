@@ -1,9 +1,9 @@
 // ============================================================================
 // deliver-lead — pushes a captured LGR lead to its installer.
 //
-// Port of ql-mc's `deliver-webhook`, adapted to LGR: a lead is already bound to
-// an installer at capture time (assets.rented_by → leads.installer_id), so this
-// resolves the recipient from the lead itself — no client-matching. It delivers
+// A lead is already bound to an installer at capture time
+// (assets.rented_by → leads.installer_id), so this resolves the recipient from
+// the lead itself — no client-matching. It delivers
 // over the installer's preferred channel(s) and writes each attempt into
 // lead_delivery_log, then stamps leads.delivered_at.
 //
