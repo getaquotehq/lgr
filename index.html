@@ -50,9 +50,12 @@
   .nav-burger.on span:nth-child(1){transform:translateY(5.5px) rotate(45deg)}
   .nav-burger.on span:nth-child(2){opacity:0}
   .nav-burger.on span:nth-child(3){transform:translateY(-5.5px) rotate(-45deg)}
+  /* dropdown; capped with dvh (not vh) so it never spills past the visible
+     screen on mobile, scrolling internally if the viewport is very short */
   .mobile-menu{display:none;position:fixed;inset:60px 0 auto 0;z-index:39;
     background:var(--bg);border-bottom:1px solid var(--line);padding:8px 24px 20px;box-shadow:var(--sh-lg);
-    max-height:calc(100vh - 60px);overflow-y:auto;-webkit-overflow-scrolling:touch}
+    max-height:calc(100vh - 60px);max-height:calc(100dvh - 60px);
+    overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch}
   .mobile-menu.on{display:block}
   body.menu-open{overflow:hidden}
   .mobile-menu a{display:block;padding:13px 4px;font-size:1rem;color:var(--ink);
@@ -296,6 +299,8 @@
     .cf{border-right:none;border-bottom:1px solid var(--line-2)}
     .cf:nth-child(3){border-bottom:none}
     .steps,.facts,.tiers,.proof-grid{grid-template-columns:1fr}
+    .metabar-in{grid-template-columns:1fr 1fr}
+    .mb-cell{padding:18px 20px}
     .floor{grid-template-columns:1fr;gap:26px;padding:28px}
     .ctable{overflow-x:auto}
     section{padding:60px 0}
