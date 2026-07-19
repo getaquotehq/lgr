@@ -1,0 +1,1243 @@
+<!DOCTYPE html>
+<html lang="en-AU" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>LGR Mission Control</title>
+<link rel="icon" href="./favicon.ico">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;0,500;1,300&family=Syne:wght@400;500;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<meta http-equiv="Content-Security-Policy" content="object-src 'none'; base-uri 'self'; connect-src https://tgujjtllrrhpwkcmmqap.supabase.co wss://tgujjtllrrhpwkcmmqap.supabase.co 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net; img-src * data: blob:; font-src https://fonts.gstatic.com;">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="./supabase-config.js"></script>
+<style>
+/* ═══ TOKENS ═══ (mirrors ql-mc; accent retinted to LGR amber) */
+:root{
+  --bg:#070708; --bg2:#0c0c0e; --s1:#0f0f12; --s2:#141417; --s3:#19191d; --s4:#1f1f24;
+  --bd:#1c1c22; --bd2:#262630; --bd3:#32323e;
+  --ink:#eeeef3; --ink2:#8a8aa0; --ink3:#58586e; --ink4:#252530;
+  --acc:#f5a623; --acc2:#d98e12; --acc3:#b8760a;
+  --acc-dim:rgba(245,166,35,.08); --acc-glow:rgba(245,166,35,.2); --acc-ink:#f7c46b;
+  --red:#ff4560; --red-dim:rgba(255,69,96,.07);
+  --grn:#2ecc8a; --grn-dim:rgba(46,204,138,.07);
+  --amb:#f5a623;
+  --font:'DM Sans',-apple-system,sans-serif; --mono:'DM Mono',monospace; --display:'Syne',sans-serif;
+  --sw:224px; --th:46px; --r:8px; --r2:12px; --r3:16px;
+}
+[data-theme="light"]{
+  --bg:#f2f2f5; --bg2:#ebebef; --s1:#ffffff; --s2:#f7f7fa; --s3:#eeeef2; --s4:#e5e5ec;
+  --bd:#dddde8; --bd2:#cacad8; --bd3:#b8b8c8;
+  --ink:#0a0a14; --ink2:#52526a; --ink3:#9494a8; --ink4:#c4c4d4;
+  --acc:#c47d0a; --acc2:#a86a08; --acc-dim:rgba(197,125,10,.06); --acc-glow:rgba(197,125,10,.12); --acc-ink:#a86a08;
+  --red:#e0304a; --red-dim:rgba(224,48,74,.055); --grn:#1db87a; --grn-dim:rgba(29,184,122,.055);
+}
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;font-family:var(--font);-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
+body{background:var(--bg);color:var(--ink);overflow:hidden;font-variant-numeric:tabular-nums}
+::-webkit-scrollbar{width:3px;height:3px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:var(--bd3);border-radius:2px}
+button{font-family:var(--font);cursor:pointer}input,textarea,select{font-family:var(--font)}a{color:inherit;text-decoration:none}
+body::after{content:'';position:fixed;inset:0;background-image:radial-gradient(circle,var(--bd) 1px,transparent 1px);background-size:32px 32px;opacity:.18;pointer-events:none;z-index:0}
+[data-theme="light"] body::after{opacity:.1}
+#app,#login-screen{position:relative;z-index:1}
+
+/* ═══ LOGIN ═══ */
+#login-screen{position:fixed;inset:0;z-index:1000;display:flex;align-items:center;justify-content:center;padding:24px;background:var(--bg)}
+.login-box{width:100%;max-width:340px;background:var(--s1);border:1px solid var(--bd2);border-radius:var(--r3);padding:32px;box-shadow:0 40px 80px rgba(0,0,0,.5)}
+.login-mark{width:44px;height:44px;background:var(--acc);border-radius:12px;display:flex;align-items:center;justify-content:center;font-family:var(--display);font-weight:800;color:#1a1205;font-size:15px;margin-bottom:18px;box-shadow:0 0 24px var(--acc-glow)}
+.login-box h1{font-family:var(--display);font-size:20px;font-weight:700;letter-spacing:-.4px}
+.login-box>p{font-size:12px;color:var(--ink3);margin-top:3px;margin-bottom:22px}
+.lf{margin-bottom:13px}
+.lf label{display:block;font-family:var(--mono);font-size:9px;font-weight:500;color:var(--ink3);text-transform:uppercase;letter-spacing:.1em;margin-bottom:6px}
+.lf input{width:100%;background:var(--s2);border:1px solid var(--bd2);border-radius:var(--r);color:var(--ink);font-size:13px;padding:9px 11px;outline:none;transition:border-color .13s}
+.lf input:focus{border-color:var(--acc);box-shadow:0 0 0 3px var(--acc-dim)}
+.login-btn{width:100%;margin-top:6px;padding:10px;background:var(--acc);color:#1a1205;border:none;border-radius:var(--r);font-size:13px;font-weight:600;transition:all .13s}
+.login-btn:hover{background:var(--acc2)}.login-btn:disabled{opacity:.6}
+.login-err{color:var(--red);font-size:11.5px;margin-top:12px;min-height:14px;text-align:center}
+
+/* ═══ APP ═══ */
+#app{display:none;height:100vh;flex-direction:column}
+#app.visible{display:flex}
+.topbar{height:var(--th);background:var(--s1);border-bottom:1px solid var(--bd);display:flex;align-items:center;padding:0 14px;gap:9px;flex-shrink:0;z-index:20}
+.tb-mark{width:24px;height:24px;background:var(--acc);border-radius:6px;display:flex;align-items:center;justify-content:center;font-family:var(--display);font-size:8px;font-weight:800;color:#1a1205;flex-shrink:0;box-shadow:0 0 12px var(--acc-glow)}
+.tb-name{font-family:var(--display);font-size:12.5px;font-weight:700;letter-spacing:-.2px}
+.tb-sep{width:1px;height:14px;background:var(--bd2)}.tb-sp{flex:1}
+.live-pill{display:flex;align-items:center;gap:5px;padding:3px 9px;border-radius:3px;background:var(--acc-dim);border:1px solid var(--acc-glow);font-family:var(--mono);font-size:9.5px;color:var(--acc);font-weight:500;letter-spacing:.05em}
+.ldot{width:5px;height:5px;border-radius:50%;background:var(--acc);animation:blink 2s infinite;box-shadow:0 0 6px var(--acc)}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.2}}
+#clock{font-size:10.5px;color:var(--ink3);font-family:var(--mono);letter-spacing:.06em}
+.ibtn{width:26px;height:26px;display:flex;align-items:center;justify-content:center;border-radius:var(--r);border:1px solid transparent;background:transparent;color:var(--ink3);font-size:12px;transition:all .12s}
+.ibtn:hover{background:var(--s3);border-color:var(--bd2);color:var(--ink)}
+.uname-chip{font-family:var(--mono);font-size:9.5px;font-weight:500;color:var(--ink2);padding:2px 8px;background:var(--s2);border:1px solid var(--bd2);border-radius:3px;letter-spacing:.04em}
+.layout{display:flex;flex:1;overflow:hidden}
+
+/* ═══ SIDEBAR ═══ */
+.sidebar{width:var(--sw);background:var(--s1);border-right:1px solid var(--bd);display:flex;flex-direction:column;flex-shrink:0;overflow-y:auto}
+.sb-header{padding:16px;border-bottom:1px solid var(--bd)}
+.sb-logo-row{display:flex;align-items:center;gap:9px;margin-bottom:13px}
+.sb-logo{width:30px;height:30px;background:var(--acc);border-radius:8px;display:flex;align-items:center;justify-content:center;font-family:var(--display);font-size:11px;font-weight:800;color:#1a1205;box-shadow:0 0 16px var(--acc-glow);flex-shrink:0}
+.sb-brand{font-family:var(--display);font-size:13px;font-weight:700;letter-spacing:-.2px;line-height:1.1}
+.sb-brand-sub{font-family:var(--mono);font-size:8px;color:var(--ink3);letter-spacing:.08em;text-transform:uppercase}
+.sb-status{display:flex;align-items:center;gap:5px;background:var(--acc-dim);border:1px solid var(--acc-glow);border-radius:4px;padding:5px 9px;font-family:var(--mono);font-size:9px;color:var(--acc);letter-spacing:.06em}
+.sb-status-dot{width:4px;height:4px;border-radius:50%;background:var(--acc);animation:blink 2s infinite;box-shadow:0 0 5px var(--acc)}
+.sb-nav{flex:1;padding:10px}
+.sb-group{margin-bottom:4px}
+.sb-group-label{font-family:var(--mono);font-size:8.5px;font-weight:500;color:var(--ink4);text-transform:uppercase;letter-spacing:.15em;padding:10px 8px 4px;display:block}
+.navbtn{display:flex;align-items:center;gap:11px;padding:9px 11px;border-radius:var(--r);font-size:13.5px;font-weight:500;color:var(--ink2);border:1px solid transparent;background:transparent;width:100%;text-align:left;transition:all .14s;line-height:1.1;margin-bottom:1px}
+.navbtn:hover{background:var(--s3);color:var(--ink)}
+.navbtn.active{background:var(--acc-dim);color:var(--acc-ink);font-weight:600}
+.navbtn.active .ni{color:var(--acc)}
+.ni{width:17px;height:17px;flex-shrink:0;display:flex;align-items:center;justify-content:center;color:var(--ink3);transition:color .14s}
+.ni svg{width:17px;height:17px;stroke:currentColor;stroke-width:1.8;fill:none;stroke-linecap:round;stroke-linejoin:round}
+.navbtn:hover .ni{color:var(--ink2)}
+.sb-divider{height:1px;margin:8px 10px;background:linear-gradient(90deg,transparent,var(--bd),transparent)}
+.sb-bottom{padding:10px;border-top:1px solid var(--bd);margin-top:auto}
+.sb-bottom .navbtn{color:var(--ink3);font-size:11.5px}
+.sb-bottom .navbtn:hover{color:var(--red)}
+.sb-bottom .navbtn:hover .ni{color:var(--red)}
+
+/* ═══ CONTENT ═══ */
+.content{flex:1;overflow-y:auto;background:var(--bg)}
+.panel{display:none;padding:20px 22px;min-height:100%}
+.panel.active{display:block}
+.ph{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:10px}
+.ph-left h1{font-family:var(--display);font-size:19px;font-weight:700;letter-spacing:-.4px}
+.ph-left p{font-size:11.5px;color:var(--ink3);margin-top:3px;font-weight:300}
+.ph-right{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+
+/* ═══ BUTTONS ═══ */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:5px;padding:6px 13px;border-radius:var(--r);border:1px solid var(--bd2);background:var(--s2);color:var(--ink2);font-size:11.5px;font-weight:400;transition:all .12s;white-space:nowrap;line-height:1}
+.btn:hover{border-color:var(--acc);color:var(--acc);background:var(--acc-dim)}
+.btn-p{background:var(--acc);color:#1a1205;border-color:var(--acc);font-weight:600;box-shadow:0 2px 10px var(--acc-glow)}
+.btn-p:hover{background:var(--acc2);border-color:var(--acc2);color:#1a1205;transform:translateY(-1px)}
+.btn-sm{padding:5px 11px;font-size:11px}
+.btn-xs{padding:3px 8px;font-size:10px}
+.btn-red{border-color:rgba(255,69,96,.22);color:var(--red)}
+.btn-red:hover{background:var(--red-dim);border-color:var(--red);color:var(--red)}
+.btn-grn{background:var(--grn);color:#fff;border-color:var(--grn);font-weight:500}
+.btn-grn:hover{opacity:.85;transform:translateY(-1px)}
+.pager{display:flex;align-items:center;justify-content:center;gap:8px;padding:12px 0 2px;font-family:var(--mono);font-size:11px;color:var(--ink3)}
+
+/* ═══ KPI GRID ═══ */
+.kg{display:grid;gap:14px;margin-bottom:22px}
+.kg.c4{grid-template-columns:repeat(4,1fr)}.kg.c3{grid-template-columns:repeat(3,1fr)}.kg.c2{grid-template-columns:1fr 1fr}
+.kpi{background:var(--s1);border:1px solid var(--bd);border-radius:var(--r2);padding:16px 18px;transition:all .15s;box-shadow:0 1px 2px rgba(0,0,0,.2),0 4px 16px rgba(0,0,0,.14)}
+[data-theme="light"] .kpi{box-shadow:0 1px 2px rgba(16,24,40,.05),0 4px 14px rgba(16,24,40,.05)}
+.kpi:hover{border-color:var(--bd2)}
+.klabel{font-size:12px;color:var(--ink2);margin-bottom:11px;font-weight:500}
+.kval{font-family:var(--mono);font-size:25px;font-weight:600;letter-spacing:-.6px;line-height:1}
+.kval.blu{color:var(--acc)}.kval.red{color:var(--red)}.kval.grn{color:var(--grn)}
+.ksub{font-size:11.5px;color:var(--ink3);margin-top:6px}
+
+/* ═══ SECTION LABEL ═══ */
+.sl{font-size:11px;font-weight:600;color:var(--ink3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:12px;margin-top:26px;display:flex;align-items:center;gap:10px}
+.sl:first-child{margin-top:0}
+.sl-line{flex:1;height:1px;background:linear-gradient(90deg,var(--bd),transparent)}
+
+/* ═══ FILTER BAR ═══ */
+.fbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:14px}
+.fbar select,.fbar input{background:var(--s2);border:1px solid var(--bd2);border-radius:var(--r);color:var(--ink);font-family:var(--font);font-size:12px;padding:6px 9px;outline:none;transition:border-color .13s}
+.fbar select:focus,.fbar input:focus{border-color:var(--acc);box-shadow:0 0 0 2px var(--acc-dim)}
+.fbar input[type=search]{min-width:200px;flex:1;max-width:280px}
+.fbar .fbspacer{flex:1}
+
+/* ═══ TABLES ═══ */
+.twrap{background:var(--s1);border:1px solid var(--bd);border-radius:var(--r2);overflow-x:auto;-webkit-overflow-scrolling:touch}
+table{width:max-content;min-width:100%;border-collapse:collapse;font-size:13px}
+thead th{text-align:left;padding:11px 16px;font-size:11px;font-weight:600;color:var(--ink3);text-transform:uppercase;letter-spacing:.04em;background:var(--s2);border-bottom:1px solid var(--bd);white-space:nowrap}
+thead th.sortable{cursor:pointer;user-select:none}
+thead th.sortable:hover{color:var(--acc)}
+thead th .sarr{opacity:.4;font-size:9px;margin-left:3px}
+thead th.sorted .sarr{opacity:1;color:var(--acc)}
+tbody td{padding:11px 16px;border-bottom:1px solid var(--bd);color:var(--ink);vertical-align:middle;white-space:nowrap}
+tbody tr:last-child td{border-bottom:none}
+tbody tr:hover td{background:var(--s2)}
+td strong{font-weight:500}
+td.mono{font-family:var(--mono);font-size:12px}
+.dim{color:var(--ink3)}
+.acts{display:flex;gap:5px;white-space:nowrap}
+
+/* ═══ BADGES ═══ */
+.badge{display:inline-flex;align-items:center;padding:3px 10px;border-radius:20px;font-size:10.5px;font-weight:600;white-space:nowrap}
+.bg-grn{background:var(--grn-dim);color:var(--grn);border:1px solid rgba(46,204,138,.18)}
+.bg-red{background:var(--red-dim);color:var(--red);border:1px solid rgba(255,69,96,.18)}
+.bg-amb{background:var(--acc-dim);color:var(--acc);border:1px solid var(--acc-glow)}
+.bg-gray{background:var(--s3);color:var(--ink2);border:1px solid var(--bd2)}
+.tierpill{font-family:var(--mono);font-size:10px;padding:2px 8px;border-radius:4px;background:var(--s3);border:1px solid var(--bd2);color:var(--ink2);text-transform:capitalize}
+
+/* ═══ QUICK-ACTION MENU ═══ */
+.qmenu{position:relative;display:inline-block}
+.qmenu-pop{position:absolute;right:0;top:calc(100% + 4px);z-index:50;background:var(--s1);border:1px solid var(--bd2);border-radius:var(--r);box-shadow:0 8px 28px rgba(0,0,0,.5);min-width:168px;padding:5px;display:none}
+.qmenu-pop.open{display:block}
+.qmenu-item{display:flex;align-items:center;gap:8px;width:100%;text-align:left;padding:7px 10px;border:none;background:transparent;color:var(--ink2);font-size:12px;border-radius:6px;transition:all .1s}
+.qmenu-item:hover{background:var(--s3);color:var(--ink)}
+.qmenu-item.danger:hover{color:var(--red);background:var(--red-dim)}
+.qmenu-sep{height:1px;background:var(--bd);margin:4px 6px}
+
+/* ═══ MODALS ═══ */
+.overlay{position:fixed;inset:0;z-index:500;background:rgba(0,0,0,.8);display:none;align-items:center;justify-content:center;backdrop-filter:blur(10px);padding:16px}
+.overlay.open{display:flex}
+.modal{background:var(--s1);border:1px solid var(--bd2);border-radius:var(--r3);box-shadow:0 40px 80px rgba(0,0,0,.7);width:100%;max-width:480px;max-height:92vh;overflow-y:auto;padding:24px;position:relative}
+.modal.wide{max-width:620px}
+.modal::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--acc),transparent);border-radius:var(--r3) var(--r3) 0 0}
+.modal h2{font-family:var(--display);font-size:16px;font-weight:700;letter-spacing:-.3px;margin-bottom:3px}
+.msub{font-family:var(--mono);font-size:9.5px;color:var(--ink3);margin-bottom:18px;letter-spacing:.04em}
+.frow{margin-bottom:12px}
+.fgrid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.flabel{display:block;font-family:var(--mono);font-size:9px;font-weight:500;color:var(--ink3);margin-bottom:5px;text-transform:uppercase;letter-spacing:.09em}
+.fi,.fs,.fta{width:100%;background:var(--s2);border:1px solid var(--bd2);border-radius:var(--r);color:var(--ink);font-family:var(--font);font-size:12.5px;padding:8px 10px;outline:none;transition:border-color .13s,box-shadow .13s;font-weight:300}
+.fi:focus,.fs:focus,.fta:focus{border-color:var(--acc);box-shadow:0 0 0 3px var(--acc-dim);background:var(--s1)}
+.fs option{background:var(--s1)}
+.fta{resize:vertical;min-height:60px;line-height:1.55}
+.fhint{font-size:10px;color:var(--ink3);margin-top:4px;font-weight:300}
+.macts{display:flex;gap:6px;justify-content:flex-end;margin-top:18px}
+
+/* ═══ MISC ═══ */
+.empty{text-align:center;padding:28px 14px;font-family:var(--mono);font-size:10.5px;color:var(--ink3);letter-spacing:.05em}
+.spin{display:inline-block;width:11px;height:11px;border:2px solid var(--bd2);border-top-color:var(--acc);border-radius:50%;animation:spin .7s linear infinite;vertical-align:middle}
+@keyframes spin{to{transform:rotate(360deg)}}
+.nichegrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
+.nichecard{background:var(--s1);border:1px solid var(--bd);border-radius:var(--r2);padding:14px}
+.nichecard-n{font-family:var(--mono);font-size:9px;color:var(--ink3);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px}
+.nichecard-v{font-family:var(--display);font-size:24px;font-weight:700;color:var(--acc);letter-spacing:-.5px}
+.nichecard-s{font-size:10.5px;color:var(--ink3);margin-top:3px}
+.subrow td{background:var(--bg2);padding:12px 16px}
+.subrow .chip{display:inline-flex;align-items:center;gap:5px;background:var(--s2);border:1px solid var(--bd2);border-radius:20px;padding:3px 10px;font-size:11px;margin:2px 4px 2px 0}
+.pacebar{width:120px;height:6px;background:var(--s3);border-radius:3px;overflow:hidden;display:inline-block;vertical-align:middle;margin-right:8px}
+.pacebar>span{display:block;height:100%;border-radius:3px}
+
+/* ═══ BOTTOM NAV (mobile) ═══ */
+.bnav{display:none;position:fixed;bottom:0;left:0;right:0;height:56px;background:var(--s1);border-top:1px solid var(--bd);z-index:100;align-items:center;justify-content:space-around;padding:0 2px}
+.bnbtn{display:flex;flex-direction:column;align-items:center;gap:2px;flex:1;padding:6px 2px;border:none;background:transparent;color:var(--ink3);transition:color .12s;font-family:var(--font)}
+.bnbtn.active{color:var(--acc)}
+.bnbtn-icon svg{width:19px;height:19px;stroke:currentColor;stroke-width:1.8;fill:none;stroke-linecap:round;stroke-linejoin:round}
+.bnbtn-lbl{font-family:var(--mono);font-size:8px;font-weight:500;letter-spacing:.04em}
+
+/* ═══ TOAST ═══ */
+#lgr-toast{position:fixed;bottom:24px;right:16px;z-index:9999;padding:9px 15px;border-radius:var(--r);font-family:var(--mono);font-size:11px;letter-spacing:.04em;box-shadow:0 8px 28px rgba(0,0,0,.5);pointer-events:none;animation:fadeup .16s ease}
+@keyframes fadeup{from{transform:translateY(5px);opacity:0}to{transform:translateY(0);opacity:1}}
+
+/* ═══ RESPONSIVE ═══ */
+@media(max-width:960px){.kg.c4{grid-template-columns:repeat(2,1fr)}.kg.c3{grid-template-columns:1fr}}
+@media(max-width:700px){
+  :root{--sw:0px}
+  .sidebar{display:none}.bnav{display:flex}
+  .panel{padding:12px 12px 76px}
+  .kg.c4,.kg.c3{grid-template-columns:1fr 1fr}
+  .fgrid2{grid-template-columns:1fr}
+  #clock,.live-pill{display:none}
+  .fbar input[type=search]{max-width:none}
+}
+</style>
+</head>
+<body>
+
+<!-- ═══ LOGIN ═══ -->
+<div id="login-screen">
+  <div class="login-box">
+    <div class="login-mark">LGR</div>
+    <h1>LGR Mission Control</h1>
+    <p>Lead Gen Rentals · admin</p>
+    <div class="lf"><label>Email</label><input type="email" id="login-email" placeholder="you@example.com" autocomplete="email"></div>
+    <div class="lf"><label>Password</label><input type="password" id="login-password" placeholder="••••••••" autocomplete="current-password"></div>
+    <button class="login-btn" id="login-btn" onclick="doLogin()">Sign in →</button>
+    <div class="login-err" id="login-error"></div>
+  </div>
+</div>
+
+<!-- ═══ APP ═══ -->
+<div id="app">
+  <div class="topbar">
+    <div class="tb-mark">LGR</div>
+    <span class="tb-name">Mission Control</span>
+    <div class="tb-sep"></div>
+    <div class="tb-sp"></div>
+    <div class="live-pill"><div class="ldot"></div>LIVE</div>
+    <span id="clock"></span>
+    <button class="ibtn" onclick="nav('dashboard')" title="Below-floor alerts" style="position:relative">⚠<span id="alert-badge" style="display:none;position:absolute;top:-2px;right:-2px;background:var(--red);color:#fff;border-radius:8px;font-size:8px;padding:0 4px;font-family:var(--mono);font-weight:700;line-height:1.6">0</span></button>
+    <span class="uname-chip" id="uname"></span>
+    <button class="ibtn" id="theme-btn" onclick="toggleTheme()" title="Toggle theme">◐</button>
+    <button class="ibtn" onclick="doLogout()" title="Sign out">⎋</button>
+  </div>
+
+  <div class="layout">
+    <!-- SIDEBAR -->
+    <div class="sidebar">
+      <div class="sb-header">
+        <div class="sb-logo-row">
+          <div class="sb-logo">LGR</div>
+          <div>
+            <div class="sb-brand">Lead Gen Rentals</div>
+            <div class="sb-brand-sub">Mission Control</div>
+          </div>
+        </div>
+        <div class="sb-status"><div class="sb-status-dot"></div>All systems live</div>
+      </div>
+      <div class="sb-nav">
+        <div class="sb-group">
+          <span class="sb-group-label">Overview</span>
+          <button class="navbtn active" data-panel="dashboard" onclick="nav('dashboard',this)">
+            <span class="ni"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/></svg></span>Dashboard
+          </button>
+        </div>
+        <div class="sb-divider"></div>
+        <div class="sb-group">
+          <span class="sb-group-label">Inventory</span>
+          <button class="navbtn" data-panel="assets" onclick="nav('assets',this)">
+            <span class="ni"><svg viewBox="0 0 24 24"><path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/><path d="M3.27 6.96L12 12.01l8.73-5.05M12 22.08V12"/></svg></span>Assets
+          </button>
+          <button class="navbtn" data-panel="rentals" onclick="nav('rentals',this)">
+            <span class="ni"><svg viewBox="0 0 24 24"><path d="M20 7h-9M14 17H5"/><circle cx="17" cy="17" r="3"/><circle cx="7" cy="7" r="3"/></svg></span>Rentals
+          </button>
+        </div>
+        <div class="sb-divider"></div>
+        <div class="sb-group">
+          <span class="sb-group-label">People &amp; Leads</span>
+          <button class="navbtn" data-panel="installers" onclick="nav('installers',this)">
+            <span class="ni"><svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg></span>Installers
+          </button>
+          <button class="navbtn" data-panel="leads" onclick="nav('leads',this)">
+            <span class="ni"><svg viewBox="0 0 24 24"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg></span>Leads
+          </button>
+        </div>
+        <div class="sb-divider"></div>
+        <div class="sb-group">
+          <span class="sb-group-label">Catalog</span>
+          <button class="navbtn" data-panel="niches" onclick="nav('niches',this)">
+            <span class="ni"><svg viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h10"/></svg></span>Niches
+          </button>
+          <button class="navbtn" data-panel="regions" onclick="nav('regions',this)">
+            <span class="ni"><svg viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg></span>Regions
+          </button>
+        </div>
+      </div>
+      <div class="sb-bottom">
+        <button class="navbtn" onclick="doLogout()">
+          <span class="ni"><svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9"/></svg></span>Sign out
+        </button>
+      </div>
+    </div>
+
+    <!-- CONTENT -->
+    <div class="content">
+
+      <!-- ═══ DASHBOARD ═══ -->
+      <div class="panel active" id="panel-dashboard">
+        <div class="ph">
+          <div class="ph-left"><h1>Dashboard</h1><p>Live snapshot across the LGR fleet</p></div>
+          <div class="ph-right"><button class="btn btn-sm" onclick="loadDashboard()">↻ Refresh</button></div>
+        </div>
+        <div class="kg c4">
+          <div class="kpi"><div class="klabel">Active rentals</div><div class="kval blu" id="db-active">—</div><div class="ksub" id="db-active-sub"></div></div>
+          <div class="kpi"><div class="klabel">Leads this month</div><div class="kval grn" id="db-leads">—</div><div class="ksub" id="db-leads-sub"></div></div>
+          <div class="kpi"><div class="klabel">Below floor pace</div><div class="kval red" id="db-below">—</div><div class="ksub">Early-warning flags</div></div>
+          <div class="kpi"><div class="klabel">Available assets</div><div class="kval" id="db-avail">—</div><div class="ksub" id="db-avail-sub"></div></div>
+        </div>
+
+        <div class="sl">Leads delivered · last 14 days<div class="sl-line"></div></div>
+        <div style="background:var(--s1);border:1px solid var(--bd);border-radius:var(--r2);padding:16px;margin-bottom:8px"><canvas id="db-chart" height="90"></canvas></div>
+
+        <div class="sl">⚠ Assets below floor pace<div class="sl-line"></div></div>
+        <div class="twrap">
+          <table>
+            <thead><tr><th>Asset</th><th>Installer</th><th>Day</th><th>Leads so far</th><th>Projected / floor</th><th>Pace</th></tr></thead>
+            <tbody id="db-below-tbody"><tr><td colspan="6" class="empty">Loading…</td></tr></tbody>
+          </table>
+        </div>
+
+        <div class="sl">Available assets per niche<div class="sl-line"></div></div>
+        <div class="nichegrid" id="db-niche-grid"></div>
+      </div>
+
+      <!-- ═══ ASSETS ═══ -->
+      <div class="panel" id="panel-assets">
+        <div class="ph">
+          <div class="ph-left"><h1>Assets</h1><p>Rentable lead funnels — full CRUD</p></div>
+          <div class="ph-right"><button class="btn btn-p" onclick="openAssetModal()">+ New asset</button></div>
+        </div>
+        <div class="fbar">
+          <input type="search" id="af-search" placeholder="Search brand or domain…" oninput="renderAssets()">
+          <select class="fs" id="af-niche" onchange="renderAssets()" style="width:auto"><option value="">All niches</option></select>
+          <select class="fs" id="af-region" onchange="renderAssets()" style="width:auto"><option value="">All regions</option></select>
+          <select class="fs" id="af-tier" onchange="renderAssets()" style="width:auto"><option value="">All tiers</option><option value="starter">Starter</option><option value="growth">Growth</option><option value="scale">Scale</option></select>
+          <select class="fs" id="af-status" onchange="renderAssets()" style="width:auto"><option value="">All statuses</option><option value="available">Available</option><option value="rented">Rented</option><option value="maintenance">Maintenance</option></select>
+          <label style="font-size:11px;color:var(--ink3);display:flex;align-items:center;gap:5px"><input type="checkbox" id="af-deleted" onchange="renderAssets()">show deleted</label>
+        </div>
+        <div class="twrap">
+          <table>
+            <thead><tr id="assets-head"></tr></thead>
+            <tbody id="assets-tbody"><tr><td colspan="10" class="empty">Loading…</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ═══ RENTALS ═══ -->
+      <div class="panel" id="panel-rentals">
+        <div class="ph">
+          <div class="ph-left"><h1>Rentals</h1><p>Rental contract history</p></div>
+        </div>
+        <div class="fbar">
+          <select class="fs" id="rf-installer" onchange="renderRentals()" style="width:auto"><option value="">All installers</option></select>
+          <select class="fs" id="rf-asset" onchange="renderRentals()" style="width:auto"><option value="">All assets</option></select>
+          <select class="fs" id="rf-state" onchange="renderRentals()" style="width:auto"><option value="">Active &amp; ended</option><option value="active">Active only</option><option value="ended">Ended only</option></select>
+        </div>
+        <div class="twrap">
+          <table>
+            <thead><tr><th>Asset</th><th>Installer</th><th>Started</th><th>Ended</th><th>Monthly</th><th>Floor</th><th>Status</th><th></th></tr></thead>
+            <tbody id="rentals-tbody"><tr><td colspan="8" class="empty">Loading…</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ═══ INSTALLERS ═══ -->
+      <div class="panel" id="panel-installers">
+        <div class="ph">
+          <div class="ph-left"><h1>Installers</h1><p>The buyers — full CRUD</p></div>
+          <div class="ph-right"><button class="btn btn-p" onclick="openInstallerModal()">+ New installer</button></div>
+        </div>
+        <div class="twrap">
+          <table>
+            <thead><tr><th>Business</th><th>Contact</th><th>Email</th><th>Phone</th><th>Renting</th><th></th></tr></thead>
+            <tbody id="installers-tbody"><tr><td colspan="6" class="empty">Loading…</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ═══ LEADS ═══ -->
+      <div class="panel" id="panel-leads">
+        <div class="ph">
+          <div class="ph-left"><h1>Leads</h1><p>Read-only delivery log</p></div>
+          <div class="ph-right"><button class="btn btn-sm" onclick="exportLeadsCsv()">↓ Export CSV</button></div>
+        </div>
+        <div class="sl">Per-installer leads · current 30-day cycle<div class="sl-line"></div></div>
+        <div class="nichegrid" id="leads-cycle-grid" style="margin-bottom:8px"></div>
+        <div class="sl">Lead log<div class="sl-line"></div></div>
+        <div class="fbar">
+          <select class="fs" id="lf-asset" onchange="loadLeadsPanel()" style="width:auto"><option value="">All assets</option></select>
+          <select class="fs" id="lf-installer" onchange="loadLeadsPanel()" style="width:auto"><option value="">All installers</option></select>
+          <select class="fs" id="lf-status" onchange="loadLeadsPanel()" style="width:auto"><option value="">All statuses</option><option value="delivered">Delivered</option><option value="duplicate">Duplicate</option><option value="invalid">Invalid</option></select>
+          <label style="font-size:11px;color:var(--ink3)">From <input type="date" id="lf-from" onchange="loadLeadsPanel()"></label>
+          <label style="font-size:11px;color:var(--ink3)">To <input type="date" id="lf-to" onchange="loadLeadsPanel()"></label>
+        </div>
+        <div class="twrap">
+          <table>
+            <thead><tr><th>Captured</th><th>Name</th><th>Phone</th><th>Email</th><th>Postcode</th><th>Asset</th><th>Installer</th><th>Status</th></tr></thead>
+            <tbody id="leads-tbody"><tr><td colspan="8" class="empty">Loading…</td></tr></tbody>
+          </table>
+        </div>
+        <div class="pager" id="leads-count"></div>
+      </div>
+
+      <!-- ═══ NICHES ═══ -->
+      <div class="panel" id="panel-niches">
+        <div class="ph">
+          <div class="ph-left"><h1>Niches</h1><p>Trade categories — full CRUD</p></div>
+          <div class="ph-right"><button class="btn btn-p" onclick="openNicheModal()">+ New niche</button></div>
+        </div>
+        <div class="twrap">
+          <table>
+            <thead><tr><th>Name</th><th>Slug</th><th>Description</th><th>Status</th><th>Sort</th><th>Assets</th><th></th></tr></thead>
+            <tbody id="niches-tbody"><tr><td colspan="7" class="empty">Loading…</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ═══ REGIONS ═══ -->
+      <div class="panel" id="panel-regions">
+        <div class="ph">
+          <div class="ph-left"><h1>Regions</h1><p>Geographic areas — full CRUD</p></div>
+          <div class="ph-right"><button class="btn btn-p" onclick="openRegionModal()">+ New region</button></div>
+        </div>
+        <div class="twrap">
+          <table>
+            <thead><tr><th>Name</th><th>Slug</th><th>State</th><th>Sort</th><th>Assets</th><th></th></tr></thead>
+            <tbody id="regions-tbody"><tr><td colspan="6" class="empty">Loading…</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- BOTTOM NAV (mobile) -->
+  <div class="bnav">
+    <button class="bnbtn active" data-panel="dashboard" onclick="nav('dashboard',this)"><span class="bnbtn-icon"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/></svg></span><span class="bnbtn-lbl">Home</span></button>
+    <button class="bnbtn" data-panel="assets" onclick="nav('assets',this)"><span class="bnbtn-icon"><svg viewBox="0 0 24 24"><path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/></svg></span><span class="bnbtn-lbl">Assets</span></button>
+    <button class="bnbtn" data-panel="rentals" onclick="nav('rentals',this)"><span class="bnbtn-icon"><svg viewBox="0 0 24 24"><circle cx="17" cy="17" r="3"/><circle cx="7" cy="7" r="3"/><path d="M20 7h-9M14 17H5"/></svg></span><span class="bnbtn-lbl">Rentals</span></button>
+    <button class="bnbtn" data-panel="installers" onclick="nav('installers',this)"><span class="bnbtn-icon"><svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/></svg></span><span class="bnbtn-lbl">Installers</span></button>
+    <button class="bnbtn" data-panel="leads" onclick="nav('leads',this)"><span class="bnbtn-icon"><svg viewBox="0 0 24 24"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg></span><span class="bnbtn-lbl">Leads</span></button>
+  </div>
+</div>
+
+<!-- ═══ ASSET MODAL ═══ -->
+<div class="overlay" id="m-asset">
+  <div class="modal wide">
+    <h2 id="ma-title">New asset</h2>
+    <div class="msub" id="ma-sub">Create a rentable funnel</div>
+    <input type="hidden" id="ma-id">
+    <div class="fgrid2">
+      <div class="frow"><label class="flabel">Brand name *</label><input class="fi" id="ma-brand" placeholder="Brisbane Solar Quotes"></div>
+      <div class="frow"><label class="flabel">Brand domain</label><input class="fi" id="ma-domain" placeholder="brisbanesolarquotes.com.au"></div>
+      <div class="frow"><label class="flabel">Niche *</label><select class="fs" id="ma-niche"></select></div>
+      <div class="frow"><label class="flabel">Region *</label><select class="fs" id="ma-region"></select></div>
+      <div class="frow"><label class="flabel">Tier *</label><select class="fs" id="ma-tier" onchange="applyTierDefaults()"><option value="starter">Starter</option><option value="growth">Growth</option><option value="scale">Scale</option></select><div class="fhint">Auto-fills price + floor (overridable)</div></div>
+      <div class="frow"><label class="flabel">Status *</label><select class="fs" id="ma-status" onchange="onAssetStatusChange()"><option value="available">Available</option><option value="rented">Rented</option><option value="maintenance">Maintenance</option></select></div>
+      <div class="frow"><label class="flabel">Monthly price (AUD) *</label><input class="fi" id="ma-price" type="number" min="0"></div>
+      <div class="frow"><label class="flabel">Floor leads *</label><input class="fi" id="ma-floor" type="number" min="0"></div>
+      <div class="frow"><label class="flabel">Typical min / mo</label><input class="fi" id="ma-tmin" type="number" min="0"></div>
+      <div class="frow"><label class="flabel">Typical max / mo</label><input class="fi" id="ma-tmax" type="number" min="0"></div>
+      <div class="frow" id="ma-rentedby-row"><label class="flabel">Rented by</label><select class="fs" id="ma-rentedby"><option value="">— none —</option></select></div>
+      <div class="frow" id="ma-renteduntil-row"><label class="flabel">Rented until</label><input class="fi" id="ma-until" type="date"></div>
+    </div>
+    <div class="macts"><button class="btn" onclick="closeModal('m-asset')">Cancel</button><button class="btn btn-p" id="ma-save" onclick="saveAsset()">Save asset</button></div>
+  </div>
+</div>
+
+<!-- ═══ INSTALLER MODAL ═══ -->
+<div class="overlay" id="m-installer">
+  <div class="modal">
+    <h2 id="mi-title">New installer</h2>
+    <div class="msub">The buyer that rents assets</div>
+    <input type="hidden" id="mi-id">
+    <div class="frow"><label class="flabel">Business name *</label><input class="fi" id="mi-business" placeholder="Sunrun Solar Co"></div>
+    <div class="fgrid2">
+      <div class="frow"><label class="flabel">Contact name</label><input class="fi" id="mi-contact"></div>
+      <div class="frow"><label class="flabel">Phone</label><input class="fi" id="mi-phone"></div>
+    </div>
+    <div class="frow"><label class="flabel">Email *</label><input class="fi" id="mi-email" type="email"></div>
+    <div class="macts"><button class="btn" onclick="closeModal('m-installer')">Cancel</button><button class="btn btn-p" id="mi-save" onclick="saveInstaller()">Save installer</button></div>
+  </div>
+</div>
+
+<!-- ═══ NICHE MODAL ═══ -->
+<div class="overlay" id="m-niche">
+  <div class="modal">
+    <h2 id="mn-title">New niche</h2>
+    <div class="msub">Trade category</div>
+    <input type="hidden" id="mn-id">
+    <div class="fgrid2">
+      <div class="frow"><label class="flabel">Name *</label><input class="fi" id="mn-name" placeholder="Residential Solar"></div>
+      <div class="frow"><label class="flabel">Slug *</label><input class="fi" id="mn-slug" placeholder="solar"></div>
+    </div>
+    <div class="frow"><label class="flabel">Short description</label><textarea class="fta" id="mn-desc" placeholder="~12-word blurb for the homepage picker"></textarea></div>
+    <div class="fgrid2">
+      <div class="frow"><label class="flabel">Status</label><select class="fs" id="mn-status"><option value="live">Live</option><option value="coming_soon">Coming soon</option><option value="paused">Paused</option></select></div>
+      <div class="frow"><label class="flabel">Sort order</label><input class="fi" id="mn-sort" type="number" value="0"></div>
+    </div>
+    <div class="macts"><button class="btn" onclick="closeModal('m-niche')">Cancel</button><button class="btn btn-p" id="mn-save" onclick="saveNiche()">Save niche</button></div>
+  </div>
+</div>
+
+<!-- ═══ REGION MODAL ═══ -->
+<div class="overlay" id="m-region">
+  <div class="modal">
+    <h2 id="mr-title">New region</h2>
+    <div class="msub">Geographic area</div>
+    <input type="hidden" id="mr-id">
+    <div class="fgrid2">
+      <div class="frow"><label class="flabel">Name *</label><input class="fi" id="mr-name" placeholder="Brisbane"></div>
+      <div class="frow"><label class="flabel">Slug *</label><input class="fi" id="mr-slug" placeholder="brisbane"></div>
+      <div class="frow"><label class="flabel">State</label><input class="fi" id="mr-state" placeholder="QLD"></div>
+      <div class="frow"><label class="flabel">Sort order</label><input class="fi" id="mr-sort" type="number" value="0"></div>
+    </div>
+    <div class="macts"><button class="btn" onclick="closeModal('m-region')">Cancel</button><button class="btn btn-p" id="mr-save" onclick="saveRegion()">Save region</button></div>
+  </div>
+</div>
+
+<script>
+'use strict';
+const CFG = window.LGR_MC_SUPABASE || {};
+let db, currentUser;
+const TIER_DEFAULTS = { starter:{price:1200,floor:10}, growth:{price:2400,floor:20}, scale:{price:3600,floor:30} };
+
+/* caches */
+let _niches=[], _regions=[], _installers=[], _assets=[];
+
+/* ── helpers ─────────────────────────────────────────────────────────────── */
+const $ = id => document.getElementById(id);
+const setText = (id,v)=>{const e=$(id); if(e) e.textContent=v;};
+const setVal = (id,v)=>{const e=$(id); if(e) e.value = v ?? '';};
+const esc = s => String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+const now = ()=> new Date().toISOString();
+const fmtAud = n => (n==null||n==='') ? '—' : '$'+Number(n).toLocaleString('en-AU',{maximumFractionDigits:0});
+const fmtDate = d => d ? new Date(d).toLocaleDateString('en-AU',{day:'numeric',month:'short',year:'numeric'}) : '—';
+const fmtDateTime = d => d ? new Date(d).toLocaleString('en-AU',{day:'numeric',month:'short',hour:'numeric',minute:'2-digit',hour12:true}) : '—';
+const daysBetween = (a,b)=> Math.max(0,(new Date(b)-new Date(a))/86400000);
+
+function toast(msg, err=false){
+  const old=$('lgr-toast'); if(old) old.remove();
+  const t=document.createElement('div'); t.id='lgr-toast'; t.textContent=msg;
+  t.style.cssText=`background:${err?'var(--s1)':'var(--acc)'};color:${err?'var(--red)':'#1a1205'};border:1px solid ${err?'rgba(255,69,96,.3)':'transparent'};font-weight:500`;
+  document.body.appendChild(t); setTimeout(()=>t.remove(),3200);
+}
+function openModal(id){ $(id).classList.add('open'); }
+function closeModal(id){ $(id).classList.remove('open'); }
+document.addEventListener('click', e => { if(e.target.classList.contains('overlay')) e.target.classList.remove('open'); });
+document.addEventListener('click', e => { if(!e.target.closest('.qmenu')) document.querySelectorAll('.qmenu-pop.open').forEach(p=>p.classList.remove('open')); });
+
+function toggleTheme(){
+  const dark = document.documentElement.getAttribute('data-theme')==='dark';
+  document.documentElement.setAttribute('data-theme', dark?'light':'dark');
+  $('theme-btn').textContent = dark?'◑':'◐';
+  localStorage.setItem('lgr-mc-theme', dark?'light':'dark');
+}
+function updateClock(){ setText('clock', new Date().toLocaleTimeString('en-AU',{hour:'2-digit',minute:'2-digit',hour12:false})+' AEST'); }
+
+/* ── boot + auth ─────────────────────────────────────────────────────────── */
+window.addEventListener('load', () => {
+  const saved = localStorage.getItem('lgr-mc-theme') || 'dark';
+  document.documentElement.setAttribute('data-theme', saved);
+  $('theme-btn').textContent = saved==='dark'?'◐':'◑';
+  setInterval(updateClock,1000); updateClock();
+  initSupabase();
+});
+document.addEventListener('keydown', e => { if(e.key==='Enter' && $('login-screen').style.display!=='none') doLogin(); });
+
+function initSupabase(){
+  try{
+    if(!window.supabase){ $('login-error').textContent='Supabase library failed to load.'; return; }
+    if(!CFG.url || !CFG.anonKey){ $('login-error').textContent='Missing Supabase config (mc/supabase-config.js).'; return; }
+    db = window.supabase.createClient(CFG.url, CFG.anonKey);
+    db.auth.onAuthStateChange((_e, session) => {
+      if(session){
+        currentUser = session.user;
+        setText('uname', currentUser.email.split('@')[0]);
+        $('login-screen').style.display='none';
+        $('app').classList.add('visible');
+        bootData();
+      } else {
+        currentUser=null;
+        $('login-screen').style.display='flex';
+        $('app').classList.remove('visible');
+      }
+    });
+  } catch(e){ $('login-error').textContent='Init error: '+e.message; }
+}
+async function doLogin(){
+  const email=$('login-email').value.trim(), pass=$('login-password').value;
+  const btn=$('login-btn'), err=$('login-error');
+  if(!email||!pass){ err.textContent='Email and password required.'; return; }
+  btn.disabled=true; btn.textContent='Signing in…'; err.textContent='';
+  const { data, error } = await db.auth.signInWithPassword({email, password:pass});
+  if(error){ err.textContent=error.message; btn.disabled=false; btn.textContent='Sign in →'; }
+  else if(!data?.session){ err.textContent='Login failed.'; btn.disabled=false; btn.textContent='Sign in →'; }
+}
+async function doLogout(){ if(!confirm('Sign out?')) return; if(db) await db.auth.signOut(); }
+
+/* ── reference data ──────────────────────────────────────────────────────── */
+async function bootData(){
+  await loadRefData();
+  nav('dashboard');
+}
+async function loadRefData(){
+  const [n,r,i] = await Promise.all([
+    db.from('niches').select('*').order('sort_order'),
+    db.from('regions').select('*').order('sort_order'),
+    db.from('installers').select('*').order('business_name'),
+  ]);
+  _niches = n.data||[]; _regions = r.data||[]; _installers = i.data||[];
+  // populate all selects
+  const nicheOpts = _niches.map(x=>`<option value="${x.id}">${esc(x.name)}</option>`).join('');
+  const regionOpts = _regions.map(x=>`<option value="${x.id}">${esc(x.name)}</option>`).join('');
+  const instOpts = _installers.map(x=>`<option value="${x.id}">${esc(x.business_name)}</option>`).join('');
+  fillSelect('af-niche','All niches',nicheOpts);
+  fillSelect('af-region','All regions',regionOpts);
+  fillSelect('rf-installer','All installers',instOpts);
+  fillSelect('rf-asset','All assets','');
+  fillSelect('lf-installer','All installers',instOpts);
+  $('ma-niche').innerHTML = nicheOpts;
+  $('ma-region').innerHTML = regionOpts;
+  $('ma-rentedby').innerHTML = '<option value="">— none —</option>'+instOpts;
+}
+function fillSelect(id, allLabel, opts){
+  const el=$(id); if(!el) return; const cur=el.value;
+  el.innerHTML = `<option value="">${allLabel}</option>`+opts;
+  el.value = cur;
+}
+const nicheName = id => (_niches.find(x=>x.id===id)||{}).name || '—';
+const regionName = id => (_regions.find(x=>x.id===id)||{}).name || '—';
+const installerName = id => (_installers.find(x=>x.id===id)||{}).business_name || '—';
+
+/* ── router ──────────────────────────────────────────────────────────────── */
+function nav(panel, el){
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  $('panel-'+panel).classList.add('active');
+  document.querySelectorAll('.navbtn,.bnbtn').forEach(b=>b.classList.remove('active'));
+  document.querySelectorAll(`[data-panel="${panel}"]`).forEach(b=>b.classList.add('active'));
+  if(panel==='dashboard') loadDashboard();
+  if(panel==='assets') loadAssets();
+  if(panel==='rentals') loadRentals();
+  if(panel==='installers') loadInstallers();
+  if(panel==='leads'){ loadLeadCycle(); loadLeadsPanel(); }
+  if(panel==='niches') loadNiches();
+  if(panel==='regions') loadRegions();
+}
+
+/* ════════════════════════════════════════════════════════════════════════
+   DASHBOARD
+   ════════════════════════════════════════════════════════════════════════ */
+async function loadDashboard(){
+  setText('db-active','…'); setText('db-leads','…'); setText('db-below','…'); setText('db-avail','…');
+  $('db-below-tbody').innerHTML = '<tr><td colspan="6" class="empty">Loading…</td></tr>';
+  // rented assets (with niche/region), all live assets, this-month leads, cycle leads
+  const monthStart = new Date(); monthStart.setDate(1); monthStart.setHours(0,0,0,0);
+  const since = new Date(Date.now()-35*86400000).toISOString();
+  const [assetsRes, monthLeadsRes, cycleLeadsRes] = await Promise.all([
+    db.from('assets').select('*').is('deleted_at',null),
+    db.from('leads').select('id',{count:'exact',head:true}).eq('status','delivered').gte('captured_at', monthStart.toISOString()),
+    db.from('leads').select('asset_id,installer_id,captured_at,status').eq('status','delivered').gte('captured_at', since),
+  ]);
+  const assets = assetsRes.data||[];
+  const rented = assets.filter(a=>a.status==='rented');
+  const available = assets.filter(a=>a.status==='available');
+  const cycleLeads = cycleLeadsRes.data||[];
+
+  setText('db-active', rented.length);
+  setText('db-active-sub', `${assets.length} live assets`);
+  setText('db-leads', monthLeadsRes.count ?? 0);
+  setText('db-leads-sub', 'delivered · month to date');
+  setText('db-avail', available.length);
+  setText('db-avail-sub', `${_niches.length} niches`);
+
+  // below-floor pace
+  const flagged = [];
+  for(const a of rented){
+    const p = pace(a, cycleLeads);
+    if(p && p.projected < a.floor_leads) flagged.push({a,p});
+  }
+  flagged.sort((x,y)=> (x.p.projected/x.a.floor_leads) - (y.p.projected/y.a.floor_leads));
+  setText('db-below', flagged.length);
+  updateAlertBadge(flagged.length);
+  renderLeadsChart(cycleLeadsRes.data||[]);
+  $('db-below-tbody').innerHTML = flagged.length ? flagged.map(({a,p})=>{
+    const pct = Math.min(100, Math.round(p.projected/a.floor_leads*100));
+    return `<tr>
+      <td><strong>${esc(a.brand_name)}</strong><div class="dim" style="font-size:11px">${esc(nicheName(a.niche_id))} · ${esc(regionName(a.region_id))}</div></td>
+      <td>${esc(installerName(a.rented_by))}</td>
+      <td class="mono">${p.day} / 30</td>
+      <td class="mono">${p.leads}</td>
+      <td class="mono"><span style="color:var(--red)">${p.projected}</span> / ${a.floor_leads}</td>
+      <td><span class="pacebar"><span style="width:${pct}%;background:var(--red)"></span></span><span class="mono" style="font-size:11px">${pct}%</span></td>
+    </tr>`;
+  }).join('') : '<tr><td colspan="6" class="empty">✓ Every rented asset is on or above floor pace</td></tr>';
+
+  // available per niche
+  const grid = $('db-niche-grid');
+  grid.innerHTML = _niches.map(n=>{
+    const cnt = available.filter(a=>a.niche_id===n.id).length;
+    const total = assets.filter(a=>a.niche_id===n.id).length;
+    return `<div class="nichecard"><div class="nichecard-n">${esc(n.name)}</div><div class="nichecard-v">${cnt}</div><div class="nichecard-s">available · ${total} total</div></div>`;
+  }).join('') || '<div class="empty">No niches</div>';
+}
+function updateAlertBadge(n){
+  const b=$('alert-badge'); if(!b) return;
+  if(n>0){ b.textContent=n; b.style.display='block'; } else b.style.display='none';
+}
+let _dbChart=null;
+function renderLeadsChart(leads){
+  const el=$('db-chart'); if(!el || !window.Chart) return;
+  const days=[]; const counts=[];
+  for(let i=13;i>=0;i--){
+    const d=new Date(); d.setHours(0,0,0,0); d.setDate(d.getDate()-i);
+    const next=new Date(d); next.setDate(next.getDate()+1);
+    days.push(d.toLocaleDateString('en-AU',{day:'numeric',month:'short'}));
+    counts.push(leads.filter(l=>{ const c=new Date(l.captured_at); return c>=d && c<next; }).length);
+  }
+  const css=getComputedStyle(document.documentElement);
+  const acc=css.getPropertyValue('--acc').trim(), ink3=css.getPropertyValue('--ink3').trim(), bd=css.getPropertyValue('--bd').trim();
+  if(_dbChart) _dbChart.destroy();
+  _dbChart=new Chart(el,{ type:'bar',
+    data:{ labels:days, datasets:[{ data:counts, backgroundColor:acc, borderRadius:4, maxBarThickness:26 }] },
+    options:{ responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}},
+      scales:{ x:{grid:{display:false},ticks:{color:ink3,font:{size:9}}},
+               y:{beginAtZero:true,grid:{color:bd},ticks:{color:ink3,font:{size:9},precision:0}} } }
+  });
+}
+// pace = leads_so_far / days_into_cycle * 30, cycle = [rented_until-30d, rented_until]
+function pace(a, cycleLeads){
+  if(!a.rented_until) return null;
+  const end = new Date(a.rented_until+'T00:00:00');
+  const start = new Date(end); start.setDate(start.getDate()-30);
+  const nowD = new Date();
+  const cursor = nowD < end ? nowD : end;
+  const day = Math.max(1, Math.round(daysBetween(start, cursor)));
+  const leads = cycleLeads.filter(l => l.asset_id===a.id && l.installer_id===a.rented_by && new Date(l.captured_at)>=start).length;
+  const projected = Math.round(leads / day * 30);
+  return { day, leads, projected };
+}
+
+/* ════════════════════════════════════════════════════════════════════════
+   ASSETS
+   ════════════════════════════════════════════════════════════════════════ */
+const ASSET_COLS = [
+  {k:'brand_name', label:'Brand'},
+  {k:'brand_domain', label:'Domain'},
+  {k:'niche', label:'Niche'},
+  {k:'region', label:'Region'},
+  {k:'tier', label:'Tier'},
+  {k:'monthly_price_aud', label:'Monthly'},
+  {k:'floor_leads', label:'Floor'},
+  {k:'status', label:'Status'},
+  {k:'rented_until', label:'Rented until'},
+];
+let assetSort = { col:'brand_name', dir:1 };
+function assetSortVal(a,k){
+  if(k==='niche') return nicheName(a.niche_id).toLowerCase();
+  if(k==='region') return regionName(a.region_id).toLowerCase();
+  const v=a[k]; return typeof v==='string'? v.toLowerCase() : (v ?? -Infinity);
+}
+function setAssetSort(col){
+  if(assetSort.col===col) assetSort.dir*=-1; else assetSort={col,dir:1};
+  renderAssets();
+}
+async function loadAssets(){
+  $('assets-tbody').innerHTML='<tr><td colspan="10" class="empty">Loading…</td></tr>';
+  const { data, error } = await db.from('assets').select('*').order('brand_name');
+  if(error){ $('assets-tbody').innerHTML=`<tr><td colspan="10" class="empty" style="color:var(--red)">${esc(error.message)}</td></tr>`; return; }
+  _assets = data||[];
+  renderAssets();
+}
+function renderAssets(){
+  // header (sortable)
+  $('assets-head').innerHTML = ASSET_COLS.map(c=>{
+    const sorted = assetSort.col===c.k;
+    const arr = sorted ? (assetSort.dir>0?'▲':'▼') : '▲';
+    return `<th class="sortable ${sorted?'sorted':''}" onclick="setAssetSort('${c.k}')">${c.label}<span class="sarr">${arr}</span></th>`;
+  }).join('') + '<th></th>';
+
+  const q = $('af-search').value.trim().toLowerCase();
+  const fn=$('af-niche').value, fr=$('af-region').value, ft=$('af-tier').value, fs=$('af-status').value;
+  const showDeleted = $('af-deleted').checked;
+  let rows = _assets.filter(a=>{
+    if(!showDeleted && a.deleted_at) return false;
+    if(showDeleted && !a.deleted_at) return false;
+    if(fn && a.niche_id!==fn) return false;
+    if(fr && a.region_id!==fr) return false;
+    if(ft && a.tier!==ft) return false;
+    if(fs && a.status!==fs) return false;
+    if(q && !(`${a.brand_name} ${a.brand_domain||''}`.toLowerCase().includes(q))) return false;
+    return true;
+  });
+  rows.sort((a,b)=>{ const va=assetSortVal(a,assetSort.col), vb=assetSortVal(b,assetSort.col); return (va<vb?-1:va>vb?1:0)*assetSort.dir; });
+
+  $('assets-tbody').innerHTML = rows.length ? rows.map(a=>{
+    const badge = a.status==='available'?'bg-grn':a.status==='rented'?'bg-amb':'bg-gray';
+    const del = a.deleted_at ? ' style="opacity:.5"' : '';
+    return `<tr${del}>
+      <td><strong>${esc(a.brand_name)}</strong>${a.deleted_at?' <span class="badge bg-red">deleted</span>':''}</td>
+      <td class="mono dim">${esc(a.brand_domain||'—')}</td>
+      <td>${esc(nicheName(a.niche_id))}</td>
+      <td>${esc(regionName(a.region_id))}</td>
+      <td><span class="tierpill">${esc(a.tier)}</span></td>
+      <td class="mono">${fmtAud(a.monthly_price_aud)}</td>
+      <td class="mono">${a.floor_leads}</td>
+      <td><span class="badge ${badge}">${esc(a.status)}</span></td>
+      <td class="mono dim">${fmtDate(a.rented_until)}</td>
+      <td class="acts">${a.deleted_at
+        ? `<button class="btn btn-xs" onclick="restoreAsset('${a.id}')">Restore</button>`
+        : `<button class="btn btn-xs" onclick="openAssetModal('${a.id}')">Edit</button>${assetQuickMenu(a)}`}</td>
+    </tr>`;
+  }).join('') : '<tr><td colspan="10" class="empty">No assets match.</td></tr>';
+}
+function assetQuickMenu(a){
+  const statuses = ['available','rented','maintenance'].filter(s=>s!==a.status);
+  return `<div class="qmenu">
+    <button class="btn btn-xs" onclick="this.nextElementSibling.classList.toggle('open')">⋯</button>
+    <div class="qmenu-pop">
+      ${statuses.map(s=>`<button class="qmenu-item" onclick="markAssetStatus('${a.id}','${s}')">Mark ${s}</button>`).join('')}
+      <div class="qmenu-sep"></div>
+      <button class="qmenu-item" onclick="duplicateAsset('${a.id}')">Duplicate</button>
+      <button class="qmenu-item danger" onclick="softDeleteAsset('${a.id}')">Soft-delete</button>
+    </div>
+  </div>`;
+}
+function openAssetModal(id){
+  const a = id ? _assets.find(x=>x.id===id) : null;
+  setVal('ma-id', a?a.id:'');
+  setText('ma-title', a?'Edit asset':'New asset');
+  setText('ma-sub', a?esc(a.brand_name):'Create a rentable funnel');
+  setVal('ma-brand', a?.brand_name);
+  setVal('ma-domain', a?.brand_domain);
+  $('ma-niche').value = a?.niche_id || (_niches[0]?.id||'');
+  $('ma-region').value = a?.region_id || (_regions[0]?.id||'');
+  $('ma-tier').value = a?.tier || 'starter';
+  $('ma-status').value = a?.status || 'available';
+  setVal('ma-price', a?.monthly_price_aud ?? TIER_DEFAULTS.starter.price);
+  setVal('ma-floor', a?.floor_leads ?? TIER_DEFAULTS.starter.floor);
+  setVal('ma-tmin', a?.typical_min);
+  setVal('ma-tmax', a?.typical_max);
+  $('ma-rentedby').value = a?.rented_by || '';
+  setVal('ma-until', a?.rented_until);
+  onAssetStatusChange();
+  openModal('m-asset');
+}
+function applyTierDefaults(){
+  const d = TIER_DEFAULTS[$('ma-tier').value]; if(!d) return;
+  setVal('ma-price', d.price); setVal('ma-floor', d.floor);
+}
+function onAssetStatusChange(){
+  const rented = $('ma-status').value==='rented';
+  $('ma-rentedby-row').style.opacity = rented?'1':'.5';
+  $('ma-renteduntil-row').style.opacity = rented?'1':'.5';
+}
+async function saveAsset(){
+  const id = $('ma-id').value;
+  const status = $('ma-status').value;
+  const rentedBy = $('ma-rentedby').value || null;
+  const payload = {
+    brand_name: $('ma-brand').value.trim(),
+    brand_domain: $('ma-domain').value.trim() || null,
+    niche_id: $('ma-niche').value,
+    region_id: $('ma-region').value,
+    tier: $('ma-tier').value,
+    status,
+    monthly_price_aud: parseInt($('ma-price').value,10),
+    floor_leads: parseInt($('ma-floor').value,10),
+    typical_min: $('ma-tmin').value?parseInt($('ma-tmin').value,10):null,
+    typical_max: $('ma-tmax').value?parseInt($('ma-tmax').value,10):null,
+    rented_by: status==='rented' ? rentedBy : null,
+    rented_until: status==='rented' ? ($('ma-until').value||null) : null,
+  };
+  if(!payload.brand_name){ toast('Brand name required', true); return; }
+  if(isNaN(payload.monthly_price_aud)||isNaN(payload.floor_leads)){ toast('Price and floor required', true); return; }
+  const btn=$('ma-save'); btn.disabled=true; btn.textContent='Saving…';
+  let error, savedId=id;
+  if(id){ ({error} = await db.from('assets').update(payload).eq('id',id)); }
+  else {
+    const res = await db.from('assets').insert(payload).select().single();
+    error=res.error; savedId=res.data?.id;
+  }
+  // if newly rented, open a rental row for history (only when it changed to rented)
+  if(!error && status==='rented' && rentedBy){ await ensureOpenRental(savedId, rentedBy, payload.monthly_price_aud, payload.floor_leads); }
+  btn.disabled=false; btn.textContent='Save asset';
+  if(error){ toast('Error: '+error.message, true); return; }
+  toast(id?'Asset updated ✓':'Asset created ✓');
+  closeModal('m-asset'); loadAssets();
+}
+// Open a rentals row if this asset+installer has no active rental yet.
+async function ensureOpenRental(assetId, installerId, price, floor){
+  const { data } = await db.from('rentals').select('id').eq('asset_id',assetId).eq('installer_id',installerId).is('ended_at',null).limit(1);
+  if(data && data.length) return;
+  await db.from('rentals').insert({ asset_id:assetId, installer_id:installerId, monthly_price_aud:price, floor_leads:floor });
+}
+async function markAssetStatus(id, status){
+  const a=_assets.find(x=>x.id===id); if(!a) return;
+  const patch = { status };
+  if(status!=='rented'){ patch.rented_by=null; patch.rented_until=null; }
+  const { error } = await db.from('assets').update(patch).eq('id',id);
+  if(error){ toast('Error: '+error.message, true); return; }
+  // ending a rental returns the asset -> close any open rental row
+  if(status!=='rented' && a.rented_by){ await db.from('rentals').update({ended_at:now()}).eq('asset_id',id).is('ended_at',null); }
+  toast(`Marked ${status} ✓`); loadAssets();
+}
+async function duplicateAsset(id){
+  const a=_assets.find(x=>x.id===id); if(!a) return;
+  const copy = { niche_id:a.niche_id, region_id:a.region_id, tier:a.tier,
+    brand_name:a.brand_name+' (copy)', brand_domain:a.brand_domain,
+    monthly_price_aud:a.monthly_price_aud, floor_leads:a.floor_leads,
+    typical_min:a.typical_min, typical_max:a.typical_max, status:'available' };
+  const { error } = await db.from('assets').insert(copy);
+  if(error){ toast('Error: '+error.message, true); return; }
+  toast('Duplicated ✓'); loadAssets();
+}
+async function softDeleteAsset(id){
+  const a=_assets.find(x=>x.id===id); if(!a) return;
+  if(!confirm(`Soft-delete "${a.brand_name}"? It's hidden everywhere but history is kept.`)) return;
+  const { error } = await db.from('assets').update({ deleted_at:now(), status:'maintenance', rented_by:null, rented_until:null }).eq('id',id);
+  if(error){ toast('Error: '+error.message, true); return; }
+  toast('Soft-deleted ✓'); loadAssets();
+}
+async function restoreAsset(id){
+  const { error } = await db.from('assets').update({ deleted_at:null, status:'available' }).eq('id',id);
+  if(error){ toast('Error: '+error.message, true); return; }
+  toast('Restored ✓'); loadAssets();
+}
+
+/* ════════════════════════════════════════════════════════════════════════
+   RENTALS
+   ════════════════════════════════════════════════════════════════════════ */
+let _rentals=[];
+async function loadRentals(){
+  // keep the asset filter fresh
+  fillSelect('rf-asset','All assets', _assets.length
+    ? _assets.map(a=>`<option value="${a.id}">${esc(a.brand_name)}</option>`).join('')
+    : '');
+  if(!_assets.length){ const r=await db.from('assets').select('*'); _assets=r.data||[]; fillSelect('rf-asset','All assets',_assets.map(a=>`<option value="${a.id}">${esc(a.brand_name)}</option>`).join('')); }
+  $('rentals-tbody').innerHTML='<tr><td colspan="8" class="empty">Loading…</td></tr>';
+  const { data, error } = await db.from('rentals').select('*').order('started_at',{ascending:false});
+  if(error){ $('rentals-tbody').innerHTML=`<tr><td colspan="8" class="empty" style="color:var(--red)">${esc(error.message)}</td></tr>`; return; }
+  _rentals=data||[]; renderRentals();
+}
+const assetName = id => (_assets.find(x=>x.id===id)||{}).brand_name || '—';
+function renderRentals(){
+  const fi=$('rf-installer').value, fa=$('rf-asset').value, fst=$('rf-state').value;
+  let rows=_rentals.filter(r=>{
+    if(fi && r.installer_id!==fi) return false;
+    if(fa && r.asset_id!==fa) return false;
+    if(fst==='active' && r.ended_at) return false;
+    if(fst==='ended' && !r.ended_at) return false;
+    return true;
+  });
+  $('rentals-tbody').innerHTML = rows.length ? rows.map(r=>{
+    const active = !r.ended_at;
+    return `<tr>
+      <td><strong>${esc(assetName(r.asset_id))}</strong></td>
+      <td>${esc(installerName(r.installer_id))}</td>
+      <td class="mono dim">${fmtDate(r.started_at)}</td>
+      <td class="mono dim">${r.ended_at?fmtDate(r.ended_at):'—'}</td>
+      <td class="mono">${fmtAud(r.monthly_price_aud)}</td>
+      <td class="mono">${r.floor_leads}</td>
+      <td><span class="badge ${active?'bg-grn':'bg-gray'}">${active?'active':'ended'}</span></td>
+      <td>${active?`<button class="btn btn-xs btn-red" onclick="endRental('${r.id}','${r.asset_id}')">End rental</button>`:''}</td>
+    </tr>`;
+  }).join('') : '<tr><td colspan="8" class="empty">No rentals match.</td></tr>';
+}
+async function endRental(id, assetId){
+  if(!confirm('End this rental now and return the asset to Available?')) return;
+  const { error } = await db.from('rentals').update({ ended_at: now() }).eq('id',id);
+  if(error){ toast('Error: '+error.message, true); return; }
+  await db.from('assets').update({ status:'available', rented_by:null, rented_until:null }).eq('id',assetId);
+  toast('Rental ended · asset available ✓');
+  // refresh caches used elsewhere
+  const r=await db.from('assets').select('*'); _assets=r.data||[];
+  loadRentals();
+}
+
+/* ════════════════════════════════════════════════════════════════════════
+   INSTALLERS
+   ════════════════════════════════════════════════════════════════════════ */
+async function loadInstallers(){
+  $('installers-tbody').innerHTML='<tr><td colspan="6" class="empty">Loading…</td></tr>';
+  const [insRes, assetRes] = await Promise.all([
+    db.from('installers').select('*').order('business_name'),
+    db.from('assets').select('id,brand_name,rented_by,rented_until').eq('status','rented').is('deleted_at',null),
+  ]);
+  _installers = insRes.data||[];
+  // refresh dependent selects
+  const instOpts=_installers.map(x=>`<option value="${x.id}">${esc(x.business_name)}</option>`).join('');
+  fillSelect('rf-installer','All installers',instOpts);
+  fillSelect('lf-installer','All installers',instOpts);
+  $('ma-rentedby').innerHTML='<option value="">— none —</option>'+instOpts;
+  const rented = assetRes.data||[];
+  if(insRes.error){ $('installers-tbody').innerHTML=`<tr><td colspan="6" class="empty" style="color:var(--red)">${esc(insRes.error.message)}</td></tr>`; return; }
+  $('installers-tbody').innerHTML = _installers.length ? _installers.map(i=>{
+    const mine = rented.filter(a=>a.rented_by===i.id);
+    const chips = mine.length ? mine.map(a=>`<span class="chip">${esc(a.brand_name)}<span class="dim mono" style="font-size:9px">→ ${fmtDate(a.rented_until)}</span></span>`).join('') : '<span class="dim">none</span>';
+    return `<tr>
+      <td><strong>${esc(i.business_name)}</strong></td>
+      <td>${esc(i.contact_name||'—')}</td>
+      <td class="mono dim">${esc(i.email)}</td>
+      <td class="mono dim">${esc(i.phone||'—')}</td>
+      <td>${mine.length ? `<button class="btn btn-xs" onclick="toggleInstallerAssets(this,'${i.id}')">${mine.length} asset${mine.length>1?'s':''}</button>` : '<span class="dim">0</span>'}</td>
+      <td class="acts"><button class="btn btn-xs" onclick="openInstallerModal('${i.id}')">Edit</button><button class="btn btn-xs btn-red" onclick="deleteInstaller('${i.id}')">Del</button></td>
+    </tr>
+    <tr class="subrow" id="isub-${i.id}" style="display:none"><td colspan="6">${chips}</td></tr>`;
+  }).join('') : '<tr><td colspan="6" class="empty">No installers yet.</td></tr>';
+}
+function toggleInstallerAssets(btn,id){ const r=$('isub-'+id); r.style.display = r.style.display==='none'?'table-row':'none'; }
+function openInstallerModal(id){
+  const i = id ? _installers.find(x=>x.id===id) : null;
+  setVal('mi-id', i?i.id:'');
+  setText('mi-title', i?'Edit installer':'New installer');
+  setVal('mi-business', i?.business_name);
+  setVal('mi-contact', i?.contact_name);
+  setVal('mi-phone', i?.phone);
+  setVal('mi-email', i?.email);
+  openModal('m-installer');
+}
+async function saveInstaller(){
+  const id=$('mi-id').value;
+  const payload={
+    business_name:$('mi-business').value.trim(),
+    contact_name:$('mi-contact').value.trim()||null,
+    phone:$('mi-phone').value.trim()||null,
+    email:$('mi-email').value.trim(),
+  };
+  if(!payload.business_name){ toast('Business name required', true); return; }
+  if(!payload.email){ toast('Email required', true); return; }
+  const btn=$('mi-save'); btn.disabled=true; btn.textContent='Saving…';
+  let error;
+  if(id){ ({error}=await db.from('installers').update(payload).eq('id',id)); }
+  else { ({error}=await db.from('installers').insert(payload)); }
+  btn.disabled=false; btn.textContent='Save installer';
+  if(error){ toast('Error: '+error.message, true); return; }
+  toast(id?'Installer updated ✓':'Installer created ✓');
+  closeModal('m-installer'); loadRefData().then(loadInstallers);
+}
+async function deleteInstaller(id){
+  const i=_installers.find(x=>x.id===id); if(!i) return;
+  if(!confirm(`Delete installer "${i.business_name}"? (Blocked if they have leads/rentals on record.)`)) return;
+  const { error } = await db.from('installers').delete().eq('id',id);
+  if(error){ toast(/foreign key|violates/.test(error.message)?'Has leads/rentals — cannot delete.':'Error: '+error.message, true); return; }
+  toast('Deleted ✓'); loadRefData().then(loadInstallers);
+}
+
+/* ════════════════════════════════════════════════════════════════════════
+   LEADS (read-only)
+   ════════════════════════════════════════════════════════════════════════ */
+let _leadsView=[];
+async function loadLeadsPanel(){
+  // ensure asset filter populated
+  if($('lf-asset').options.length<=1 && _assets.length){
+    fillSelect('lf-asset','All assets',_assets.map(a=>`<option value="${a.id}">${esc(a.brand_name)}</option>`).join(''));
+  }
+  $('leads-tbody').innerHTML='<tr><td colspan="8" class="empty">Loading…</td></tr>';
+  let q = db.from('leads').select('*').order('captured_at',{ascending:false}).limit(1000);
+  const fa=$('lf-asset').value, fi=$('lf-installer').value, fs=$('lf-status').value, ff=$('lf-from').value, ft=$('lf-to').value;
+  if(fa) q=q.eq('asset_id',fa);
+  if(fi) q=q.eq('installer_id',fi);
+  if(fs) q=q.eq('status',fs);
+  if(ff) q=q.gte('captured_at', new Date(ff+'T00:00:00').toISOString());
+  if(ft) q=q.lte('captured_at', new Date(ft+'T23:59:59').toISOString());
+  const { data, error } = await q;
+  if(error){ $('leads-tbody').innerHTML=`<tr><td colspan="8" class="empty" style="color:var(--red)">${esc(error.message)}</td></tr>`; return; }
+  _leadsView = data||[];
+  // make sure asset names resolve
+  if(!_assets.length){ const r=await db.from('assets').select('*'); _assets=r.data||[]; }
+  setText('leads-count', `${_leadsView.length} lead${_leadsView.length!==1?'s':''}`);
+  $('leads-tbody').innerHTML = _leadsView.length ? _leadsView.map(l=>{
+    const badge = l.status==='delivered'?'bg-grn':l.status==='duplicate'?'bg-amb':'bg-red';
+    return `<tr>
+      <td class="mono dim">${fmtDateTime(l.captured_at)}</td>
+      <td><strong>${esc(l.full_name)}</strong></td>
+      <td class="mono">${esc(l.phone)}</td>
+      <td class="mono dim">${esc(l.email||'—')}</td>
+      <td class="mono dim">${esc(l.postcode||'—')}</td>
+      <td>${esc(assetName(l.asset_id))}</td>
+      <td>${esc(installerName(l.installer_id))}</td>
+      <td><span class="badge ${badge}">${esc(l.status)}</span></td>
+    </tr>`;
+  }).join('') : '<tr><td colspan="8" class="empty">No leads match.</td></tr>';
+}
+// per-installer counts for the current 30-day cycle (floor tracking)
+async function loadLeadCycle(){
+  const since = new Date(Date.now()-30*86400000).toISOString();
+  const { data } = await db.from('leads').select('installer_id,status').eq('status','delivered').gte('captured_at', since);
+  const counts={}; (data||[]).forEach(l=>{ counts[l.installer_id]=(counts[l.installer_id]||0)+1; });
+  const grid=$('leads-cycle-grid');
+  grid.innerHTML = _installers.length ? _installers.map(i=>{
+    const c=counts[i.id]||0;
+    return `<div class="nichecard"><div class="nichecard-n">${esc(i.business_name)}</div><div class="nichecard-v">${c}</div><div class="nichecard-s">delivered · last 30d</div></div>`;
+  }).join('') : '<div class="empty">No installers</div>';
+}
+function exportLeadsCsv(){
+  if(!_leadsView.length){ toast('Nothing to export', true); return; }
+  const cols=['captured_at','full_name','phone','email','postcode','asset','installer','status','is_duplicate'];
+  const rows=_leadsView.map(l=>[
+    l.captured_at, l.full_name, l.phone, l.email||'', l.postcode||'',
+    assetName(l.asset_id), installerName(l.installer_id), l.status, l.is_duplicate?'yes':'no'
+  ]);
+  const csv=[cols.join(','), ...rows.map(r=>r.map(v=>{
+    const s=String(v ?? ''); return /[",\n]/.test(s)?'"'+s.replace(/"/g,'""')+'"':s;
+  }).join(','))].join('\n');
+  const blob=new Blob([csv],{type:'text/csv'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a'); a.href=url; a.download=`lgr-leads-${new Date().toISOString().slice(0,10)}.csv`;
+  a.click(); URL.revokeObjectURL(url);
+  toast(`Exported ${_leadsView.length} leads ✓`);
+}
+
+/* ════════════════════════════════════════════════════════════════════════
+   NICHES (catalog CRUD)
+   ════════════════════════════════════════════════════════════════════════ */
+const slugify = s => String(s||'').toLowerCase().trim().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');
+async function loadNiches(){
+  $('niches-tbody').innerHTML='<tr><td colspan="7" class="empty">Loading…</td></tr>';
+  const [nRes, aRes] = await Promise.all([
+    db.from('niches').select('*').order('sort_order'),
+    db.from('assets').select('niche_id').is('deleted_at',null),
+  ]);
+  if(nRes.error){ $('niches-tbody').innerHTML=`<tr><td colspan="7" class="empty" style="color:var(--red)">${esc(nRes.error.message)}</td></tr>`; return; }
+  _niches=nRes.data||[];
+  const cnt={}; (aRes.data||[]).forEach(a=>cnt[a.niche_id]=(cnt[a.niche_id]||0)+1);
+  const statusBadge=s=> s==='live'?'bg-grn':s==='coming_soon'?'bg-amb':'bg-gray';
+  $('niches-tbody').innerHTML = _niches.length ? _niches.map(n=>`<tr>
+      <td><strong>${esc(n.name)}</strong></td>
+      <td class="mono dim">${esc(n.slug)}</td>
+      <td class="dim" style="white-space:normal;max-width:320px">${esc(n.short_desc||'—')}</td>
+      <td><span class="badge ${statusBadge(n.status)}">${esc(n.status)}</span></td>
+      <td class="mono">${n.sort_order??0}</td>
+      <td class="mono">${cnt[n.id]||0}</td>
+      <td class="acts"><button class="btn btn-xs" onclick="openNicheModal('${n.id}')">Edit</button><button class="btn btn-xs btn-red" onclick="deleteNiche('${n.id}')">Del</button></td>
+    </tr>`).join('') : '<tr><td colspan="7" class="empty">No niches yet.</td></tr>';
+}
+function openNicheModal(id){
+  const n=id?_niches.find(x=>x.id===id):null;
+  setVal('mn-id', n?n.id:''); setText('mn-title', n?'Edit niche':'New niche');
+  setVal('mn-name', n?.name); setVal('mn-slug', n?.slug); setVal('mn-desc', n?.short_desc);
+  $('mn-status').value=n?.status||'live'; setVal('mn-sort', n?.sort_order??0);
+  openModal('m-niche');
+}
+async function saveNiche(){
+  const id=$('mn-id').value;
+  const payload={ name:$('mn-name').value.trim(), slug:$('mn-slug').value.trim()||slugify($('mn-name').value),
+    short_desc:$('mn-desc').value.trim()||null, status:$('mn-status').value, sort_order:parseInt($('mn-sort').value,10)||0 };
+  if(!payload.name||!payload.slug){ toast('Name and slug required', true); return; }
+  const btn=$('mn-save'); btn.disabled=true; btn.textContent='Saving…';
+  let error;
+  if(id){ ({error}=await db.from('niches').update(payload).eq('id',id)); }
+  else { ({error}=await db.from('niches').insert(payload)); }
+  btn.disabled=false; btn.textContent='Save niche';
+  if(error){ toast(/duplicate|unique/.test(error.message)?'Slug already exists.':'Error: '+error.message, true); return; }
+  toast(id?'Niche updated ✓':'Niche created ✓'); closeModal('m-niche');
+  await loadRefData(); loadNiches();
+}
+async function deleteNiche(id){
+  const n=_niches.find(x=>x.id===id); if(!n) return;
+  if(!confirm(`Delete niche "${n.name}"? (Blocked if assets use it.)`)) return;
+  const { error } = await db.from('niches').delete().eq('id',id);
+  if(error){ toast(/foreign key|violates/.test(error.message)?'Assets use this niche — cannot delete.':'Error: '+error.message, true); return; }
+  toast('Deleted ✓'); await loadRefData(); loadNiches();
+}
+
+/* ════════════════════════════════════════════════════════════════════════
+   REGIONS (catalog CRUD)
+   ════════════════════════════════════════════════════════════════════════ */
+async function loadRegions(){
+  $('regions-tbody').innerHTML='<tr><td colspan="6" class="empty">Loading…</td></tr>';
+  const [rRes, aRes] = await Promise.all([
+    db.from('regions').select('*').order('sort_order'),
+    db.from('assets').select('region_id').is('deleted_at',null),
+  ]);
+  if(rRes.error){ $('regions-tbody').innerHTML=`<tr><td colspan="6" class="empty" style="color:var(--red)">${esc(rRes.error.message)}</td></tr>`; return; }
+  _regions=rRes.data||[];
+  const cnt={}; (aRes.data||[]).forEach(a=>cnt[a.region_id]=(cnt[a.region_id]||0)+1);
+  $('regions-tbody').innerHTML = _regions.length ? _regions.map(r=>`<tr>
+      <td><strong>${esc(r.name)}</strong></td>
+      <td class="mono dim">${esc(r.slug)}</td>
+      <td>${esc(r.state||'—')}</td>
+      <td class="mono">${r.sort_order??0}</td>
+      <td class="mono">${cnt[r.id]||0}</td>
+      <td class="acts"><button class="btn btn-xs" onclick="openRegionModal('${r.id}')">Edit</button><button class="btn btn-xs btn-red" onclick="deleteRegion('${r.id}')">Del</button></td>
+    </tr>`).join('') : '<tr><td colspan="6" class="empty">No regions yet.</td></tr>';
+}
+function openRegionModal(id){
+  const r=id?_regions.find(x=>x.id===id):null;
+  setVal('mr-id', r?r.id:''); setText('mr-title', r?'Edit region':'New region');
+  setVal('mr-name', r?.name); setVal('mr-slug', r?.slug); setVal('mr-state', r?.state); setVal('mr-sort', r?.sort_order??0);
+  openModal('m-region');
+}
+async function saveRegion(){
+  const id=$('mr-id').value;
+  const payload={ name:$('mr-name').value.trim(), slug:$('mr-slug').value.trim()||slugify($('mr-name').value),
+    state:$('mr-state').value.trim()||null, sort_order:parseInt($('mr-sort').value,10)||0 };
+  if(!payload.name||!payload.slug){ toast('Name and slug required', true); return; }
+  const btn=$('mr-save'); btn.disabled=true; btn.textContent='Saving…';
+  let error;
+  if(id){ ({error}=await db.from('regions').update(payload).eq('id',id)); }
+  else { ({error}=await db.from('regions').insert(payload)); }
+  btn.disabled=false; btn.textContent='Save region';
+  if(error){ toast(/duplicate|unique/.test(error.message)?'Slug already exists.':'Error: '+error.message, true); return; }
+  toast(id?'Region updated ✓':'Region created ✓'); closeModal('m-region');
+  await loadRefData(); loadRegions();
+}
+async function deleteRegion(id){
+  const r=_regions.find(x=>x.id===id); if(!r) return;
+  if(!confirm(`Delete region "${r.name}"? (Blocked if assets use it.)`)) return;
+  const { error } = await db.from('regions').delete().eq('id',id);
+  if(error){ toast(/foreign key|violates/.test(error.message)?'Assets use this region — cannot delete.':'Error: '+error.message, true); return; }
+  toast('Deleted ✓'); await loadRefData(); loadRegions();
+}
+</script>
+</body>
+</html>
