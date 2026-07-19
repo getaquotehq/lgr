@@ -24,8 +24,17 @@ app / separate deployment / separate auth** — it shares nothing with `ql-mc`.
 | **Assets** | Full CRUD. Filter by niche/region/tier/status, search brand/domain, sortable columns. Tier dropdown auto-fills price + floor (Starter $1,200/10, Growth $2,400/20, Scale $3,600/30, overridable). Row quick-actions: mark status, duplicate, **soft-delete** (`deleted_at`, never a hard delete). |
 | **Rentals** | Rental history with installer/asset/active-ended filters. **End rental** stamps `ended_at` and returns the asset to `available`. |
 | **Installers** | Full CRUD. Expand a row to see the assets they currently rent. |
-| **Leads** (read-only) | Delivery log with asset/installer/status/date-range filters, **CSV export**, and **per-installer 30-day-cycle counts** for floor tracking. |
+| **Lead Distribution** | ql-mc-style panel adapted to LGR: KPI row (received / delivered / duplicate / invalid / **outstanding-to-floor**), niche·asset·installer·status filters, collapsible **by-installer** 30-day breakdown, paginated lead table with inline status change, **CSV export**, **Test lead** injector (runs the real `insert_lead()` funnel incl. dedup), and a **delivery log**. |
 | **Niches / Regions** | Catalog CRUD (slug, name, status, sort order). |
+
+### Lead delivery pipeline
+
+`insert_lead()` attributes each lead to the asset's current renter and fires a
+`pg_notify('lead_delivered', …)` stub. Migration `20260719140000_lead_delivery_log.sql`
+adds a `lead_delivery_log` table + an `after insert` trigger so every captured
+lead is recorded (queued / skipped), which powers the panel's **Delivery log**.
+Real fan-out (SMS / email / CRM push) is the next step — an Edge Function that
+subscribes to the notify channel and writes richer `sent`/`failed` rows.
 
 ### Floor-pace early warning
 

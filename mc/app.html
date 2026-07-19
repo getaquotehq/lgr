@@ -120,7 +120,7 @@ body::after{content:'';position:fixed;inset:0;background-image:radial-gradient(c
 
 /* ═══ KPI GRID ═══ */
 .kg{display:grid;gap:14px;margin-bottom:22px}
-.kg.c4{grid-template-columns:repeat(4,1fr)}.kg.c3{grid-template-columns:repeat(3,1fr)}.kg.c2{grid-template-columns:1fr 1fr}
+.kg.c5{grid-template-columns:repeat(5,1fr)}.kg.c4{grid-template-columns:repeat(4,1fr)}.kg.c3{grid-template-columns:repeat(3,1fr)}.kg.c2{grid-template-columns:1fr 1fr}
 .kpi{background:var(--s1);border:1px solid var(--bd);border-radius:var(--r2);padding:16px 18px;transition:all .15s;box-shadow:0 1px 2px rgba(0,0,0,.2),0 4px 16px rgba(0,0,0,.14)}
 [data-theme="light"] .kpi{box-shadow:0 1px 2px rgba(16,24,40,.05),0 4px 14px rgba(16,24,40,.05)}
 .kpi:hover{border-color:var(--bd2)}
@@ -218,7 +218,7 @@ td.mono{font-family:var(--mono);font-size:12px}
 @keyframes fadeup{from{transform:translateY(5px);opacity:0}to{transform:translateY(0);opacity:1}}
 
 /* ═══ RESPONSIVE ═══ */
-@media(max-width:960px){.kg.c4{grid-template-columns:repeat(2,1fr)}.kg.c3{grid-template-columns:1fr}}
+@media(max-width:960px){.kg.c5,.kg.c4{grid-template-columns:repeat(2,1fr)}.kg.c3{grid-template-columns:1fr}}
 @media(max-width:700px){
   :root{--sw:0px}
   .sidebar{display:none}.bnav{display:flex}
@@ -403,29 +403,53 @@ td.mono{font-family:var(--mono);font-size:12px}
         </div>
       </div>
 
-      <!-- ═══ LEADS ═══ -->
+      <!-- ═══ LEAD DISTRIBUTION ═══ -->
       <div class="panel" id="panel-leads">
         <div class="ph">
-          <div class="ph-left"><h1>Leads</h1><p>Read-only delivery log</p></div>
-          <div class="ph-right"><button class="btn btn-sm" onclick="exportLeadsCsv()">↓ Export CSV</button></div>
+          <div class="ph-left"><h1>Lead Distribution</h1><p>Captured leads · delivery &amp; floor tracking</p></div>
+          <div class="ph-right">
+            <select class="fs" id="lf-niche" onchange="loadLeads(true)" style="width:auto"><option value="">All niches</option></select>
+            <select class="fs" id="lf-asset" onchange="loadLeads(true)" style="width:auto"><option value="">All assets</option></select>
+            <select class="fs" id="lf-installer" onchange="loadLeads(true)" style="width:auto"><option value="">All installers</option></select>
+            <select class="fs" id="lf-status" onchange="loadLeads(true)" style="width:auto"><option value="">All statuses</option><option value="delivered">Delivered</option><option value="duplicate">Duplicate</option><option value="invalid">Invalid</option></select>
+            <button class="btn btn-sm" onclick="loadLeads()">↻ Refresh</button>
+            <button class="btn btn-sm" onclick="exportLeadsCsv()">↓ CSV</button>
+            <button class="btn btn-p btn-sm" onclick="openTestLead()">＋ Test lead</button>
+          </div>
         </div>
-        <div class="sl">Per-installer leads · current 30-day cycle<div class="sl-line"></div></div>
-        <div class="nichegrid" id="leads-cycle-grid" style="margin-bottom:8px"></div>
-        <div class="sl">Lead log<div class="sl-line"></div></div>
-        <div class="fbar">
-          <select class="fs" id="lf-asset" onchange="loadLeadsPanel()" style="width:auto"><option value="">All assets</option></select>
-          <select class="fs" id="lf-installer" onchange="loadLeadsPanel()" style="width:auto"><option value="">All installers</option></select>
-          <select class="fs" id="lf-status" onchange="loadLeadsPanel()" style="width:auto"><option value="">All statuses</option><option value="delivered">Delivered</option><option value="duplicate">Duplicate</option><option value="invalid">Invalid</option></select>
-          <label style="font-size:11px;color:var(--ink3)">From <input type="date" id="lf-from" onchange="loadLeadsPanel()"></label>
-          <label style="font-size:11px;color:var(--ink3)">To <input type="date" id="lf-to" onchange="loadLeadsPanel()"></label>
+        <div class="kg c5 mb4">
+          <div class="kpi"><div class="klabel">Total received</div><div class="kval blu" id="ld-total">—</div><div class="ksub" id="ld-total-sub">matching filters</div></div>
+          <div class="kpi"><div class="klabel">Delivered</div><div class="kval grn" id="ld-delivered">—</div></div>
+          <div class="kpi"><div class="klabel">Duplicate</div><div class="kval" id="ld-duplicate" style="color:var(--amb)">—</div></div>
+          <div class="kpi"><div class="klabel">Invalid</div><div class="kval red" id="ld-invalid">—</div></div>
+          <div class="kpi"><div class="klabel">Outstanding to floor</div><div class="kval" id="ld-outstanding" style="color:var(--amb)">—</div><div class="ksub">rented assets · floor − cycle delivered</div></div>
         </div>
+
+        <div class="sl" style="cursor:pointer;user-select:none" onclick="toggleLdBreakdown()">
+          By installer · current 30-day cycle <span id="ld-chevron" style="font-size:10px;margin-left:6px;color:var(--ink3)">▶</span>
+          <div class="sl-line"></div>
+        </div>
+        <div id="ld-breakdown" class="mb4" style="display:none"><div class="empty">Loading…</div></div>
+
+        <div class="sl">All leads <div class="sl-line"></div></div>
         <div class="twrap">
           <table>
-            <thead><tr><th>Captured</th><th>Name</th><th>Phone</th><th>Email</th><th>Postcode</th><th>Asset</th><th>Installer</th><th>Status</th></tr></thead>
-            <tbody id="leads-tbody"><tr><td colspan="8" class="empty">Loading…</td></tr></tbody>
+            <thead><tr>
+              <th>Captured</th><th>Niche</th><th>Name</th><th>Phone</th><th>Postcode</th>
+              <th>Asset</th><th>Extra</th><th>Status</th><th>Installer</th><th>Actions</th>
+            </tr></thead>
+            <tbody id="ld-tbody"><tr><td colspan="10" class="empty">Loading…</td></tr></tbody>
+          </table>
+          <div class="pager" id="ld-pager"></div>
+        </div>
+
+        <div class="sl" style="margin-top:16px">Delivery log <div class="sl-line"></div></div>
+        <div class="twrap">
+          <table>
+            <thead><tr><th>Time</th><th>Lead</th><th>Installer</th><th>Channel</th><th>Status</th><th>Detail</th></tr></thead>
+            <tbody id="dlog-tbody"><tr><td colspan="6" class="empty">Loading…</td></tr></tbody>
           </table>
         </div>
-        <div class="pager" id="leads-count"></div>
       </div>
 
       <!-- ═══ NICHES ═══ -->
@@ -541,6 +565,24 @@ td.mono{font-family:var(--mono);font-size:12px}
       <div class="frow"><label class="flabel">Sort order</label><input class="fi" id="mr-sort" type="number" value="0"></div>
     </div>
     <div class="macts"><button class="btn" onclick="closeModal('m-region')">Cancel</button><button class="btn btn-p" id="mr-save" onclick="saveRegion()">Save region</button></div>
+  </div>
+</div>
+
+<!-- ═══ TEST LEAD MODAL ═══ -->
+<div class="overlay" id="m-test-lead">
+  <div class="modal">
+    <h2>Submit test lead</h2>
+    <div class="msub">Runs the real insert_lead() funnel — dedup &amp; delivery included</div>
+    <div class="frow"><label class="flabel">Asset (must be rented) *</label><select class="fs" id="tl-asset" onchange="onTestAssetChange()"></select><div class="fhint" id="tl-asset-hint"></div></div>
+    <div class="fgrid2">
+      <div class="frow"><label class="flabel">Full name *</label><input class="fi" id="tl-name" value="Jane Test"></div>
+      <div class="frow"><label class="flabel">Phone *</label><input class="fi" id="tl-phone" value="0444 444 444"></div>
+      <div class="frow"><label class="flabel">Email</label><input class="fi" id="tl-email" type="email" value="jane@test.com"></div>
+      <div class="frow"><label class="flabel">Postcode</label><input class="fi" id="tl-postcode" value="4218"></div>
+    </div>
+    <div class="frow"><label class="flabel">Extra (JSON)</label><textarea class="fta" id="tl-extra" style="font-family:var(--mono);font-size:11px">{"quarterly_bill": 320, "timeline": "3-6 months"}</textarea><div class="fhint">Niche-specific fields stored on the lead's <code>extra</code> column.</div></div>
+    <div id="tl-status" style="display:none;padding:8px 10px;border-radius:6px;font-size:12px;margin-bottom:8px"></div>
+    <div class="macts"><button class="btn" onclick="closeModal('m-test-lead')">Cancel</button><button class="btn btn-p" id="tl-btn" onclick="sendTestLead()">Send test lead</button></div>
   </div>
 </div>
 
@@ -668,7 +710,7 @@ function nav(panel, el){
   if(panel==='assets') loadAssets();
   if(panel==='rentals') loadRentals();
   if(panel==='installers') loadInstallers();
-  if(panel==='leads'){ loadLeadCycle(); loadLeadsPanel(); }
+  if(panel==='leads') loadLeads(true);
   if(panel==='niches') loadNiches();
   if(panel==='regions') loadRegions();
 }
@@ -1073,58 +1115,203 @@ async function deleteInstaller(id){
 }
 
 /* ════════════════════════════════════════════════════════════════════════
-   LEADS (read-only)
+   LEAD DISTRIBUTION  (mirrors ql-mc's panel, adapted to LGR's schema)
    ════════════════════════════════════════════════════════════════════════ */
-let _leadsView=[];
-async function loadLeadsPanel(){
-  // ensure asset filter populated
-  if($('lf-asset').options.length<=1 && _assets.length){
-    fillSelect('lf-asset','All assets',_assets.map(a=>`<option value="${a.id}">${esc(a.brand_name)}</option>`).join(''));
-  }
-  $('leads-tbody').innerHTML='<tr><td colspan="8" class="empty">Loading…</td></tr>';
-  let q = db.from('leads').select('*').order('captured_at',{ascending:false}).limit(1000);
-  const fa=$('lf-asset').value, fi=$('lf-installer').value, fs=$('lf-status').value, ff=$('lf-from').value, ft=$('lf-to').value;
-  if(fa) q=q.eq('asset_id',fa);
-  if(fi) q=q.eq('installer_id',fi);
-  if(fs) q=q.eq('status',fs);
-  if(ff) q=q.gte('captured_at', new Date(ff+'T00:00:00').toISOString());
-  if(ft) q=q.lte('captured_at', new Date(ft+'T23:59:59').toISOString());
-  const { data, error } = await q;
-  if(error){ $('leads-tbody').innerHTML=`<tr><td colspan="8" class="empty" style="color:var(--red)">${esc(error.message)}</td></tr>`; return; }
-  _leadsView = data||[];
-  // make sure asset names resolve
+const LD_PAGE=50;
+let ldPage=0, ldTotal=0, _leadsView=[], _ldBreakdownOpen=false;
+const assetNiche = id => nicheName((_assets.find(x=>x.id===id)||{}).niche_id);
+
+function renderPager(elId,page,total,onPage){
+  const el=$(elId); if(!el) return;
+  const pages=Math.ceil(total/LD_PAGE);
+  if(pages<=1){ el.innerHTML=''; return; }
+  const from=page*LD_PAGE+1, to=Math.min((page+1)*LD_PAGE,total);
+  el.innerHTML=`<button class="btn btn-xs" id="${elId}-prev" ${page===0?'disabled':''}>← Prev</button><span>${from}–${to} of ${total}</span><button class="btn btn-xs" id="${elId}-next" ${page>=pages-1?'disabled':''}>Next →</button>`;
+  const p=$(`${elId}-prev`), n=$(`${elId}-next`);
+  if(p) p.onclick=()=>onPage(page-1);
+  if(n) n.onclick=()=>onPage(page+1);
+}
+function toggleLdBreakdown(){
+  _ldBreakdownOpen=!_ldBreakdownOpen;
+  $('ld-breakdown').style.display=_ldBreakdownOpen?'':'none';
+  $('ld-chevron').textContent=_ldBreakdownOpen?'▼':'▶';
+}
+async function loadLeads(reset){
+  if(reset) ldPage=0;
   if(!_assets.length){ const r=await db.from('assets').select('*'); _assets=r.data||[]; }
-  setText('leads-count', `${_leadsView.length} lead${_leadsView.length!==1?'s':''}`);
-  $('leads-tbody').innerHTML = _leadsView.length ? _leadsView.map(l=>{
+  // keep the niche + asset filter dropdowns fresh
+  if($('lf-niche').options.length<=1) fillSelect('lf-niche','All niches',_niches.map(n=>`<option value="${n.id}">${esc(n.name)}</option>`).join(''));
+  if($('lf-asset').options.length<=1) fillSelect('lf-asset','All assets',_assets.map(a=>`<option value="${a.id}">${esc(a.brand_name)}</option>`).join(''));
+  $('ld-tbody').innerHTML='<tr><td colspan="10" class="empty">Loading…</td></tr>';
+
+  const fn=$('lf-niche').value, fa=$('lf-asset').value, fi=$('lf-installer').value, fs=$('lf-status').value;
+  // asset scope from the niche filter (leads has no niche column — it's on the asset)
+  const nicheAssetIds = fn ? _assets.filter(a=>a.niche_id===fn).map(a=>a.id) : null;
+
+  const applyFilters = q => {
+    if(fa) q=q.eq('asset_id',fa);
+    if(fi) q=q.eq('installer_id',fi);
+    if(fs) q=q.eq('status',fs);
+    if(nicheAssetIds) q=q.in('asset_id', nicheAssetIds.length?nicheAssetIds:['00000000-0000-0000-0000-000000000000']);
+    return q;
+  };
+
+  // stats (all matching rows, lightweight) + paged table (with count) + delivery log
+  const statsQ = applyFilters(db.from('leads').select('status,installer_id,captured_at'));
+  const tableQ = applyFilters(db.from('leads').select('*',{count:'exact'}).order('captured_at',{ascending:false}))
+                   .range(ldPage*LD_PAGE, (ldPage+1)*LD_PAGE-1);
+  const dlogQ = db.from('lead_delivery_log').select('*').order('created_at',{ascending:false}).limit(50);
+
+  const [statsR, tableR, dlogR] = await Promise.all([statsQ, tableQ, dlogQ]);
+  if(statsR.error || tableR.error){
+    $('ld-tbody').innerHTML=`<tr><td colspan="10" class="empty" style="color:var(--red)">${esc((statsR.error||tableR.error).message)}</td></tr>`; return;
+  }
+  const all = statsR.data||[];
+  ldTotal = tableR.count||0;
+  const rows = tableR.data||[];
+  _leadsView = rows;
+
+  // KPI row
+  setText('ld-total', all.length);
+  setText('ld-total-sub', ldTotal>all.length?`${ldTotal} total (paged)`:'matching filters');
+  setText('ld-delivered', all.filter(l=>l.status==='delivered').length);
+  setText('ld-duplicate', all.filter(l=>l.status==='duplicate').length);
+  setText('ld-invalid', all.filter(l=>l.status==='invalid').length);
+  computeOutstanding();
+
+  // By-installer breakdown (current 30-day cycle, delivered only)
+  renderLdBreakdown();
+
+  // table
+  $('ld-tbody').innerHTML = rows.length ? rows.map(l=>{
     const badge = l.status==='delivered'?'bg-grn':l.status==='duplicate'?'bg-amb':'bg-red';
+    const extra = l.extra && Object.keys(l.extra).length
+      ? Object.entries(l.extra).slice(0,3).map(([k,v])=>`${esc(k)}: ${esc(String(v))}`).join(' · ') : '';
     return `<tr>
-      <td class="mono dim">${fmtDateTime(l.captured_at)}</td>
-      <td><strong>${esc(l.full_name)}</strong></td>
+      <td class="mono dim" style="white-space:nowrap">${fmtDateTime(l.captured_at)}</td>
+      <td><span class="tierpill">${esc(assetNiche(l.asset_id))}</span></td>
+      <td><strong>${esc(l.full_name)}</strong>${l.email?`<div class="mono dim" style="font-size:10px">${esc(l.email)}</div>`:''}</td>
       <td class="mono">${esc(l.phone)}</td>
-      <td class="mono dim">${esc(l.email||'—')}</td>
       <td class="mono dim">${esc(l.postcode||'—')}</td>
       <td>${esc(assetName(l.asset_id))}</td>
-      <td>${esc(installerName(l.installer_id))}</td>
+      <td class="dim" style="max-width:200px;white-space:normal;font-size:11px">${extra||'—'}</td>
       <td><span class="badge ${badge}">${esc(l.status)}</span></td>
+      <td>${esc(installerName(l.installer_id))}</td>
+      <td class="acts">
+        <select class="fs" style="font-size:10.5px;padding:3px 6px;width:auto" onchange="updateLeadStatus('${l.id}',this.value,this)">
+          <option value="delivered" ${l.status==='delivered'?'selected':''}>Delivered</option>
+          <option value="duplicate" ${l.status==='duplicate'?'selected':''}>Duplicate</option>
+          <option value="invalid" ${l.status==='invalid'?'selected':''}>Invalid</option>
+        </select>
+      </td>
     </tr>`;
-  }).join('') : '<tr><td colspan="8" class="empty">No leads match.</td></tr>';
+  }).join('') : '<tr><td colspan="10" class="empty">No leads match.</td></tr>';
+  renderPager('ld-pager', ldPage, ldTotal, p=>{ ldPage=p; loadLeads(); });
+
+  // delivery log
+  $('dlog-tbody').innerHTML = (dlogR.data&&dlogR.data.length) ? dlogR.data.map(d=>{
+    const badge = d.status==='sent'?'bg-grn':d.status==='queued'?'bg-amb':d.status==='failed'?'bg-red':'bg-gray';
+    const lead = rows.find(r=>r.id===d.lead_id);
+    return `<tr>
+      <td class="mono dim" style="white-space:nowrap">${fmtDateTime(d.created_at)}</td>
+      <td>${lead?esc(lead.full_name):`<span class="mono dim">${esc(String(d.lead_id).slice(0,8))}</span>`}</td>
+      <td>${esc(installerName(d.installer_id))}</td>
+      <td class="mono dim">${esc(d.channel)}</td>
+      <td><span class="badge ${badge}">${esc(d.status)}</span></td>
+      <td class="dim" style="white-space:normal;max-width:280px;font-size:11px">${esc(d.detail||'')}</td>
+    </tr>`;
+  }).join('') : '<tr><td colspan="6" class="empty">No delivery events yet.</td></tr>';
 }
-// per-installer counts for the current 30-day cycle (floor tracking)
-async function loadLeadCycle(){
-  const since = new Date(Date.now()-30*86400000).toISOString();
-  const { data } = await db.from('leads').select('installer_id,status').eq('status','delivered').gte('captured_at', since);
-  const counts={}; (data||[]).forEach(l=>{ counts[l.installer_id]=(counts[l.installer_id]||0)+1; });
-  const grid=$('leads-cycle-grid');
-  grid.innerHTML = _installers.length ? _installers.map(i=>{
-    const c=counts[i.id]||0;
-    return `<div class="nichecard"><div class="nichecard-n">${esc(i.business_name)}</div><div class="nichecard-v">${c}</div><div class="nichecard-s">delivered · last 30d</div></div>`;
-  }).join('') : '<div class="empty">No installers</div>';
+
+// "Outstanding to floor": across rented assets, sum max(0, floor − delivered this cycle).
+async function computeOutstanding(){
+  const rented=_assets.filter(a=>a.status==='rented' && !a.deleted_at);
+  if(!rented.length){ setText('ld-outstanding','0'); return; }
+  const since=new Date(Date.now()-30*86400000).toISOString();
+  const { data } = await db.from('leads').select('asset_id,installer_id').eq('status','delivered').gte('captured_at',since);
+  const byAsset={}; (data||[]).forEach(l=>{ byAsset[l.asset_id]=(byAsset[l.asset_id]||0)+1; });
+  const out=rented.reduce((s,a)=>s+Math.max(0,(a.floor_leads||0)-(byAsset[a.id]||0)),0);
+  setText('ld-outstanding', out);
 }
+async function renderLdBreakdown(){
+  const since=new Date(Date.now()-30*86400000).toISOString();
+  const { data } = await db.from('leads').select('installer_id,status').gte('captured_at',since);
+  const m={}; (data||[]).forEach(l=>{
+    if(!m[l.installer_id]) m[l.installer_id]={delivered:0,duplicate:0,invalid:0};
+    m[l.installer_id][l.status]=(m[l.installer_id][l.status]||0)+1;
+  });
+  const rows=_installers.map(i=>({i,s:m[i.id]||{delivered:0,duplicate:0,invalid:0}}))
+    .filter(r=>r.s.delivered||r.s.duplicate||r.s.invalid);
+  $('ld-breakdown').innerHTML = rows.length ? `<div class="twrap"><table style="font-size:12px">
+    <thead><tr><th>Installer</th><th>Delivered</th><th>Duplicate</th><th>Invalid</th><th>Floor (rented)</th></tr></thead>
+    <tbody>${rows.map(({i,s})=>{
+      const floor=_assets.filter(a=>a.rented_by===i.id&&a.status==='rented').reduce((x,a)=>x+(a.floor_leads||0),0);
+      const under = floor && s.delivered<floor;
+      return `<tr>
+        <td><strong>${esc(i.business_name)}</strong></td>
+        <td class="mono" style="color:var(--grn)">${s.delivered}</td>
+        <td class="mono" style="color:var(--amb)">${s.duplicate}</td>
+        <td class="mono" style="color:${s.invalid?'var(--red)':'var(--ink3)'}">${s.invalid}</td>
+        <td class="mono">${floor?`<span style="color:${under?'var(--red)':'var(--grn)'}">${s.delivered}</span> / ${floor}`:'—'}</td>
+      </tr>`;
+    }).join('')}</tbody></table></div>` : '<div class="empty">No leads in the last 30 days.</div>';
+}
+async function updateLeadStatus(id, status, sel){
+  sel.disabled=true;
+  const { error } = await db.from('leads').update({ status, is_duplicate: status==='duplicate' }).eq('id',id);
+  sel.disabled=false;
+  if(error){ toast('Update failed: '+error.message, true); return; }
+  toast(`Marked ${status} ✓`); loadLeads();
+}
+
+/* ── Test lead (real insert_lead RPC) ──────────────────────────────────────── */
+function openTestLead(){
+  const rented=_assets.filter(a=>a.status==='rented'&&!a.deleted_at);
+  $('tl-asset').innerHTML = rented.length
+    ? rented.map(a=>`<option value="${a.id}">${esc(a.brand_name)} → ${esc(installerName(a.rented_by))}</option>`).join('')
+    : '<option value="">No rented assets — rent one first</option>';
+  $('tl-btn').disabled = !rented.length;
+  $('tl-status').style.display='none';
+  onTestAssetChange();
+  openModal('m-test-lead');
+}
+function onTestAssetChange(){
+  const a=_assets.find(x=>x.id===$('tl-asset').value);
+  $('tl-asset-hint').textContent = a ? `Lead will be attributed to ${installerName(a.rented_by)} · ${assetNiche(a.id)}` : '';
+}
+async function sendTestLead(){
+  const assetId=$('tl-asset').value;
+  if(!assetId){ toast('Pick a rented asset', true); return; }
+  let extra={};
+  try { extra = $('tl-extra').value.trim()?JSON.parse($('tl-extra').value):{}; }
+  catch(e){ toast('Extra must be valid JSON', true); return; }
+  const btn=$('tl-btn'); btn.disabled=true; btn.textContent='Sending…';
+  const { data, error } = await db.rpc('insert_lead', {
+    p_asset_id: assetId,
+    p_full_name: $('tl-name').value.trim(),
+    p_phone: $('tl-phone').value.trim(),
+    p_email: $('tl-email').value.trim()||null,
+    p_postcode: $('tl-postcode').value.trim()||null,
+    p_extra: extra,
+  });
+  btn.disabled=false; btn.textContent='Send test lead';
+  const box=$('tl-status'); box.style.display='block';
+  if(error){
+    box.style.cssText='display:block;padding:8px 10px;border-radius:6px;font-size:12px;margin-bottom:8px;background:var(--red-dim);color:var(--red)';
+    box.textContent='✗ '+error.message; return;
+  }
+  const dup = data && data.is_duplicate;
+  box.style.cssText=`display:block;padding:8px 10px;border-radius:6px;font-size:12px;margin-bottom:8px;background:${dup?'var(--acc-dim)':'var(--grn-dim)'};color:${dup?'var(--amb)':'var(--grn)'}`;
+  box.textContent = dup ? '⚠ Captured as DUPLICATE (same phone/asset/installer within 30 days) — did not count toward floor.' : '✓ Lead captured & delivered.';
+  toast(dup?'Duplicate captured':'Test lead delivered ✓');
+  loadLeads(true);
+}
+
 function exportLeadsCsv(){
   if(!_leadsView.length){ toast('Nothing to export', true); return; }
-  const cols=['captured_at','full_name','phone','email','postcode','asset','installer','status','is_duplicate'];
+  const cols=['captured_at','niche','full_name','phone','email','postcode','asset','installer','status','is_duplicate'];
   const rows=_leadsView.map(l=>[
-    l.captured_at, l.full_name, l.phone, l.email||'', l.postcode||'',
+    l.captured_at, assetNiche(l.asset_id), l.full_name, l.phone, l.email||'', l.postcode||'',
     assetName(l.asset_id), installerName(l.installer_id), l.status, l.is_duplicate?'yes':'no'
   ]);
   const csv=[cols.join(','), ...rows.map(r=>r.map(v=>{
