@@ -123,6 +123,9 @@
   .pill{font-size:.72rem;font-weight:550;padding:4px 11px;border-radius:99px;letter-spacing:0}
   .pill.open{color:var(--green);background:var(--green-tint)}
   .pill.taken{color:var(--red);background:var(--red-tint)}
+  .sk-bar{background:var(--line-2);border-radius:6px;height:12px;display:inline-block;
+    animation:skpulse 1.2s ease-in-out infinite}
+  @keyframes skpulse{0%,100%{opacity:.5}50%{opacity:1}}
 
   /* metabar - trust stats bar */
   .metabar{border-top:1px solid var(--line);border-bottom:1px solid var(--line);
@@ -711,6 +714,8 @@
   </div>
 </footer>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="supabase-config.js"></script>
 <script>
   const burger = document.getElementById('burger');
   const mobileMenu = document.getElementById('mobileMenu');
@@ -723,25 +728,105 @@
   burger.addEventListener('click', () => setMenu(!burger.classList.contains('on')));
   mobileMenu.querySelectorAll('a').forEach(a => a.addEventListener('click', () => setMenu(false)));
 
-  // Placeholder availability check - wire to backend.
+  /* ---- Availability counter wired to Supabase ---- */
   const out = document.getElementById('out');
-  document.getElementById('checkBtn').addEventListener('click', function(){
-    const area = document.getElementById('area').value.trim();
-    document.getElementById('rArea').firstChild.textContent = area || '{{area_name}}';
-    document.getElementById('rTrade').textContent = document.getElementById('trade').value;
+  const cfg = window.LGR_SUPABASE || {};
+  const esc = s => (s==null?'':String(s)).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const money = n => '$' + Number(n).toLocaleString('en-AU');
+  const cap = s => s ? s.charAt(0).toUpperCase() + s.slice(1) : s;
+  const TIER_NAME = { starter:'Starter', growth:'Growth', scale:'Scale' };
+
+  let sb = null, SOLAR_REGIONS = [];
+  const hasConfig = cfg.url && cfg.anonKey && cfg.anonKey.indexOf('__') !== 0;
+  if(hasConfig){
+    sb = supabase.createClient(cfg.url, cfg.anonKey);
+    // preload the solar regions so we can match a typed suburb/postcode to one
+    sb.from('assets').select('regions!inner(slug,name),niches!inner(slug)').eq('niches.slug','solar')
+      .then(({ data }) => {
+        const seen = new Set();
+        (data||[]).forEach(a => { const r = a.regions; if(r && !seen.has(r.slug)){ seen.add(r.slug); SOLAR_REGIONS.push(r); } });
+      });
+  }
+
+  function matchRegion(input){
+    const q = (input||'').trim().toLowerCase();
+    if(!q) return null;
+    return SOLAR_REGIONS.find(r => r.name.toLowerCase() === q || r.slug === q)
+        || SOLAR_REGIONS.find(r => r.name.toLowerCase().includes(q) || q.includes(r.name.toLowerCase()))
+        || null;
+  }
+
+  const loadingRow = () =>
+    `<div class="res"><span class="res-k">Area</span>
+       <span class="res-v"><span class="sk-bar" style="width:130px;height:14px"></span></span>
+       <span class="res-r"><span class="sk-bar" style="width:88px;height:22px;border-radius:99px"></span></span></div>`;
+  const errRow = msg =>
+    `<div class="res"><span class="res-v" style="color:var(--muted);font-weight:450">${esc(msg)}</span></div>`;
+
+  function renderCounter(region, typed, assets){
+    const areaName = region ? region.name : (typed || '{{area_name}}');
+    const count = assets.length;
+    const pill = count > 0
+      ? `<span class="pill open">${count} asset${count>1?'s':''} open</span>`
+      : `<span class="pill taken">Fully booked</span>`;
+    const claimHref = region ? `/fleet.html?region=${encodeURIComponent(region.slug)}` : '/fleet.html';
+    let classRow;
+    if(count > 0){
+      const cheapest = assets.slice().sort((a,b)=>a.monthly_price_aud-b.monthly_price_aud)[0];
+      const name = TIER_NAME[cheapest.tier] || cap(cheapest.tier);
+      const range = (cheapest.typical_min && cheapest.typical_max) ? `typically ${cheapest.typical_min}–${cheapest.typical_max}` : '';
+      classRow = `<div class="res">
+        <span class="res-k">Class</span>
+        <span class="res-v">${esc(name)} <small>${cheapest.floor_leads} leads guaranteed · ${esc(range)} · cancel any time</small></span>
+        <span class="res-r">
+          <span class="res-v">${esc(money(cheapest.monthly_price_aud))}<small style="text-align:right">per 30 days</small></span>
+          <a href="${claimHref}" class="btn btn-primary btn-sm">Claim</a>
+        </span>
+      </div>`;
+    } else {
+      classRow = `<div class="res">
+        <span class="res-k">Class</span>
+        <span class="res-v">No open assets right now <small>see the full fleet or join the waitlist for this area</small></span>
+        <span class="res-r"><a href="${claimHref}" class="btn btn-ghost btn-sm">View fleet</a></span>
+      </div>`;
+    }
+    out.innerHTML = `
+      <div class="res">
+        <span class="res-k">Area</span>
+        <span class="res-v">${esc(areaName)}<small>Residential Solar</small></span>
+        <span class="res-r">${pill}</span>
+      </div>
+      ${classRow}`;
+  }
+
+  async function checkAvailability(){
+    const typed = document.getElementById('area').value.trim();
     out.classList.add('on');
-  });
+    if(!sb){ out.innerHTML = errRow('Availability data temporarily unavailable.'); return; }
+    out.innerHTML = loadingRow();
+    const region = matchRegion(typed) || SOLAR_REGIONS[0] || null;
+    try{
+      let q = sb.from('assets')
+        .select('tier,monthly_price_aud,floor_leads,typical_min,typical_max,status,regions!inner(slug,name),niches!inner(slug)')
+        .eq('niches.slug','solar').eq('status','available');
+      if(region) q = q.eq('regions.slug', region.slug);
+      const { data, error } = await q;
+      if(error) throw error;
+      renderCounter(region, typed, data || []);
+    }catch(e){
+      console.error('availability check failed', e);
+      out.innerHTML = errRow('Availability data temporarily unavailable. Please try again shortly.');
+    }
+  }
+
+  document.getElementById('checkBtn').addEventListener('click', checkAvailability);
   document.getElementById('area').addEventListener('keydown', e => {
-    if(e.key === 'Enter') document.getElementById('checkBtn').click();
+    if(e.key === 'Enter') checkAvailability();
   });
 
-  // Placeholder claim handler - wire to checkout.
+  // Pricing-tier "Claim your asset" buttons -> fleet page
   document.querySelectorAll('.buyBtn').forEach(b => {
-    b.addEventListener('click', function(){
-      const t = this.textContent;
-      this.textContent = 'Checking availability…';
-      setTimeout(() => { this.textContent = t; }, 1200);
-    });
+    b.addEventListener('click', function(){ window.location.href = '/fleet.html'; });
   });
 </script>
 </body>

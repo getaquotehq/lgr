@@ -159,6 +159,9 @@
 
   .empty{grid-column:1/-1;text-align:center;padding:64px 20px;color:var(--muted);
     border:1px dashed var(--line);border-radius:12px;background:var(--bg)}
+  .sk-bar{background:var(--line-2);border-radius:6px;height:12px;display:block;
+    animation:skpulse 1.2s ease-in-out infinite}
+  @keyframes skpulse{0%,100%{opacity:.5}50%{opacity:1}}
 
   /* footer (congruent with the rest of the site) */
   footer{background:var(--ink);border-top:1px solid var(--ink);padding:56px 0 40px;margin-top:24px}
@@ -198,8 +201,6 @@
 </nav>
 
 <div class="wrap">
-
-  <div class="tpl-banner">TEMPLATE - all values are placeholder slots. Wire the card data array to your backend for live inventory.</div>
 
   <div class="head">
     <h1>Assets available near <span id="regionLabel">—</span></h1>
@@ -263,49 +264,35 @@
   </div>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="supabase-config.js"></script>
 <script>
 /* ------------------------------------------------------------------
-   PLACEHOLDER INVENTORY - replace with a backend fetch.
-   Every display string is a {{slot}}. Only enumerable values
-   (tier, status, price band) are real, so the layout renders.
+   Live inventory from Supabase. Card rendering + the {{brand_name}},
+   {{brand_domain}}, {{area_name}} slot pattern are preserved - the
+   slots are now populated from `assets` rows joined to `regions`.
 ------------------------------------------------------------------ */
-const TIERS = {
-  Starter: { code:"T1", price:"$1,200", leads:"10–14" },
-  Growth:  { code:"T2", price:"$2,400", leads:"20–28" },
-  Scale:   { code:"T3", price:"$3,600", leads:"30–42" }
-};
-
-const TRADES = ["All Residential Solar", "Residential Solar", "Battery Retrofit"];
-
-const INVENTORY = [
-  { region:"{{region_1}}", area:"{{area_name}}", tier:"Growth",    status:"open"  },
-  { region:"{{region_1}}", area:"{{area_name}}", tier:"Growth",    status:"taken" },
-  { region:"{{region_1}}", area:"{{area_name}}", tier:"Starter", status:"open"  },
-  { region:"{{region_1}}", area:"{{area_name}}", tier:"Starter", status:"open"  },
-  { region:"{{region_1}}", area:"{{area_name}}", tier:"Starter", status:"taken" },
-  { region:"{{region_1}}", area:"{{area_name}}", tier:"Scale",  status:"open"  },
-  { region:"{{region_2}}", area:"{{area_name}}", tier:"Growth",    status:"open"  },
-  { region:"{{region_2}}", area:"{{area_name}}", tier:"Starter", status:"open"  },
-  { region:"{{region_3}}", area:"{{area_name}}", tier:"Growth",    status:"open"  }
-];
-
 const $ = s => document.querySelector(s);
-const regions = [...new Set(INVENTORY.map(i => i.region))];
-let curRegion = regions[0], curTier = "all", curStatus = "all", active = null;
+const esc = s => (s==null?'':String(s)).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const money = n => '$' + Number(n).toLocaleString('en-AU');
+const cap = s => s ? s.charAt(0).toUpperCase() + s.slice(1) : s;
+const TIER_CODE = { starter:'T1', growth:'T2', scale:'T3' };
 
-$('#regionSel').innerHTML = regions.map(r => `<option value="${r}">${r}</option>`).join('');
+let INVENTORY = [];                 // mapped asset rows
+let REGIONS = [];                   // [{name,slug}] distinct, in order
+let curRegion = null, curTier = 'all', curStatus = 'all', active = null;
 
-/* the "vehicle photo": a landing page in browser chrome */
+/* the "vehicle photo": a landing page in browser chrome (brand slots = DB row) */
 function shot(item, big){
   return `
   <div class="chrome">
     <div class="chrome-bar">
       <span class="dot"></span><span class="dot"></span><span class="dot"></span>
-      <span class="url">{{brand_domain}}</span>
+      <span class="url">${esc(item.brand_domain || '')}</span>
     </div>
     <div class="lp">
       <div class="lp-brand"></div>
-      <span class="lp-h">{{brand_name}}</span>
+      <span class="lp-h">${esc(item.brand_name || '')}</span>
       <div class="lp-l" style="width:92%"></div>
       <div class="lp-l" style="width:68%"></div>
       ${big ? '<div class="lp-l" style="width:80%"></div>' : ''}
@@ -317,7 +304,6 @@ function shot(item, big){
 }
 
 function card(item){
-  const t = TIERS[item.tier];
   const open = item.status === "open";
   return `<article class="card ${open ? '' : 'taken'}">
     <div class="shot">
@@ -326,45 +312,63 @@ function card(item){
     </div>
     <div class="info">
       <div class="row1">
-        <span class="area">${item.area}</span>
-        <span class="tier-code">${t.code}</span>
+        <span class="area">${esc(item.area)}</span>
+        <span class="tier-code">${item.code}</span>
       </div>
-      <div class="tier-name">${item.tier}</div>
+      <div class="tier-name">${esc(item.tier)}</div>
       <div class="specs">
-        <div class="spec"><span class="k">Typical leads / 30 days</span><span class="v">${t.leads}</span></div>
+        <div class="spec"><span class="k">Typical leads / 30 days</span><span class="v">${esc(item.leads)}</span></div>
         <div class="spec"><span class="k">Installers per lead</span><span class="v">1</span></div>
         <div class="spec"><span class="k">Ad spend</span><span class="v">We carry it</span></div>
       </div>
       <div class="priceline">
-        <span class="price">${t.price}<small> +GST / 30 days</small></span>
+        <span class="price">${esc(item.price)}<small> +GST / 30 days</small></span>
       </div>
       <div class="actions">
         ${open
           ? `<button class="btn btn-ghost" data-i="${item._i}" data-a="preview">Preview</button>
-             <button class="btn btn-primary" data-i="${item._i}" data-a="claim">Claim</button>`
+             <button class="btn btn-primary" data-i="${item._i}" data-a="claim">Rent</button>`
           : `<button class="btn btn-mute" data-i="${item._i}" data-a="wait">Join waitlist</button>`}
       </div>
     </div>
   </article>`;
 }
 
+function skeleton(){
+  $('#fleet').innerHTML = Array.from({length:6}).map(() => `
+    <article class="card" aria-hidden="true">
+      <div class="shot"></div>
+      <div class="info">
+        <div class="row1"><span class="sk-bar" style="width:55%;height:16px"></span></div>
+        <span class="sk-bar" style="width:32%;height:10px;margin:9px 0 15px"></span>
+        <span class="sk-bar" style="width:100%;height:74px;border-radius:8px;margin-bottom:14px"></span>
+        <span class="sk-bar" style="width:42%;height:20px"></span>
+      </div>
+    </article>`).join('');
+}
+
+function fleetError(){
+  $('#fleet').innerHTML = `<div class="empty">Availability data temporarily unavailable.<br>Please refresh in a moment.</div>`;
+  $('#countLine').innerHTML = '';
+}
+
 function render(){
   INVENTORY.forEach((x,i) => x._i = i);
   const list = INVENTORY.filter(x =>
-    x.region === curRegion &&
+    (!curRegion || x.region === curRegion) &&
     (curTier === "all" || x.tier === curTier) &&
     (curStatus === "all" || x.status === curStatus));
 
-  $('#regionLabel').textContent = curRegion;
-  const open = INVENTORY.filter(x => x.region === curRegion && x.status === "open").length;
-  $('#countLine').innerHTML = `<span><b>${open} available</b>&nbsp;in ${curRegion}</span>`;
+  $('#regionLabel').textContent = curRegion || '—';
+  const open = INVENTORY.filter(x => (!curRegion || x.region === curRegion) && x.status === "open").length;
+  $('#countLine').innerHTML = `<span><b>${open} available</b>&nbsp;in ${esc(curRegion || 'all regions')}</span>`;
 
   $('#fleet').innerHTML = list.length
     ? list.map(card).join('')
-    : `<div class="empty">Nothing matches that filter in ${curRegion}.<br>Assets get built to order too - tell us the trade and the postcode.</div>`;
+    : `<div class="empty">Nothing matches that filter in ${esc(curRegion || 'that area')}.<br>Assets get built to order too - tell us the trade and the postcode.</div>`;
 }
 
-$('#regionSel').addEventListener('change', e => { curRegion = e.target.value; render(); });
+$('#regionSel').addEventListener('change', e => { curRegion = e.target.value || null; render(); });
 $('#tierSel').addEventListener('change',   e => { curTier   = e.target.value; render(); });
 $('#statusSel').addEventListener('change', e => { curStatus = e.target.value; render(); });
 
@@ -378,22 +382,86 @@ document.addEventListener('click', e => {
 
 function openModal(item){
   active = item;
-  const t = TIERS[item.tier];
   $('#modalShot').innerHTML = shot(item, true);
-  $('#modalMeta').textContent = `${item.area} · ${item.tier} (${t.code}) · ${t.price} +GST / 30 days`;
-  $('#modalTitle').textContent = `{{brand_name}}`;
+  $('#modalMeta').textContent = `${item.area} · ${item.tier} (${item.code}) · ${item.price} +GST / 30 days`;
+  $('#modalTitle').textContent = item.brand_name || '';
+  const claim = $('#modalClaim');
+  claim.disabled = false; claim.textContent = 'Rent this asset →';
   $('#modal').classList.add('on');
 }
 $('#modalClose').addEventListener('click', () => $('#modal').classList.remove('on'));
 $('#modal').addEventListener('click', e => { if(e.target.id === 'modal') $('#modal').classList.remove('on'); });
-$('#modalClaim').addEventListener('click', () => {
-  $('#modal').classList.remove('on');
-  // Wire to checkout / territory-lock flow.
-  console.log('claim', active);
+
+/* "Rent this asset" -> stub /api/rent-asset endpoint (to be built later) */
+$('#modalClaim').addEventListener('click', async () => {
+  if(!active) return;
+  const btn = $('#modalClaim');
+  btn.disabled = true; btn.textContent = 'Requesting…';
+  try{
+    const res = await fetch('/api/rent-asset', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ asset_id: active.id })
+    });
+    if(!res.ok) throw new Error('stub not available');
+    btn.textContent = 'Requested ✓';
+  }catch(_){
+    // /api/rent-asset is a stub - acknowledge gracefully until it exists
+    btn.textContent = "We'll be in touch ✓";
+  }
 });
+
 document.addEventListener('keydown', e => { if(e.key === 'Escape') $('#modal').classList.remove('on'); });
 
-render();
+/* ---- map an assets row (with joined region) to a card item ---- */
+function mapRow(a){
+  const region = a.regions || {};
+  return {
+    id: a.id,
+    region: region.name || '',
+    region_slug: region.slug || '',
+    area: region.name || '',                       // {{area_name}} slot
+    tier: cap(a.tier),
+    code: TIER_CODE[a.tier] || '',
+    price: money(a.monthly_price_aud),
+    leads: (a.typical_min && a.typical_max) ? `${a.typical_min}–${a.typical_max}` : `${a.floor_leads}+`,
+    status: a.status === 'available' ? 'open' : 'taken',
+    brand_name: a.brand_name,                       // {{brand_name}} slot
+    brand_domain: a.brand_domain                    // {{brand_domain}} slot
+  };
+}
+
+async function loadInventory(){
+  const cfg = window.LGR_SUPABASE || {};
+  if(!cfg.url || !cfg.anonKey || cfg.anonKey.indexOf('__') === 0){ fleetError(); return; }
+  skeleton();
+  try{
+    const sb = supabase.createClient(cfg.url, cfg.anonKey);
+    const { data, error } = await sb.from('assets')
+      .select('id,tier,brand_name,brand_domain,monthly_price_aud,floor_leads,typical_min,typical_max,status,regions!inner(slug,name,sort_order),niches!inner(slug)')
+      .eq('niches.slug', 'solar')
+      .order('sort_order', { referencedTable:'regions', ascending:true })
+      .order('tier', { ascending:true });
+    if(error) throw error;
+    INVENTORY = (data || []).map(mapRow);
+
+    // distinct regions (in returned order) that actually have assets
+    const seen = new Set(); REGIONS = [];
+    INVENTORY.forEach(i => { if(i.region && !seen.has(i.region)){ seen.add(i.region); REGIONS.push({ name:i.region, slug:i.region_slug }); } });
+
+    // optional ?region=<slug> prefilter (from the solar counter "Claim" link)
+    const wanted = new URLSearchParams(location.search).get('region');
+    const match = REGIONS.find(r => r.slug === wanted);
+    curRegion = match ? match.name : (REGIONS[0] ? REGIONS[0].name : null);
+
+    $('#regionSel').innerHTML = REGIONS.map(r =>
+      `<option value="${esc(r.name)}"${r.name === curRegion ? ' selected' : ''}>${esc(r.name)}</option>`).join('');
+    render();
+  }catch(e){
+    console.error('inventory load failed', e);
+    fleetError();
+  }
+}
+loadInventory();
 </script>
 
 <footer>

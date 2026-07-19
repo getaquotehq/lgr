@@ -107,6 +107,12 @@
   .pill{font-size:.72rem;font-weight:550;padding:4px 11px;border-radius:99px;letter-spacing:0}
   .pill.open{color:var(--green);background:var(--green-tint)}
   .pill.soon{color:var(--muted);background:var(--surface-2)}
+  /* loading / error states for live data */
+  .sk-bar{background:var(--line-2);border-radius:6px;height:12px;display:block;
+    animation:skpulse 1.2s ease-in-out infinite}
+  @keyframes skpulse{0%,100%{opacity:.5}50%{opacity:1}}
+  .data-error{grid-column:1/-1;text-align:center;padding:26px 24px;border:1px dashed var(--line);
+    border-radius:var(--r-lg);color:var(--muted);font-size:.92rem;background:var(--surface)}
 
   /* metabar - trust stats bar */
   .metabar{border-top:1px solid var(--line);border-bottom:1px solid var(--line);
@@ -199,44 +205,12 @@
     <h1>Australia's exclusive lead rental engine</h1>
     <p>Rent a lead engine built for your trade. We run the ads and carry the spend. You get every lead it makes - never shared, never resold.</p>
 
-    <div class="trades" id="trades">
-
-      <a href="/solar-leads" class="trade live">
-        <div class="trade-top">
-          <h3>Residential Solar</h3>
-          <span class="pill open">Live</span>
-        </div>
-        <p>Homeowners ready to quote solar, matched to one installer per area with named consent on the form.</p>
-        <span class="btn btn-primary">View solar leads →</span>
-      </a>
-
-      <div class="trade soon">
-        <div class="trade-top">
-          <h3>HVAC</h3>
-          <span class="pill soon">Coming soon</span>
-        </div>
-        <p>Split &amp; ducted system installs, exclusive to a single installer in your area.</p>
-        <span class="btn btn-ghost" aria-disabled="true">Coming soon</span>
-      </div>
-
-      <div class="trade soon">
-        <div class="trade-top">
-          <h3>Roofing</h3>
-          <span class="pill soon">Coming soon</span>
-        </div>
-        <p>Re-roofs and roof restorations, one trade per area - never shared, never resold.</p>
-        <span class="btn btn-ghost" aria-disabled="true">Coming soon</span>
-      </div>
-
-      <div class="trade soon">
-        <div class="trade-top">
-          <h3>Renovations</h3>
-          <span class="pill soon">Coming soon</span>
-        </div>
-        <p>Bathroom &amp; kitchen renovation projects, delivered to one builder at a time.</p>
-        <span class="btn btn-ghost" aria-disabled="true">Coming soon</span>
-      </div>
-
+    <!-- Trade picker - rendered from Supabase `niches` on load -->
+    <div class="trades" id="trades" aria-busy="true">
+      <div class="trade trade-sk" aria-hidden="true"><div class="trade-top"><span class="sk-bar" style="width:45%;height:16px"></span><span class="sk-bar" style="width:52px"></span></div><span class="sk-bar" style="width:90%;margin:6px 0"></span><span class="sk-bar" style="width:70%;margin-bottom:22px"></span><span class="sk-bar" style="width:100%;height:38px;border-radius:7px"></span></div>
+      <div class="trade trade-sk" aria-hidden="true"><div class="trade-top"><span class="sk-bar" style="width:40%;height:16px"></span><span class="sk-bar" style="width:52px"></span></div><span class="sk-bar" style="width:90%;margin:6px 0"></span><span class="sk-bar" style="width:70%;margin-bottom:22px"></span><span class="sk-bar" style="width:100%;height:38px;border-radius:7px"></span></div>
+      <div class="trade trade-sk" aria-hidden="true"><div class="trade-top"><span class="sk-bar" style="width:50%;height:16px"></span><span class="sk-bar" style="width:52px"></span></div><span class="sk-bar" style="width:90%;margin:6px 0"></span><span class="sk-bar" style="width:70%;margin-bottom:22px"></span><span class="sk-bar" style="width:100%;height:38px;border-radius:7px"></span></div>
+      <div class="trade trade-sk" aria-hidden="true"><div class="trade-top"><span class="sk-bar" style="width:42%;height:16px"></span><span class="sk-bar" style="width:52px"></span></div><span class="sk-bar" style="width:90%;margin:6px 0"></span><span class="sk-bar" style="width:70%;margin-bottom:22px"></span><span class="sk-bar" style="width:100%;height:38px;border-radius:7px"></span></div>
     </div>
   </div>
 
@@ -308,6 +282,8 @@
   </div>
 </footer>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="supabase-config.js"></script>
 <script>
   const burger = document.getElementById('burger');
   const mobileMenu = document.getElementById('mobileMenu');
@@ -319,6 +295,49 @@
   };
   burger.addEventListener('click', () => setMenu(!burger.classList.contains('on')));
   mobileMenu.querySelectorAll('a').forEach(a => a.addEventListener('click', () => setMenu(false)));
+
+  /* ---- Trade picker: render niches live from Supabase ---- */
+  (function(){
+    const grid = document.getElementById('trades');
+    const cfg = window.LGR_SUPABASE || {};
+    const esc = s => (s==null?'':String(s)).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+    const href = slug => slug === 'solar' ? '/solar-leads' : '/' + slug + '-leads';
+    const label = n => n.slug === 'solar' ? 'solar' : n.name.toLowerCase();
+    const cardLive = n =>
+      '<a href="'+href(n.slug)+'" class="trade live">'
+      + '<div class="trade-top"><h3>'+esc(n.name)+'</h3><span class="pill open">Live</span></div>'
+      + '<p>'+esc(n.short_desc||'')+'</p>'
+      + '<span class="btn btn-primary">View '+esc(label(n))+' leads →</span></a>';
+    const cardSoon = n =>
+      '<div class="trade soon">'
+      + '<div class="trade-top"><h3>'+esc(n.name)+'</h3><span class="pill soon">Coming soon</span></div>'
+      + '<p>'+esc(n.short_desc||'')+'</p>'
+      + '<span class="btn btn-ghost" aria-disabled="true">Coming soon</span></div>';
+    async function loadTrades(){
+      if(!cfg.url || !cfg.anonKey || cfg.anonKey.indexOf('__') === 0){
+        grid.innerHTML = '<div class="data-error">Trade data temporarily unavailable.</div>';
+        grid.removeAttribute('aria-busy'); return;
+      }
+      try{
+        const sb = supabase.createClient(cfg.url, cfg.anonKey);
+        const { data, error } = await sb.from('niches')
+          .select('slug,name,short_desc,status,sort_order')
+          .in('status', ['live','coming_soon'])
+          .order('sort_order', { ascending:true })
+          .order('name', { ascending:true });
+        if(error) throw error;
+        grid.innerHTML = (data && data.length)
+          ? data.map(n => n.status === 'live' ? cardLive(n) : cardSoon(n)).join('')
+          : '<div class="data-error">No trades available yet.</div>';
+      }catch(e){
+        console.error('niches load failed', e);
+        grid.innerHTML = '<div class="data-error">Trade data temporarily unavailable. Please try again shortly.</div>';
+      }finally{
+        grid.removeAttribute('aria-busy');
+      }
+    }
+    loadTrades();
+  })();
 </script>
 </body>
 </html>
