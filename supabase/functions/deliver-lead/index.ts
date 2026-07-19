@@ -122,7 +122,7 @@ async function deliverEmail(lead: Record<string, unknown>, to: string, brand: st
     body: JSON.stringify({
       from: `${brand} <${fromEmail}>`,
       to: [to],
-      reply_to: fromEmail,
+      reply_to: "contact@leadgenrentals.com.au",
       subject: `New Lead — ${lead.full_name} · ${lead.postcode ?? ""}`.trim(),
       html: buildEmailHtml(lead, brand),
     }),
