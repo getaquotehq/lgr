@@ -432,23 +432,33 @@ function previewUrl(item){
   return d ? 'https://' + d + '/' : null;
 }
 
-/* live preview: the REAL landing page in browser chrome, with a clickable
-   address bar + "Open ↗" that pops the funnel in a new tab so installers can
-   walk it exactly as a homeowner would. Falls back to the mock if there's no
-   domain yet. */
+/* a copy of each funnel's landing page is hosted alongside this site at
+   /previews/<domain>.html, so the mock browser window always renders the real
+   LP even before the brand's own DNS is pointed. */
+function localPreviewUrl(item){
+  const d = (item.brand_domain || '').trim().toLowerCase().replace(/^https?:\/\//,'').replace(/\/.*$/,'');
+  return d ? 'previews/' + d + '.html' : null;
+}
+
+/* live preview: the REAL landing page rendered inside browser chrome. The
+   iframe loads the locally-hosted copy so it shows immediately; the clickable
+   address bar + "Open ↗" point at the brand's live domain so installers can
+   walk the funnel exactly as a homeowner would. Falls back to the mock shot if
+   there's no domain yet. */
 function liveShot(item){
-  const url = previewUrl(item);
-  if(!url) return shot(item, true);
+  const live  = previewUrl(item);        // https://<domain>/  (real site)
+  const local = localPreviewUrl(item);   // previews/<domain>.html (always renders)
+  if(!live || !local) return shot(item, true);
   return `
   <div class="chrome live">
     <div class="chrome-bar">
       <span class="dot"></span><span class="dot"></span><span class="dot"></span>
-      <a class="url" href="${esc(url)}" target="_blank" rel="noopener">${esc(item.brand_domain || '')}</a>
-      <a class="open-live" href="${esc(url)}" target="_blank" rel="noopener">Open ↗</a>
+      <a class="url" href="${esc(live)}" target="_blank" rel="noopener">${esc(item.brand_domain || '')}</a>
+      <a class="open-live" href="${esc(live)}" target="_blank" rel="noopener">Open ↗</a>
     </div>
     <div class="live-frame">
-      <iframe src="${esc(url)}" loading="lazy" title="${esc(item.brand_name || 'Landing page')} preview" referrerpolicy="no-referrer"></iframe>
-      <a class="live-fallback" href="${esc(url)}" target="_blank" rel="noopener">Open live landing page ↗</a>
+      <iframe src="${esc(local)}" loading="lazy" title="${esc(item.brand_name || 'Landing page')} preview" referrerpolicy="no-referrer"></iframe>
+      <a class="live-fallback" href="${esc(live)}" target="_blank" rel="noopener">Open live landing page ↗</a>
     </div>
   </div>`;
 }
