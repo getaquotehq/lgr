@@ -108,6 +108,11 @@
   .lp-form{margin-top:11px;display:flex;gap:6px}
   .lp-in{flex:1;height:16px;border:1px solid var(--line);border-radius:3px;background:var(--bg)}
   .lp-btn{width:52px;height:16px;border-radius:3px;background:var(--blue)}
+  /* live card thumbnail: the real LP rendered at half scale inside the chrome */
+  .chrome.card-live{display:flex;flex-direction:column}
+  .mini-frame{position:relative;flex:1;overflow:hidden;background:#fff}
+  .mini-frame iframe{position:absolute;top:0;left:0;width:200%;height:200%;border:0;
+    transform:scale(.5);transform-origin:top left;background:#fff;pointer-events:none}
 
   .info{padding:18px}
   .row1{display:flex;justify-content:space-between;align-items:center;margin-bottom:3px;gap:10px}
@@ -509,6 +514,28 @@ h1 .hl{background:linear-gradient(120deg,${a1},${a2});-webkit-background-clip:te
 </body></html>`;
 }
 
+/* card thumbnail: the same coded-in preview, rendered at half scale inside the
+   browser chrome so each card shows its real LP instead of a skeleton — the
+   srcdoc is set by hydrateCardPreviews() after the grid renders. */
+function miniShot(item){
+  return `
+  <div class="chrome card-live">
+    <div class="chrome-bar">
+      <span class="dot"></span><span class="dot"></span><span class="dot"></span>
+      <span class="url">${esc(item.brand_domain || '')}</span>
+    </div>
+    <div class="mini-frame"><iframe data-pv="${item._i}" scrolling="no" sandbox="" title="${esc(item.brand_name || 'Landing page')} preview" aria-hidden="true" tabindex="-1"></iframe></div>
+  </div>`;
+}
+
+/* Fill every card thumbnail iframe with its coded-in preview document. */
+function hydrateCardPreviews(){
+  document.querySelectorAll('#fleet iframe[data-pv]').forEach(f => {
+    const it = INVENTORY[+f.dataset.pv];
+    if(it) f.srcdoc = buildPreviewDoc(it);
+  });
+}
+
 /* live preview: the branded landing page rendered inside browser chrome. The
    preview document is coded in above and injected via srcdoc (set in openModal);
    the clickable address bar + "Open ↗" point at the brand's live domain so
@@ -536,7 +563,7 @@ function card(item){
   return `<article class="card ${open ? '' : 'taken'}">
     <div class="shot">
       <span class="ribbon ${item.status}">${open ? 'AVAILABLE' : 'TAKEN'}</span>
-      ${shot(item, false)}
+      ${item.brand_domain ? miniShot(item) : shot(item, false)}
     </div>
     <div class="info">
       <div class="row1">
@@ -594,6 +621,7 @@ function render(){
   $('#fleet').innerHTML = list.length
     ? list.map(card).join('')
     : `<div class="empty">Nothing matches that filter in ${esc(curRegion || 'that area')}.<br>Assets get built to order too - tell us the trade and the postcode.</div>`;
+  hydrateCardPreviews();
 }
 
 $('#regionSel').addEventListener('change', e => { curRegion = e.target.value || null; render(); });
