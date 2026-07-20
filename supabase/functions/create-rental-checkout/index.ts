@@ -14,9 +14,12 @@
 //   { asset_id, business_name, contact_name, email, phone }
 // Response: { url }  → the browser redirects to Stripe.
 //
+// GST is added by Stripe Tax via automatic_tax below (uses the account's tax
+// settings), so no tax-rate secret is needed. Checkout collects the billing
+// address automatically because automatic_tax is enabled.
+//
 // Secrets (Supabase → Edge Functions → Secrets):
 //   STRIPE_API_KEY            (required — the LGR Stripe secret key)
-//   STRIPE_TAX_RATE_GST       (optional — a Stripe tax rate id for 10% GST)
 //   SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY   (auto-injected)
 // ============================================================================
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
@@ -30,7 +33,6 @@ const supabase = createClient(
 )
 
 const SITE = 'https://leadgenrentals.com.au'
-const GST_TAX_RATE = Deno.env.get('STRIPE_TAX_RATE_GST') || ''
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -93,16 +95,21 @@ serve(async (req) => {
         currency: 'aud',
         unit_amount: price * 100,
         recurring: { interval: 'month' },
+        // Prices are advertised "+GST", so treat them as tax-exclusive — Stripe
+        // Tax adds 10% GST on top rather than carving it out of the amount.
+        tax_behavior: 'exclusive',
         product_data: { name: productName, description: productDesc },
       },
       quantity: 1,
     }
-    if (GST_TAX_RATE) lineItem.tax_rates = [GST_TAX_RATE]
 
     const session = await stripe.checkout.sessions.create({
       mode: 'subscription',
       payment_method_types: ['card'],
       ...(customerId ? { customer: customerId } : { customer_email: String(email).trim() }),
+      // Uses the account's Stripe Tax settings (GST) — required to make tax
+      // apply to an API-created Checkout Session.
+      automatic_tax: { enabled: true },
       line_items: [lineItem],
       metadata: {
         type: 'asset_rental',
