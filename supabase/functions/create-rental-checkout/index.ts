@@ -1,13 +1,13 @@
 // ============================================================================
-// create-rental-checkout — public checkout for an LGR asset rental.
+// create-rental-checkout - public checkout for an LGR asset rental.
 //
 // Called from fleet.html when an installer clicks "Rent this asset". No auth:
-// the installer isn't a Supabase user yet — they become one (well, an
+// the installer isn't a Supabase user yet - they become one (well, an
 // `installers` row) only once the Stripe payment completes, via stripe-webhook.
 //
 // LGR rentals are billed month-to-month in advance, so this creates a Stripe
 // Checkout Session in `subscription` mode with an inline recurring monthly
-// price. The price and floor are read from the DB — the client is never
+// price. The price and floor are read from the DB - the client is never
 // trusted with the amount.
 //
 // Request (JSON):
@@ -19,7 +19,7 @@
 // address automatically because automatic_tax is enabled.
 //
 // Secrets (Supabase → Edge Functions → Secrets):
-//   STRIPE_API_KEY            (required — the LGR Stripe secret key)
+//   STRIPE_API_KEY            (required - the LGR Stripe secret key)
 //   SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY   (auto-injected)
 // ============================================================================
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
@@ -47,6 +47,53 @@ function json(body: unknown, status = 200) {
     status,
     headers: { ...corsHeaders, 'Content-Type': 'application/json' },
   })
+}
+
+// Fire an internal "checkout started" notice to the LGR inbox via Resend.
+// Best-effort: RESEND_API_KEY / RESEND_FROM_EMAIL must be set (same as the
+// confirmation email). A failure here never blocks the checkout.
+async function notifyCheckoutStarted(d: {
+  business_name: string; contact_name: string; email: string; phone: string
+  brand_name: string; niche: string; region: string; tier: string
+  price: number; floor: number; session_id: string
+}) {
+  const apiKey = Deno.env.get('RESEND_API_KEY')
+  const fromEmail = Deno.env.get('RESEND_FROM_EMAIL')
+  if (!apiKey || !fromEmail) {
+    console.warn('checkout-started notice skipped: RESEND_* not configured')
+    return
+  }
+  const esc = (s: string) => String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+  const money = (n: number) => '$' + Number(n).toLocaleString('en-AU')
+  const row = (k: string, v: string) =>
+    `<tr><td style="padding:4px 14px 4px 0;color:#656D76">${k}</td><td><strong>${v}</strong></td></tr>`
+  const html = `
+    <h2 style="margin:0 0 14px;font-family:Arial,sans-serif">Checkout started - not yet paid</h2>
+    <table style="border-collapse:collapse;font-size:14px;font-family:Arial,sans-serif">
+      ${row('Business', esc(d.business_name))}
+      ${row('Contact', esc(d.contact_name) || '-')}
+      ${row('Email', `<a href="mailto:${esc(d.email)}">${esc(d.email)}</a>`)}
+      ${row('Phone', esc(d.phone) || '-')}
+      ${row('Asset', esc(d.brand_name))}
+      ${row('Trade', esc(d.niche) + (d.region ? ' - ' + esc(d.region) : '') + ' (' + esc(d.tier) + ')')}
+      ${row('Rental', money(d.price) + ' + GST / 30 days')}
+      ${row('Floor', d.floor + ' leads')}
+      ${row('Stripe session', `<code>${esc(d.session_id)}</code>`)}
+    </table>
+    <p style="margin:16px 0 0;font-size:12px;color:#888;font-family:Arial,sans-serif">Payment has not been received yet. A confirmation is sent to the renter on completion.</p>`
+
+  const res = await fetch('https://api.resend.com/emails', {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      from: `Lead Gen Rentals <${fromEmail}>`,
+      to: ['contact@leadgenrentals.com.au'],
+      reply_to: d.email || 'contact@leadgenrentals.com.au',
+      subject: `New checkout started - ${d.business_name} (${d.email})`,
+      html,
+    }),
+  })
+  if (!res.ok) console.error('resend (checkout-started) error:', res.status, (await res.text()).slice(0, 300))
 }
 
 serve(async (req) => {
@@ -80,8 +127,8 @@ serve(async (req) => {
     const nicheName = (asset as any).niches?.name || 'Leads'
     const regionName = (asset as any).regions?.name || ''
     const tierName = TIER_NAME[asset.tier] || asset.tier
-    const productName = `${asset.brand_name} — ${tierName} lead engine`
-    const productDesc = `Exclusive ${nicheName} lead engine${regionName ? ' · ' + regionName : ''}. ` +
+    const productName = `${asset.brand_name} - ${tierName} lead engine`
+    const productDesc = `Exclusive ${nicheName} lead engine${regionName ? ' - ' + regionName : ''}. ` +
       `Guaranteed floor of ${asset.floor_leads} leads / 30 days, delivered to you alone. ` +
       `Flat monthly rental, cancel any time.`
 
@@ -95,7 +142,7 @@ serve(async (req) => {
         currency: 'aud',
         unit_amount: price * 100,
         recurring: { interval: 'month' },
-        // Prices are advertised "+GST", so treat them as tax-exclusive — Stripe
+        // Prices are advertised "+GST", so treat them as tax-exclusive - Stripe
         // Tax adds 10% GST on top rather than carving it out of the amount.
         tax_behavior: 'exclusive',
         product_data: { name: productName, description: productDesc },
@@ -107,7 +154,7 @@ serve(async (req) => {
       mode: 'subscription',
       payment_method_types: ['card'],
       ...(customerId ? { customer: customerId } : { customer_email: String(email).trim() }),
-      // Uses the account's Stripe Tax settings (GST) — required to make tax
+      // Uses the account's Stripe Tax settings (GST) - required to make tax
       // apply to an API-created Checkout Session.
       automatic_tax: { enabled: true },
       line_items: [lineItem],
@@ -141,6 +188,21 @@ serve(async (req) => {
       stripe_customer_id: customerId || null,
       status: 'pending',
     })
+
+    // ── notify the team that a checkout has started (not yet paid) ────────────
+    await notifyCheckoutStarted({
+      business_name: String(business_name),
+      contact_name: String(contact_name || ''),
+      email: String(email).trim(),
+      phone: String(phone || ''),
+      brand_name: asset.brand_name,
+      niche: nicheName,
+      region: regionName,
+      tier: tierName,
+      price,
+      floor: asset.floor_leads,
+      session_id: session.id,
+    }).catch((e) => console.error('notifyCheckoutStarted failed (non-fatal):', e))
 
     return json({ url: session.url })
   } catch (err) {
