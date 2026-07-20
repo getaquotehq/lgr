@@ -31,170 +31,29 @@
   .mono{font-family:var(--mono)}
   a{color:inherit}
 
-  /* nav (top bar only - scoped so it doesn't hit the footer's <nav>) */
-  body>nav{background:rgba(255,255,255,.8);backdrop-filter:saturate(1.8) blur(12px);
-    border-bottom:1px solid var(--line);position:sticky;top:0;z-index:40}
-  .nav-in{max-width:1120px;margin:0 auto;padding:0 24px;height:60px;
-    display:flex;align-items:center;justify-content:space-between}
-  .brand{display:flex;align-items:center;gap:9px;font-weight:600;font-size:.94rem;
-    letter-spacing:-.015em;white-space:nowrap;color:var(--ink);text-decoration:none}
-  .brand-logo{height:46px;width:auto;display:block}
-  .nav-r{display:flex;align-items:center;gap:6px}
-  .nav-l{font-size:.88rem;color:var(--muted);text-decoration:none;font-weight:450;
-    padding:8px 12px;border-radius:6px;transition:.12s}
-  .nav-l:hover{color:var(--ink);background:var(--surface-2)}
-  .nav-r .btn{margin-left:8px}
-  .nav-burger{display:none;background:none;border:none;cursor:pointer;padding:8px;margin:-8px -8px -8px 0}
-  .nav-burger span{display:block;width:19px;height:1.5px;background:var(--ink);margin:4px 0;
-    transition:transform .22s,opacity .22s}
-  .nav-burger.on span:nth-child(1){transform:translateY(5.5px) rotate(45deg)}
-  .nav-burger.on span:nth-child(2){opacity:0}
-  .nav-burger.on span:nth-child(3){transform:translateY(-5.5px) rotate(-45deg)}
-  /* dropdown; capped with dvh (not vh) so it never spills past the visible
-     screen on mobile, scrolling internally if the viewport is very short */
-  .mobile-menu{display:none;position:fixed;inset:60px 0 auto 0;z-index:39;
-    background:var(--bg);border-bottom:1px solid var(--line);padding:8px 24px 20px;box-shadow:var(--sh-lg);
-    max-height:calc(100vh - 60px);max-height:calc(100dvh - 60px);
-    overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch}
-  .mobile-menu.on{display:block}
-  body.menu-open{overflow:hidden}
-  .mobile-menu a{display:block;padding:13px 4px;font-size:1rem;color:var(--ink);
-    text-decoration:none;border-bottom:1px solid var(--line-2);font-weight:500}
-  .mobile-menu a:last-child{border-bottom:none}
-  .mobile-menu .btn{margin-top:14px;width:100%}
-
-  /* buttons */
-  .btn{font-family:var(--sans);font-weight:550;font-size:.9rem;border:1px solid transparent;
-    padding:10px 18px;border-radius:7px;cursor:pointer;text-decoration:none;letter-spacing:-.01em;
-    display:inline-flex;align-items:center;justify-content:center;gap:7px;
-    transition:background .14s,border-color .14s;white-space:nowrap}
-  .btn-primary{background:var(--blue);color:#fff;box-shadow:0 1px 2px rgba(245,158,11,.24)}
-  .btn-primary:hover{background:var(--blue-600)}
-  .btn-ghost{background:var(--bg);color:var(--ink);border-color:var(--line);box-shadow:var(--sh-sm)}
-  .btn-ghost:hover{border-color:var(--faint);background:var(--surface)}
-  .btn:focus-visible{outline:2px solid var(--blue);outline-offset:2px}
-  .btn-sm{padding:8px 14px;font-size:.85rem}
-  .btn[aria-disabled="true"]{opacity:.55;cursor:default;pointer-events:none}
-
-  /* hero */
-  .hero{padding:96px 24px 24px;text-align:left;position:relative;overflow:hidden;
-    max-width:1120px;margin:0 auto}
-  .hero::before{content:"";position:absolute;inset:0;z-index:-1;
-    background-image:linear-gradient(var(--line-2) 1px,transparent 1px),linear-gradient(90deg,var(--line-2) 1px,transparent 1px);
-    background-size:56px 56px;
-    mask-image:radial-gradient(ellipse 70% 60% at 0% 0%,#000,transparent 70%);
-    -webkit-mask-image:radial-gradient(ellipse 70% 60% at 0% 0%,#000,transparent 70%);opacity:.55}
-  .eyebrow{font-family:var(--mono);font-size:.72rem;letter-spacing:.02em;
-    color:var(--muted);display:inline-flex;align-items:center;gap:9px;margin-bottom:32px;
-    text-transform:uppercase;font-weight:500}
-  .eyebrow::before{content:"";width:24px;height:1px;background:var(--muted)}
-  h1{font-size:clamp(2.6rem,6.8vw,4.6rem);line-height:.98;letter-spacing:-.045em;
-    font-weight:640;margin-bottom:24px;max-width:16ch;color:var(--ink)}
-  .hero p{font-size:1.14rem;color:var(--muted);max-width:38rem;line-height:1.5;font-weight:420}
-
-  /* trade picker - niche cards (replaces the solar counter on the home page) */
-  .trades{display:grid;grid-template-columns:repeat(2,1fr);gap:16px;margin:52px 0 0;max-width:800px}
-  .trade{background:var(--bg);border:1px solid var(--line);border-radius:var(--r-lg);
-    padding:24px;display:flex;flex-direction:column;box-shadow:var(--sh-sm);text-align:left;
-    color:var(--ink);text-decoration:none;
-    transition:transform .16s,box-shadow .16s,border-color .16s}
-  a.trade.live:hover{transform:translateY(-2px);box-shadow:var(--sh-lg);border-color:var(--blue-line)}
-  .trade.soon{opacity:.75}
-  .trade-top{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:11px}
-  .trade h3{font-size:1.14rem;font-weight:600;letter-spacing:-.02em;color:var(--ink)}
-  .trade p{font-size:.9rem;color:var(--muted);line-height:1.5;flex:1;margin-bottom:18px}
-  .trade .btn{width:100%}
-  .pill{font-size:.72rem;font-weight:550;padding:4px 11px;border-radius:99px;letter-spacing:0}
-  .pill.open{color:var(--green);background:var(--green-tint)}
-  .pill.soon{color:var(--muted);background:var(--surface-2)}
-  /* loading / error states for live data */
-  .sk-bar{background:var(--line-2);border-radius:6px;height:12px;display:block;
-    animation:skpulse 1.2s ease-in-out infinite}
-  @keyframes skpulse{0%,100%{opacity:.5}50%{opacity:1}}
-  .data-error{grid-column:1/-1;text-align:center;padding:26px 24px;border:1px dashed var(--line);
-    border-radius:var(--r-lg);color:var(--muted);font-size:.92rem;background:var(--surface)}
-
-  /* metabar - trust stats bar */
-  .metabar{border-top:1px solid var(--line);border-bottom:1px solid var(--line);
-    background:var(--bg);margin-top:24px}
-  .metabar-in{max-width:1120px;margin:0 auto;padding:0 24px;
-    display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--line)}
-  .mb-cell{background:var(--bg);padding:22px 24px}
-  .mb-k{font-family:var(--mono);font-size:.68rem;letter-spacing:.02em;text-transform:uppercase;
-    color:var(--muted);display:block;margin-bottom:10px;font-weight:500}
-  .mb-v{font-size:1.42rem;letter-spacing:-.028em;color:var(--ink);font-weight:600;line-height:1;
-    font-variant-numeric:tabular-nums}
-
-  /* sections */
-  section{padding:100px 0}
-  .sec-head{max-width:44rem;margin-bottom:12px}
-  .sec-eyebrow{font-family:var(--mono);font-size:.72rem;letter-spacing:.02em;
-    text-transform:uppercase;color:var(--muted);margin-bottom:20px;font-weight:500;
-    display:inline-flex;align-items:center;gap:9px}
-  .sec-eyebrow::before{content:"";width:24px;height:1px;background:var(--muted)}
-  h2{font-size:clamp(2rem,4.4vw,3.1rem);letter-spacing:-.038em;line-height:1.02;
-    font-weight:640;margin-bottom:20px;color:var(--ink)}
-  .lede{font-size:1.06rem;color:var(--muted);max-width:42rem;line-height:1.5;font-weight:420}
-
-  /* steps */
-  .steps{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:36px}
-  .step{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-lg);padding:26px 24px}
-  .step-n{width:30px;height:30px;border-radius:8px;background:var(--bg);border:1px solid var(--line);
-    color:var(--blue);font-size:.82rem;font-weight:600;
-    display:flex;align-items:center;justify-content:center;margin-bottom:16px;flex-shrink:0}
-  .step h4{font-size:1.04rem;font-weight:600;margin-bottom:7px;letter-spacing:-.015em;color:var(--ink)}
-  .step p{font-size:.9rem;color:var(--muted);line-height:1.55}
-
-  footer{background:var(--ink);border-top:1px solid var(--ink);padding:56px 0 40px}
-  .foot-top{display:flex;justify-content:space-between;align-items:center;
-    padding-bottom:32px;margin-bottom:32px;border-bottom:1px solid rgba(255,255,255,.1);
-    gap:24px;flex-wrap:wrap}
-  .foot-top .brand-logo{height:50px}
-  .foot-nav{display:flex;gap:26px;flex-wrap:wrap}
-  .foot-nav a{color:rgba(255,255,255,.6);text-decoration:none;font-size:.88rem;
-    font-weight:450;transition:color .12s}
-  .foot-nav a:hover{color:#fff}
-  .foot{display:flex;justify-content:space-between;gap:28px;flex-wrap:wrap;align-items:flex-start}
-  .fine{font-size:.78rem;color:rgba(255,255,255,.5);max-width:46rem;line-height:1.65}
-
-  @media(max-width:860px){
-    .nav-r{display:none}
-    .nav-burger{display:block}
-    .trades{grid-template-columns:1fr}
-    .steps{grid-template-columns:1fr}
-    .metabar-in{grid-template-columns:1fr 1fr}
-    .mb-cell{padding:18px 20px}
-    section{padding:60px 0}
-    .hero{padding:48px 24px 40px}
-    /* mobile-menu CTA was inheriting nav-link styles (block display, 4px padding,
-       border-bottom) which beat .btn on specificity - reset explicitly */
-    .mobile-menu a.btn{
-      display:flex!important;align-items:center;justify-content:center;
-      padding:12px 18px!important;border-bottom:none!important;color:#fff!important;
-    }
-  }
-  @media(prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}html{scroll-behavior:auto}}
-</style>
-</head>
-<body>
-
-<nav>
+  /* nav (top bar only - scoped so it doesn't hit the footer's <nav>
   <div class="nav-in">
     <a href="/" class="brand" aria-label="Lead Gen Rentals home"><img src="LeadGen-Rentals-Logo.png" alt="Lead Gen Rentals" class="brand-logo"></a>
     <div class="nav-r">
-      <a href="#trades" class="nav-l">Trades</a>
-      <a href="#how" class="nav-l">How it works</a>
-      <a href="#trades" class="btn btn-primary btn-sm">Browse trades</a>
+      <a href="/solar-leads" class="nav-l">Solar</a>
+      <a href="/hvac-leads" class="nav-l">HVAC</a>
+      <a href="/roofing-leads" class="nav-l">Roofing</a>
+      <a href="/renovations-leads" class="nav-l">Renovations</a>
+      <a href="/about" class="nav-l">About</a>
+      <a href="/contact" class="nav-l">Contact</a>
+      <a href="/#trades" class="btn btn-primary btn-sm">Browse trades</a>
     </div>
-    <button class="nav-burger" id="burger" aria-label="Menu" aria-expanded="false">
-      <span></span><span></span><span></span>
-    </button>
+    <button class="nav-burger" id="burger" aria-label="Menu" aria-expanded="false"><span></span><span></span><span></span></button>
   </div>
 </nav>
 <div class="mobile-menu" id="mobileMenu">
-  <a href="#trades">Trades</a>
-  <a href="#how">How it works</a>
-  <a href="#trades" class="btn btn-primary">Browse trades</a>
+  <a href="/solar-leads">Solar</a>
+  <a href="/hvac-leads">HVAC</a>
+  <a href="/roofing-leads">Roofing</a>
+  <a href="/renovations-leads">Renovations</a>
+  <a href="/about">About</a>
+  <a href="/contact">Contact</a>
+  <a href="/#trades" class="btn btn-primary">Browse trades</a>
 </div>
 
 <main>

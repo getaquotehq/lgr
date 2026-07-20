@@ -208,21 +208,46 @@
   @media(max-width:640px){.fleet{grid-template-columns:1fr}.filters{grid-template-columns:1fr}
     .ff{border-right:none;border-bottom:1px solid var(--line)}.nav-tag{display:none}}
   @media(prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+  .nav-burger{display:none;background:none;border:none;cursor:pointer;padding:8px;margin:-8px -8px -8px 0}
+  .nav-burger span{display:block;width:19px;height:1.5px;background:var(--ink);margin:4px 0;transition:transform .22s,opacity .22s}
+  .nav-burger.on span:nth-child(1){transform:translateY(5.5px) rotate(45deg)}
+  .nav-burger.on span:nth-child(2){opacity:0}
+  .nav-burger.on span:nth-child(3){transform:translateY(-5.5px) rotate(-45deg)}
+  .mobile-menu{display:none;position:fixed;inset:60px 0 auto 0;z-index:39;background:var(--bg);border-bottom:1px solid var(--line);padding:8px 24px 20px;box-shadow:var(--sh-lg)}
+  .mobile-menu.on{display:block}
+  body.menu-open{overflow:hidden}
+  .mobile-menu a{display:block;padding:13px 4px;font-size:1rem;color:var(--ink);text-decoration:none;border-bottom:1px solid var(--line-2);font-weight:500}
+  .mobile-menu a:last-child{border-bottom:none}
+  .mobile-menu a.btn{display:flex;justify-content:center;border-bottom:none;color:#fff!important;margin-top:14px;padding:12px 18px}
+  @media(max-width:860px){.nav-r{display:none}.nav-burger{display:block}}
 </style>
 </head>
 <body>
 
 <nav>
   <div class="nav-in">
-    <div class="brand-wrap" style="display:flex;align-items:center;gap:9px;min-width:0">
-      <a href="/" class="brand" aria-label="Lead Gen Rentals home"><img src="LeadGen-Rentals-Logo.png" alt="Lead Gen Rentals" class="brand-logo"></a>
-    </div>
+    <a href="/" class="brand" aria-label="Lead Gen Rentals home"><img src="LeadGen-Rentals-Logo.png" alt="Lead Gen Rentals" class="brand-logo"></a>
     <div class="nav-r">
-      <a href="/solar-leads" class="nav-l" id="backLink">← Solar leads</a>
-      <span class="nav-tag">Service business view</span>
+      <a href="/solar-leads" class="nav-l">Solar</a>
+      <a href="/hvac-leads" class="nav-l">HVAC</a>
+      <a href="/roofing-leads" class="nav-l">Roofing</a>
+      <a href="/renovations-leads" class="nav-l">Renovations</a>
+      <a href="/about" class="nav-l">About</a>
+      <a href="/contact" class="nav-l">Contact</a>
+      <a href="/#trades" class="btn btn-primary btn-sm">Browse trades</a>
     </div>
+    <button class="nav-burger" id="burger" aria-label="Menu" aria-expanded="false"><span></span><span></span><span></span></button>
   </div>
 </nav>
+<div class="mobile-menu" id="mobileMenu">
+  <a href="/solar-leads">Solar</a>
+  <a href="/hvac-leads">HVAC</a>
+  <a href="/roofing-leads">Roofing</a>
+  <a href="/renovations-leads">Renovations</a>
+  <a href="/about">About</a>
+  <a href="/contact">Contact</a>
+  <a href="/#trades" class="btn btn-primary">Browse trades</a>
+</div>
 
 <div class="wrap">
 
@@ -616,5 +641,11 @@ loadInventory();
   </div>
 </footer>
 
+<script>
+(function(){var b=document.getElementById('burger'),m=document.getElementById('mobileMenu');if(!b||!m)return;
+var t=function(o){b.classList.toggle('on',o);m.classList.toggle('on',o);document.body.classList.toggle('menu-open',o);b.setAttribute('aria-expanded',o);};
+b.addEventListener('click',function(){t(!b.classList.contains('on'));});
+m.querySelectorAll('a').forEach(function(a){a.addEventListener('click',function(){t(false);});});})();
+</script>
 </body>
 </html>
