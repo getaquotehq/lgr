@@ -156,6 +156,31 @@
   .modal-actions{display:flex;gap:10px;margin-top:18px}
   .modal-actions .btn{flex:1}
   .modal-actions .btn.go{flex:2}
+  .modal-actions .btn:disabled{opacity:.6;cursor:default}
+
+  /* rental details form (step 2 inside the modal) */
+  .rf-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .rf-f{display:flex;flex-direction:column}
+  .rf-f label{font-family:var(--mono);font-size:.66rem;letter-spacing:.02em;text-transform:uppercase;
+    color:var(--muted);margin-bottom:5px;font-weight:500}
+  .rf-f .req{color:var(--red);margin-left:3px}
+  .rf-f input{border:1px solid var(--line);border-radius:6px;padding:9px 11px;font-family:var(--sans);
+    font-size:.9rem;color:var(--ink);background:var(--bg);transition:border-color .12s}
+  .rf-f input:focus{outline:none;border-color:var(--blue)}
+  .rf-f input.err{border-color:var(--red);background:var(--red-tint)}
+  .rf-total{margin-top:14px;font-size:.9rem;color:var(--ink);font-weight:600}
+  .rf-total small{font-weight:420;color:var(--muted)}
+  .rf-err{margin-top:10px;font-size:.84rem;color:var(--red);display:none}
+  .rf-err.on{display:block}
+  .rf-secure{margin-top:12px;text-align:center;font-size:.74rem;color:var(--muted)}
+  @media(max-width:520px){.rf-grid{grid-template-columns:1fr}}
+
+  /* checkout return banner */
+  .banner{border-radius:10px;padding:14px 18px;margin:22px 0 0;font-size:.92rem;
+    display:flex;align-items:center;gap:12px;line-height:1.5}
+  .banner.ok{background:var(--green-tint);border:1px solid #BCE9D6;color:#0A6B4B}
+  .banner.info{background:var(--amber-tint);border:1px solid #F5DFBE;color:var(--amber)}
+  .banner b{font-weight:650}
 
   .empty{grid-column:1/-1;text-align:center;padding:64px 20px;color:var(--muted);
     border:1px dashed var(--line);border-radius:12px;background:var(--bg)}
@@ -194,7 +219,7 @@
       <span class="nav-tag">/ available assets</span>
     </div>
     <div class="nav-r">
-      <a href="/solar-leads" class="nav-l">← Solar leads</a>
+      <a href="/solar-leads" class="nav-l" id="backLink">← Solar leads</a>
       <span class="nav-tag">Installer view</span>
     </div>
   </div>
@@ -202,9 +227,11 @@
 
 <div class="wrap">
 
+  <div id="checkoutBanner"></div>
+
   <div class="head">
     <h1>Assets available near <span id="regionLabel">—</span></h1>
-    <p class="sub">Each one is a ready-to-run solar lead engine. Rent an asset and it's locked to you - every lead it produces is yours alone, never shared, with your business name on the consent.</p>
+    <p class="sub">Each one is a ready-to-run <span id="nicheLabel">lead</span> engine. Rent an asset and it's locked to you - every lead it produces is yours alone, never shared, with your business name on the consent.</p>
   </div>
 
   <div class="filters">
@@ -235,31 +262,50 @@
   <div class="fleet" id="fleet"></div>
 </div>
 
-<!-- PREVIEW MODAL -->
+<!-- PREVIEW / RENT MODAL -->
 <div class="modal" id="modal">
   <div class="modal-in">
     <div class="modal-shot" id="modalShot"></div>
     <div class="modal-body">
       <div class="m-meta" id="modalMeta"></div>
       <h3 id="modalTitle"></h3>
-      <p>This is the landing page homeowners see. Every lead it captures consents to <b>your business by name</b> - that's how exclusivity is proven at the point of capture, not promised afterwards.</p>
-      <div class="mform">
-        <div class="t">Get your free solar quote</div>
-        <div class="b">Full name</div>
-        <div class="b">Email</div>
-        <div class="b">Phone number</div>
-        <div class="b">Postcode</div>
-        <div class="b">Average quarterly power bill</div>
-        <div class="b">How soon are you looking to install?</div>
-        <div class="chk">
-          <span class="tick"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3.5"><path d="M20 6 9 17l-5-5"/></svg></span>
-          <span>I agree to be contacted about my solar project by <span class="slot">{{installer_business_name}}</span>.</span>
+
+      <!-- STEP 1: preview of the landing page homeowners see -->
+      <div id="modalPreview">
+        <p>This is the landing page homeowners see. Every lead it captures consents to <b>your business by name</b> - that's how exclusivity is proven at the point of capture, not promised afterwards.</p>
+        <div class="mform">
+          <div class="t" id="mformTitle">Get your free quote</div>
+          <div class="b" id="mfield0">Full name</div>
+          <div class="b" id="mfield1">Email</div>
+          <div class="b" id="mfield2">Phone number</div>
+          <div class="b" id="mfield3">Postcode</div>
+          <div class="b" id="mfield4">&nbsp;</div>
+          <div class="b" id="mfield5">&nbsp;</div>
+          <div class="chk">
+            <span class="tick"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3.5"><path d="M20 6 9 17l-5-5"/></svg></span>
+            <span>I agree to be contacted about my <span id="mConsentNoun">project</span> by <span class="slot">{{installer_business_name}}</span>.</span>
+          </div>
         </div>
       </div>
+
+      <!-- STEP 2: rental details (revealed on "Rent this asset") -->
+      <form id="rentForm" style="display:none">
+        <p style="margin-bottom:16px">You're renting <b id="rentAssetName"></b>. Enter your details and we'll take you to secure Stripe checkout — your business name goes on every lead's consent.</p>
+        <div class="rf-grid">
+          <div class="rf-f"><label for="rf-business">Business name<span class="req">*</span></label><input id="rf-business" type="text" placeholder="e.g. Bright Spark Electrical" autocomplete="organization"></div>
+          <div class="rf-f"><label for="rf-contact">Your name</label><input id="rf-contact" type="text" placeholder="Full name" autocomplete="name"></div>
+          <div class="rf-f"><label for="rf-email">Email<span class="req">*</span></label><input id="rf-email" type="email" placeholder="you@business.com.au" autocomplete="email"></div>
+          <div class="rf-f"><label for="rf-phone">Phone</label><input id="rf-phone" type="tel" placeholder="04xx xxx xxx" autocomplete="tel"></div>
+        </div>
+        <p class="rf-total" id="rentTotal"></p>
+        <p class="rf-err" id="rentErr"></p>
+      </form>
+
       <div class="modal-actions">
-        <button class="btn btn-ghost" id="modalClose">Close</button>
-        <button class="btn btn-primary go" id="modalClaim">Claim this asset →</button>
+        <button class="btn btn-ghost" id="modalClose" type="button">Close</button>
+        <button class="btn btn-primary go" id="modalClaim" type="button">Rent this asset →</button>
       </div>
+      <p class="rf-secure" id="rentSecure" style="display:none">🔒 Payments processed securely by Stripe · billed monthly in advance · cancel any time</p>
     </div>
   </div>
 </div>
@@ -278,9 +324,37 @@ const money = n => '$' + Number(n).toLocaleString('en-AU');
 const cap = s => s ? s.charAt(0).toUpperCase() + s.slice(1) : s;
 const TIER_CODE = { starter:'T1', growth:'T2', scale:'T3' };
 
+// Per-niche copy — matches the tailored landing pages. Fleet is niche-aware
+// via ?niche=<slug> (defaults to solar).
+const NICHE_CFG = {
+  solar:       { label:'Residential Solar', noun:'solar project',       quote:'Get your free solar quote',      page:'/solar-leads',       back:'← Solar leads',       fields:['Postcode','Average quarterly power bill','How soon are you looking to install?'] },
+  hvac:        { label:'Residential HVAC',  noun:'heating & cooling job', quote:'Get your free HVAC quote',       page:'/hvac-leads',        back:'← HVAC leads',        fields:['Postcode','Type of system','How soon are you looking to install?'] },
+  roofing:     { label:'Residential Roofing', noun:'roofing job',        quote:'Get your free roofing quote',    page:'/roofing-leads',     back:'← Roofing leads',     fields:['Postcode','What does your roof need?','How soon are you looking to start?'] },
+  renovations: { label:'Home Renovations',  noun:'renovation',           quote:'Get your free renovation quote', page:'/renovations-leads', back:'← Renovation leads',  fields:['Postcode','Project type','Approx budget'] },
+};
+const NICHE = (new URLSearchParams(location.search).get('niche') || 'solar').toLowerCase();
+const NC = NICHE_CFG[NICHE] || NICHE_CFG.solar;
+
 let INVENTORY = [];                 // mapped asset rows
 let REGIONS = [];                   // [{name,slug}] distinct, in order
 let curRegion = null, curTier = 'all', curStatus = 'all', active = null;
+
+// niche-aware chrome
+document.title = `Lead Gen Rentals - Available ${NC.label} assets`;
+$('#nicheLabel').textContent = NC.label.replace(/^Residential |^Home /, '').toLowerCase() + ' lead';
+const _back = $('#backLink'); if(_back){ _back.textContent = NC.back; _back.href = NC.page; }
+
+// checkout return banner (?checkout=success|cancelled)
+(function(){
+  const q = new URLSearchParams(location.search);
+  const state = q.get('checkout');
+  const el = $('#checkoutBanner'); if(!el || !state) return;
+  if(state === 'success'){
+    el.innerHTML = `<div class="banner ok"><span>✓</span><span><b>Payment received — your asset is now yours.</b> We'll email a welcome note shortly and your engine goes live within days. Every lead it makes is delivered to you alone.</span></div>`;
+  } else if(state === 'cancelled'){
+    el.innerHTML = `<div class="banner info"><span>↩</span><span><b>Checkout cancelled — no charge was made.</b> The asset is still open. Pick it below whenever you're ready.</span></div>`;
+  }
+})();
 
 /* the "vehicle photo": a landing page in browser chrome (brand slots = DB row) */
 function shot(item, big){
@@ -380,37 +454,92 @@ document.addEventListener('click', e => {
   openModal(item);
 });
 
+let rentStep = false;   // false = preview, true = details form
+
+// populate the niche-specific preview form once
+(function initPreviewForm(){
+  $('#mformTitle').textContent = NC.quote;
+  $('#mConsentNoun').textContent = NC.noun;
+  const labels = ['Full name','Email','Phone number', ...NC.fields];
+  for(let i=0;i<6;i++){
+    const el = $('#mfield'+i);
+    if(el) el.textContent = labels[i] || '';
+  }
+})();
+
+function showPreviewStep(){
+  rentStep = false;
+  $('#modalPreview').style.display = '';
+  $('#rentForm').style.display = 'none';
+  $('#rentSecure').style.display = 'none';
+  const claim = $('#modalClaim');
+  claim.disabled = active && active.status !== 'open';
+  claim.textContent = 'Rent this asset →';
+}
+function showRentStep(){
+  rentStep = true;
+  $('#modalPreview').style.display = 'none';
+  $('#rentForm').style.display = '';
+  $('#rentSecure').style.display = '';
+  $('#rentAssetName').textContent = `${active.brand_name} — ${active.tier} (${active.area})`;
+  $('#rentTotal').innerHTML = `${esc(active.price)} <small>+GST per 30 days · floor ${active.floor} leads guaranteed</small>`;
+  $('#rentErr').classList.remove('on');
+  const claim = $('#modalClaim');
+  claim.disabled = false; claim.textContent = 'Continue to secure checkout →';
+  setTimeout(() => $('#rf-business').focus(), 40);
+}
+
 function openModal(item){
   active = item;
   $('#modalShot').innerHTML = shot(item, true);
   $('#modalMeta').textContent = `${item.area} · ${item.tier} (${item.code}) · ${item.price} +GST / 30 days`;
   $('#modalTitle').textContent = item.brand_name || '';
-  const claim = $('#modalClaim');
-  claim.disabled = false; claim.textContent = 'Rent this asset →';
+  showPreviewStep();
   $('#modal').classList.add('on');
 }
-$('#modalClose').addEventListener('click', () => $('#modal').classList.remove('on'));
-$('#modal').addEventListener('click', e => { if(e.target.id === 'modal') $('#modal').classList.remove('on'); });
+function closeModal(){ $('#modal').classList.remove('on'); }
+$('#modalClose').addEventListener('click', closeModal);
+$('#modal').addEventListener('click', e => { if(e.target.id === 'modal') closeModal(); });
+document.addEventListener('keydown', e => { if(e.key === 'Escape') closeModal(); });
 
-/* "Rent this asset" -> stub /api/rent-asset endpoint (to be built later) */
+/* Rent this asset -> collect details -> Stripe subscription checkout */
 $('#modalClaim').addEventListener('click', async () => {
   if(!active) return;
-  const btn = $('#modalClaim');
-  btn.disabled = true; btn.textContent = 'Requesting…';
-  try{
-    const res = await fetch('/api/rent-asset', {
-      method:'POST', headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({ asset_id: active.id })
-    });
-    if(!res.ok) throw new Error('stub not available');
-    btn.textContent = 'Requested ✓';
-  }catch(_){
-    // /api/rent-asset is a stub - acknowledge gracefully until it exists
-    btn.textContent = "We'll be in touch ✓";
-  }
+  if(!rentStep){ showRentStep(); return; }
+  await startCheckout();
 });
 
-document.addEventListener('keydown', e => { if(e.key === 'Escape') $('#modal').classList.remove('on'); });
+async function startCheckout(){
+  const business = $('#rf-business').value.trim();
+  const contact  = $('#rf-contact').value.trim();
+  const email    = $('#rf-email').value.trim();
+  const phone    = $('#rf-phone').value.trim();
+  const err = $('#rentErr');
+  const flash = (el,msg) => { el.classList.add('err'); err.textContent = msg; err.classList.add('on'); el.focus(); };
+  ['rf-business','rf-email'].forEach(id => $('#'+id).classList.remove('err'));
+  err.classList.remove('on');
+
+  if(!business){ return flash($('#rf-business'), 'Business name is required.'); }
+  if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){ return flash($('#rf-email'), 'Enter a valid email address.'); }
+
+  const cfg = window.LGR_SUPABASE || {};
+  const btn = $('#modalClaim');
+  btn.disabled = true; btn.textContent = 'Redirecting to Stripe…';
+  try{
+    const res = await fetch(`${cfg.url}/functions/v1/create-rental-checkout`, {
+      method:'POST',
+      headers:{ 'Content-Type':'application/json', apikey: cfg.anonKey, Authorization: `Bearer ${cfg.anonKey}` },
+      body: JSON.stringify({ asset_id: active.id, business_name: business, contact_name: contact, email, phone })
+    });
+    const data = await res.json().catch(() => ({}));
+    if(!res.ok || !data.url) throw new Error(data.error || 'We could not start checkout. Please try again.');
+    window.location.href = data.url;
+  }catch(e){
+    err.textContent = e.message || 'We could not start checkout. Please try again.';
+    err.classList.add('on');
+    btn.disabled = false; btn.textContent = 'Continue to secure checkout →';
+  }
+}
 
 /* ---- map an assets row (with joined region) to a card item ---- */
 function mapRow(a){
@@ -423,6 +552,8 @@ function mapRow(a){
     tier: cap(a.tier),
     code: TIER_CODE[a.tier] || '',
     price: money(a.monthly_price_aud),
+    price_aud: a.monthly_price_aud,
+    floor: a.floor_leads,
     leads: (a.typical_min && a.typical_max) ? `${a.typical_min}–${a.typical_max}` : `${a.floor_leads}+`,
     status: a.status === 'available' ? 'open' : 'taken',
     brand_name: a.brand_name,                       // {{brand_name}} slot
@@ -438,7 +569,7 @@ async function loadInventory(){
     const sb = supabase.createClient(cfg.url, cfg.anonKey);
     const { data, error } = await sb.from('assets')
       .select('id,tier,brand_name,brand_domain,monthly_price_aud,floor_leads,typical_min,typical_max,status,regions!inner(slug,name,sort_order),niches!inner(slug)')
-      .eq('niches.slug', 'solar')
+      .eq('niches.slug', NICHE)
       .order('sort_order', { referencedTable:'regions', ascending:true })
       .order('tier', { ascending:true });
     if(error) throw error;
@@ -478,7 +609,7 @@ loadInventory();
       </nav>
     </div>
     <div class="foot">
-      <p class="fine">© 2026 Lead Gen Rentals. Lead Gen Rentals runs paid advertising on its own accounts and delivers the resulting leads to a single installer per asset. A lead means a form submission containing a name and an Australian mobile number, captured with named consent to be contacted by that installer. Every lead is delivered to one installer only: where the same mobile number is submitted to more than one Lead Gen Rentals asset within 30 days, the first submission is delivered and later ones are discarded and do not count toward any floor. Each class carries a guaranteed floor of leads per 30-day period. Where the floor is not met within the period, Lead Gen Rentals will at the installer's election either continue running the campaign at its own cost until the floor is reached, or refund the shortfall pro-rata at the floor rate (period fee ÷ floor). Volume above the floor is typical and varies with market conditions and season; it is not guaranteed. Lead Gen Rentals does not guarantee that any lead will answer, quote or convert. Where an installer holds multiple assets in one area, Lead Gen Rentals maps audiences and creative to minimise overlap and bears any resulting increase in its own advertising costs. Billed month to month in advance - cancel any time before your next cycle begins, no lock-in and no exit fee.</p>
+      <p class="fine">© 2026 Lead Gen Rentals. Lead Gen Rentals runs paid advertising on its own accounts and delivers the resulting leads to a single installer per asset. A lead means a form submission containing a name and an Australian mobile number, captured with named consent to be contacted by that installer. Every lead is delivered to one installer only. Each class carries a guaranteed floor of leads per 30-day period. Where the floor is not met within the period, Lead Gen Rentals will at the installer's election either continue running the campaign at its own cost until the floor is reached, or refund the shortfall pro-rata at the floor rate (period fee ÷ floor). Volume above the floor is typical and varies with market conditions and season; it is not guaranteed. Lead Gen Rentals does not guarantee that any lead will answer, quote or convert. Where an installer holds multiple assets in one area, Lead Gen Rentals maps audiences and creative to minimise overlap and bears any resulting increase in its own advertising costs. Billed month to month in advance - cancel any time before your next cycle begins, no lock-in and no exit fee.</p>
     </div>
   </div>
 </footer>

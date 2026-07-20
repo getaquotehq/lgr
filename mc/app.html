@@ -163,6 +163,7 @@ td.mono{font-family:var(--mono);font-size:12px}
 .bg-red{background:var(--red-dim);color:var(--red);border:1px solid rgba(255,69,96,.18)}
 .bg-amb{background:var(--acc-dim);color:var(--acc);border:1px solid var(--acc-glow)}
 .bg-gray{background:var(--s3);color:var(--ink2);border:1px solid var(--bd2)}
+.bg-blu{background:rgba(99,91,255,.10);color:#8f88ff;border:1px solid rgba(99,91,255,.22)}
 .tierpill{font-family:var(--mono);font-size:10px;padding:2px 8px;border-radius:4px;background:var(--s3);border:1px solid var(--bd2);color:var(--ink2);text-transform:capitalize}
 
 /* ═══ QUICK-ACTION MENU ═══ */
@@ -1042,7 +1043,7 @@ function renderRentals(){
       <td class="mono dim">${r.ended_at?fmtDate(r.ended_at):'—'}</td>
       <td class="mono">${fmtAud(r.monthly_price_aud)}</td>
       <td class="mono">${r.floor_leads}</td>
-      <td><span class="badge ${active?'bg-grn':'bg-gray'}">${active?'active':'ended'}</span></td>
+      <td><span class="badge ${active?'bg-grn':'bg-gray'}">${active?'active':'ended'}</span>${r.stripe_subscription_id?` <span class="badge bg-blu" title="${esc(r.stripe_subscription_id)}">Stripe</span>`:''}</td>
       <td>${active?`<button class="btn btn-xs btn-red" onclick="endRental('${r.id}','${r.asset_id}')">End rental</button>`:''}</td>
     </tr>`;
   }).join('') : '<tr><td colspan="8" class="empty">No rentals match.</td></tr>';

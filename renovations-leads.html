@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Exclusive Solar Leads - Lead Gen Rentals</title>
+<title>Exclusive Renovation Leads - Lead Gen Rentals</title>
 <link rel="icon" href="favicon.ico">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -326,7 +326,7 @@
   <div class="nav-in">
     <div class="brand-wrap" style="display:flex;align-items:center;gap:9px;min-width:0">
       <a href="/" class="brand" aria-label="Lead Gen Rentals home"><img src="LeadGen-Rentals-Logo.png" alt="Lead Gen Rentals" class="brand-logo"></a>
-      <span class="nav-tag">/ Solar Leads</span>
+      <span class="nav-tag">/ Renovations Leads</span>
     </div>
     <div class="nav-r">
       <a href="#why" class="nav-l">Why</a>
@@ -352,8 +352,8 @@
 
   <!-- HERO + COUNTER -->
   <div class="hero">
-    <span class="eyebrow">Residential Solar Leads</span>
-    <h1>Plug into an exclusive solar lead engine.</h1>
+    <span class="eyebrow">Home Renovation Leads</span>
+    <h1>Plug into an exclusive renovation lead engine.</h1>
     <p>We built the campaign, ran the ads and we carry the spend. The moment a homeowner's ready, the lead passes to one installer - you. Never shared, never resold.</p>
 
     <!-- SIGNATURE: availability counter -->
@@ -363,9 +363,9 @@
           <div class="cf">
             <label for="trade">Trade</label>
             <select id="trade">
-              <option>All Residential Solar</option>
-              <option>Residential Solar</option>
-              <option>Battery Retrofit</option>
+              <option>All Renovations</option>
+              <option>Bathroom & Kitchen</option>
+              <option>Full-Home Renovation</option>
             </select>
           </div>
           <div class="cf">
@@ -511,16 +511,16 @@
           <p class="lede">Most lead companies ask you to trust that a lead is exclusive. We don't. Every homeowner consents to be contacted by your business, by name, at the moment they submit. There's nowhere else the lead can go.</p>
         </div>
         <div class="form-card">
-          <div class="fc-title">Get your free solar quote</div>
+          <div class="fc-title">Get your free renovation quote</div>
           <div class="fc-f"><span>Full name</span><div class="fc-box">&nbsp;</div></div>
           <div class="fc-f"><span>Email</span><div class="fc-box">&nbsp;</div></div>
           <div class="fc-f"><span>Phone number</span><div class="fc-box">&nbsp;</div></div>
           <div class="fc-f"><span>Postcode</span><div class="fc-box">&nbsp;</div></div>
-          <div class="fc-f"><span>Average quarterly power bill</span><div class="fc-box">&nbsp;</div></div>
-          <div class="fc-f"><span>How soon are you looking to install?</span><div class="fc-box">&nbsp;</div></div>
+          <div class="fc-f"><span>Project type</span><div class="fc-box">&nbsp;</div></div>
+          <div class="fc-f"><span>Approx budget</span><div class="fc-box">&nbsp;</div></div>
           <div class="fc-chk">
             <span class="tick"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3.5"><path d="M20 6 9 17l-5-5"/></svg></span>
-            <span>I agree to be contacted about my solar project by <span class="slot">{{installer_business_name}}</span> at the number provided.</span>
+            <span>I agree to be contacted about my renovation by <span class="slot">{{installer_business_name}}</span> at the number provided.</span>
           </div>
           <p class="fc-cap">The business name is written into every form we deploy for you, validated at launch and locked. One lead, one installer, on the record.</p>
         </div>
@@ -736,23 +736,23 @@
   const cap = s => s ? s.charAt(0).toUpperCase() + s.slice(1) : s;
   const TIER_NAME = { starter:'Starter', growth:'Growth', scale:'Scale' };
 
-  let sb = null, SOLAR_REGIONS = [];
+  let sb = null, NICHE_REGIONS = [];
   const hasConfig = cfg.url && cfg.anonKey && cfg.anonKey.indexOf('__') !== 0;
   if(hasConfig){
     sb = supabase.createClient(cfg.url, cfg.anonKey);
-    // preload the solar regions so we can match a typed suburb/postcode to one
-    sb.from('assets').select('regions!inner(slug,name),niches!inner(slug)').eq('niches.slug','solar')
+    // preload this niche's regions so we can match a typed suburb/postcode to one
+    sb.from('assets').select('regions!inner(slug,name),niches!inner(slug)').eq('niches.slug','renovations')
       .then(({ data }) => {
         const seen = new Set();
-        (data||[]).forEach(a => { const r = a.regions; if(r && !seen.has(r.slug)){ seen.add(r.slug); SOLAR_REGIONS.push(r); } });
+        (data||[]).forEach(a => { const r = a.regions; if(r && !seen.has(r.slug)){ seen.add(r.slug); NICHE_REGIONS.push(r); } });
       });
   }
 
   function matchRegion(input){
     const q = (input||'').trim().toLowerCase();
     if(!q) return null;
-    return SOLAR_REGIONS.find(r => r.name.toLowerCase() === q || r.slug === q)
-        || SOLAR_REGIONS.find(r => r.name.toLowerCase().includes(q) || q.includes(r.name.toLowerCase()))
+    return NICHE_REGIONS.find(r => r.name.toLowerCase() === q || r.slug === q)
+        || NICHE_REGIONS.find(r => r.name.toLowerCase().includes(q) || q.includes(r.name.toLowerCase()))
         || null;
   }
 
@@ -769,7 +769,7 @@
     const pill = count > 0
       ? `<span class="pill open">${count} asset${count>1?'s':''} open</span>`
       : `<span class="pill taken">Fully booked</span>`;
-    const claimHref = region ? `/fleet.html?region=${encodeURIComponent(region.slug)}` : '/fleet.html';
+    const claimHref = region ? `/fleet.html?niche=renovations&region=${encodeURIComponent(region.slug)}` : '/fleet.html?niche=renovations';
     let classRow;
     if(count > 0){
       const cheapest = assets.slice().sort((a,b)=>a.monthly_price_aud-b.monthly_price_aud)[0];
@@ -793,7 +793,7 @@
     out.innerHTML = `
       <div class="res">
         <span class="res-k">Area</span>
-        <span class="res-v">${esc(areaName)}<small>Residential Solar</small></span>
+        <span class="res-v">${esc(areaName)}<small>Home Renovation</small></span>
         <span class="res-r">${pill}</span>
       </div>
       ${classRow}`;
@@ -804,11 +804,11 @@
     out.classList.add('on');
     if(!sb){ out.innerHTML = errRow('Availability data temporarily unavailable.'); return; }
     out.innerHTML = loadingRow();
-    const region = matchRegion(typed) || SOLAR_REGIONS[0] || null;
+    const region = matchRegion(typed) || NICHE_REGIONS[0] || null;
     try{
       let q = sb.from('assets')
         .select('tier,monthly_price_aud,floor_leads,typical_min,typical_max,status,regions!inner(slug,name),niches!inner(slug)')
-        .eq('niches.slug','solar').eq('status','available');
+        .eq('niches.slug','renovations').eq('status','available');
       if(region) q = q.eq('regions.slug', region.slug);
       const { data, error } = await q;
       if(error) throw error;
@@ -826,7 +826,7 @@
 
   // Pricing-tier "Claim your asset" buttons -> fleet page
   document.querySelectorAll('.buyBtn').forEach(b => {
-    b.addEventListener('click', function(){ window.location.href = '/fleet.html'; });
+    b.addEventListener('click', function(){ window.location.href = '/fleet.html?niche=renovations'; });
   });
 </script>
 </body>
