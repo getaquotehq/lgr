@@ -138,6 +138,20 @@
     max-height:calc(100dvh - 48px);overflow-y:auto;overflow-x:hidden;box-shadow:var(--sh-lg);animation:pop .22s ease}
   @keyframes pop{from{opacity:0;transform:scale(.97)}to{opacity:1;transform:none}}
   .modal-shot{background:var(--bg);padding:22px 22px 0;height:210px;border-bottom:1px solid var(--line)}
+  /* live iframe preview inside the modal */
+  .modal-shot:has(.chrome.live){height:360px;padding:14px 14px 0}
+  .chrome.live{height:100%;display:flex;flex-direction:column;border-radius:8px 8px 0 0;overflow:hidden}
+  .chrome.live .chrome-bar{align-items:center}
+  .chrome.live a.url{text-decoration:none;color:var(--faint);cursor:pointer;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .chrome.live a.url:hover{color:var(--blue)}
+  .open-live{margin-left:auto;font-family:var(--mono);font-size:.62rem;font-weight:700;color:var(--blue);
+    text-decoration:none;border:1px solid var(--line-2);border-radius:5px;padding:3px 7px;white-space:nowrap}
+  .open-live:hover{background:var(--blue-tint)}
+  .live-frame{position:relative;flex:1;background:#fff;overflow:hidden}
+  .live-frame iframe{position:absolute;inset:0;width:100%;height:100%;border:0;background:#fff}
+  .live-fallback{position:absolute;left:50%;bottom:10px;transform:translateX(-50%);z-index:2;
+    font-size:.7rem;font-weight:700;color:var(--blue);background:rgba(255,255,255,.92);
+    border:1px solid var(--line-2);border-radius:6px;padding:5px 10px;text-decoration:none}
   .modal-body{padding:24px}
   .modal-body .m-meta{font-family:var(--mono);font-size:.68rem;color:var(--faint);
     letter-spacing:.08em;text-transform:uppercase;margin-bottom:8px}
@@ -412,6 +426,33 @@ function shot(item, big){
   </div>`;
 }
 
+/* the live landing page URL for an asset (its brand_domain) */
+function previewUrl(item){
+  const d = (item.brand_domain || '').trim().replace(/^https?:\/\//,'').replace(/\/.*$/,'');
+  return d ? 'https://' + d + '/' : null;
+}
+
+/* live preview: the REAL landing page in browser chrome, with a clickable
+   address bar + "Open ↗" that pops the funnel in a new tab so installers can
+   walk it exactly as a homeowner would. Falls back to the mock if there's no
+   domain yet. */
+function liveShot(item){
+  const url = previewUrl(item);
+  if(!url) return shot(item, true);
+  return `
+  <div class="chrome live">
+    <div class="chrome-bar">
+      <span class="dot"></span><span class="dot"></span><span class="dot"></span>
+      <a class="url" href="${esc(url)}" target="_blank" rel="noopener">${esc(item.brand_domain || '')}</a>
+      <a class="open-live" href="${esc(url)}" target="_blank" rel="noopener">Open ↗</a>
+    </div>
+    <div class="live-frame">
+      <iframe src="${esc(url)}" loading="lazy" title="${esc(item.brand_name || 'Landing page')} preview" referrerpolicy="no-referrer"></iframe>
+      <a class="live-fallback" href="${esc(url)}" target="_blank" rel="noopener">Open live landing page ↗</a>
+    </div>
+  </div>`;
+}
+
 function card(item){
   const open = item.status === "open";
   return `<article class="card ${open ? '' : 'taken'}">
@@ -526,7 +567,7 @@ function showRentStep(){
 
 function openModal(item){
   active = item;
-  $('#modalShot').innerHTML = shot(item, true);
+  $('#modalShot').innerHTML = liveShot(item);
   $('#modalMeta').textContent = `${item.area} · ${item.tier} (${item.code}) · ${item.price} +GST / 30 days`;
   $('#modalTitle').textContent = item.brand_name || '';
   showPreviewStep();

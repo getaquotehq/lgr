@@ -502,7 +502,7 @@ td.mono{font-family:var(--mono);font-size:12px}
     <input type="hidden" id="ma-id">
     <div class="fgrid2">
       <div class="frow"><label class="flabel">Brand name *</label><input class="fi" id="ma-brand" placeholder="Brisbane Solar Quotes"></div>
-      <div class="frow"><label class="flabel">Brand domain</label><input class="fi" id="ma-domain" placeholder="brisbanesolarquotes.com.au"></div>
+      <div class="frow"><label class="flabel">Brand domain <a id="ma-preview-link" href="#" target="_blank" rel="noopener" style="display:none;float:right;font-weight:600;color:var(--acc);text-decoration:none">Open preview ↗</a></label><input class="fi" id="ma-domain" placeholder="clearsolarquotes.com.au" oninput="syncPreviewLink()"></div>
       <div class="frow"><label class="flabel">Niche *</label><select class="fs" id="ma-niche"></select></div>
       <div class="frow"><label class="flabel">Region *</label><select class="fs" id="ma-region"></select></div>
       <div class="frow"><label class="flabel">Tier *</label><select class="fs" id="ma-tier" onchange="applyTierDefaults()"><option value="starter">Starter</option><option value="growth">Growth</option><option value="scale">Scale</option></select><div class="fhint">Auto-fills price + floor (overridable)</div></div>
@@ -879,7 +879,9 @@ function renderAssets(){
     const del = a.deleted_at ? ' style="opacity:.5"' : '';
     return `<tr${del}>
       <td><strong>${esc(a.brand_name)}</strong>${a.deleted_at?' <span class="badge bg-red">deleted</span>':''}</td>
-      <td class="mono dim">${esc(a.brand_domain||'—')}</td>
+      <td class="mono dim">${a.brand_domain
+        ? `<a href="https://${esc(a.brand_domain)}/" target="_blank" rel="noopener" title="Open live landing page" style="color:var(--acc);text-decoration:none">${esc(a.brand_domain)} ↗</a>`
+        : '—'}</td>
       <td>${esc(nicheName(a.niche_id))}</td>
       <td>${esc(regionName(a.region_id))}</td>
       <td><span class="tierpill">${esc(a.tier)}</span></td>
@@ -900,6 +902,7 @@ function assetQuickMenu(a){
     <div class="qmenu-pop">
       ${statuses.map(s=>`<button class="qmenu-item" onclick="markAssetStatus('${a.id}','${s}')">Mark ${s}</button>`).join('')}
       <div class="qmenu-sep"></div>
+      ${a.brand_domain?`<a class="qmenu-item" href="https://${esc(a.brand_domain)}/" target="_blank" rel="noopener" style="text-decoration:none;display:block">Open preview ↗</a>`:''}
       <button class="qmenu-item" onclick="duplicateAsset('${a.id}')">Duplicate</button>
       <button class="qmenu-item danger" onclick="softDeleteAsset('${a.id}')">Soft-delete</button>
       <button class="qmenu-item danger" onclick="hardDeleteAsset('${a.id}')">Hard delete (permanent)</button>
@@ -924,8 +927,17 @@ function openAssetModal(id){
   $('ma-rentedby').value = a?.rented_by || '';
   setVal('ma-until', a?.rented_until);
   setVal('ma-postcodes', (a?.service_postcodes||[]).join(', '));
+  syncPreviewLink();
   onAssetStatusChange();
   openModal('m-asset');
+}
+// Show/point the "Open preview ↗" link next to the domain field at the live LP.
+function syncPreviewLink(){
+  const d = ($('ma-domain').value||'').trim().replace(/^https?:\/\//,'').replace(/\/.*$/,'');
+  const link = $('ma-preview-link');
+  if(!link) return;
+  if(d){ link.href = 'https://'+d+'/'; link.style.display=''; }
+  else { link.style.display='none'; }
 }
 function applyTierDefaults(){
   const d = TIER_DEFAULTS[$('ma-tier').value]; if(!d) return;
