@@ -902,6 +902,7 @@ function assetQuickMenu(a){
       <div class="qmenu-sep"></div>
       <button class="qmenu-item" onclick="duplicateAsset('${a.id}')">Duplicate</button>
       <button class="qmenu-item danger" onclick="softDeleteAsset('${a.id}')">Soft-delete</button>
+      <button class="qmenu-item danger" onclick="hardDeleteAsset('${a.id}')">Hard delete (permanent)</button>
     </div>
   </div>`;
 }
@@ -1003,6 +1004,19 @@ async function softDeleteAsset(id){
   if(error){ toast('Error: '+error.message, true); return; }
   toast('Soft-deleted ✓'); loadAssets();
 }
+async function hardDeleteAsset(id){
+  const a=_assets.find(x=>x.id===id); if(!a) return;
+  const [l,r,c]=await Promise.all([
+    db.from('leads').select('id',{count:'exact',head:true}).eq('asset_id',id),
+    db.from('rentals').select('id',{count:'exact',head:true}).eq('asset_id',id),
+    db.from('rental_checkouts').select('id',{count:'exact',head:true}).eq('asset_id',id),
+  ]);
+  const msg=`PERMANENTLY delete "${a.brand_name}"?\n\nThis also deletes everything linked to it:\n  • ${l.count||0} lead(s)\n  • ${r.count||0} rental record(s)\n  • ${c.count||0} checkout record(s)\n\nThis cannot be undone.`;
+  if(!confirm(msg)) return;
+  const { error } = await db.rpc('hard_delete_asset',{ p_id:id });
+  if(error){ toast('Error: '+error.message, true); return; }
+  toast('Deleted permanently ✓'); loadAssets();
+}
 async function restoreAsset(id){
   const { error } = await db.from('assets').update({ deleted_at:null, status:'available' }).eq('id',id);
   if(error){ toast('Error: '+error.message, true); return; }
@@ -1044,9 +1058,15 @@ function renderRentals(){
       <td class="mono">${fmtAud(r.monthly_price_aud)}</td>
       <td class="mono">${r.floor_leads}</td>
       <td><span class="badge ${active?'bg-grn':'bg-gray'}">${active?'active':'ended'}</span>${r.stripe_subscription_id?` <span class="badge bg-blu" title="${esc(r.stripe_subscription_id)}">Stripe</span>`:''}</td>
-      <td>${active?`<button class="btn btn-xs btn-red" onclick="endRental('${r.id}','${r.asset_id}')">End rental</button>`:''}</td>
+      <td>${active?`<button class="btn btn-xs" onclick="endRental('${r.id}','${r.asset_id}')">End rental</button> `:''}<button class="btn btn-xs btn-red" onclick="deleteRental('${r.id}')">Delete</button></td>
     </tr>`;
   }).join('') : '<tr><td colspan="8" class="empty">No rentals match.</td></tr>';
+}
+async function deleteRental(id){
+  if(!confirm('PERMANENTLY delete this rental record?\n\nThis removes the history row only (the asset and business stay). This cannot be undone.')) return;
+  const { error } = await db.from('rentals').delete().eq('id',id);
+  if(error){ toast('Error: '+error.message, true); return; }
+  toast('Rental deleted ✓'); loadRentals();
 }
 async function endRental(id, assetId){
   if(!confirm('End this rental now and return the asset to Available?')) return;
@@ -1137,10 +1157,15 @@ async function saveInstaller(){
 }
 async function deleteInstaller(id){
   const i=_installers.find(x=>x.id===id); if(!i) return;
-  if(!confirm(`Delete installer "${i.business_name}"? (Blocked if they have leads/rentals on record.)`)) return;
-  const { error } = await db.from('installers').delete().eq('id',id);
-  if(error){ toast(/foreign key|violates/.test(error.message)?'Has leads/rentals — cannot delete.':'Error: '+error.message, true); return; }
-  toast('Deleted ✓'); loadRefData().then(loadInstallers);
+  const [l,r]=await Promise.all([
+    db.from('leads').select('id',{count:'exact',head:true}).eq('installer_id',id),
+    db.from('rentals').select('id',{count:'exact',head:true}).eq('installer_id',id),
+  ]);
+  const msg=`PERMANENTLY delete "${i.business_name}"?\n\nThis also deletes everything linked to them:\n  • ${l.count||0} lead(s)\n  • ${r.count||0} rental record(s)\nand frees any asset they currently rent.\n\nThis cannot be undone.`;
+  if(!confirm(msg)) return;
+  const { error } = await db.rpc('hard_delete_installer',{ p_id:id });
+  if(error){ toast('Error: '+error.message, true); return; }
+  toast('Deleted permanently ✓'); loadRefData().then(loadInstallers);
 }
 
 /* ════════════════════════════════════════════════════════════════════════
