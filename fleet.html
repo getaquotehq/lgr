@@ -432,23 +432,91 @@ function previewUrl(item){
   return d ? 'https://' + d + '/' : null;
 }
 
-/* a copy of each funnel's landing page is hosted alongside this site at
-   /previews/<domain>.html, so the mock browser window always renders the real
-   LP even before the brand's own DNS is pointed. */
-function localPreviewUrl(item){
-  const d = (item.brand_domain || '').trim().toLowerCase().replace(/^https?:\/\//,'').replace(/\/.*$/,'');
-  return d ? 'previews/' + d + '.html' : null;
+/* Per-brand accent colours for the coded-in preview (match each live LP). */
+const PREVIEW_THEME = {
+  'clearsolarquotes.com.au':   ['#2563eb', '#06b6d4'],
+  'ausolarquotes.com.au':      ['#059669', '#f59e0b'],
+  'premiumsolarquotes.com.au': ['#7c3aed', '#d4af37'],
+};
+
+/* Build the landing-page preview as a self-contained HTML document, coded in
+   here (no hosted file) and fed to the iframe via srcdoc. It mirrors the real
+   LP — same hero + branded survey card the homeowner sees — but is pure
+   HTML/CSS with no scripts, so it renders instantly and can never send a code
+   or a lead. */
+function buildPreviewDoc(item){
+  const domain = (item.brand_domain || '').trim().toLowerCase();
+  const brand  = item.brand_name || 'Solar Quotes';
+  const theme  = PREVIEW_THEME[domain] || ['#2563eb', '#06b6d4'];
+  const a1 = theme[0], a2 = theme[1];
+  const e = s => (s==null?'':String(s)).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  return `<!doctype html><html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;color:#0e1117;background:#f6f8fb;-webkit-font-smoothing:antialiased}
+.top{position:sticky;top:0;display:flex;align-items:center;justify-content:space-between;height:52px;padding:0 18px;background:rgba(255,255,255,.92);border-bottom:1px solid #e6eaf0}
+.brand{display:flex;align-items:center;gap:8px;font-weight:800;font-size:.98rem;letter-spacing:-.02em}
+.spark{width:26px;height:26px;border-radius:7px;background:linear-gradient(135deg,${a1},${a2});display:grid;place-items:center}
+.spark svg{fill:#fff}
+.navcta{background:${a1};color:#fff;border-radius:50px;padding:7px 14px;font-weight:700;font-size:.76rem}
+.wrap{padding:26px 18px 34px}
+.eyebrow{display:inline-flex;align-items:center;gap:6px;background:rgba(0,0,0,.04);border:1px solid #e6eaf0;color:#3a4150;font-weight:600;font-size:.68rem;padding:4px 10px;border-radius:50px;margin-bottom:12px}
+.eyebrow .d{width:6px;height:6px;border-radius:50%;background:#16a34a}
+h1{font-size:1.7rem;line-height:1.08;letter-spacing:-.035em;font-weight:900;margin-bottom:12px}
+h1 .hl{background:linear-gradient(120deg,${a1},${a2});-webkit-background-clip:text;background-clip:text;color:transparent}
+.sub{font-size:.9rem;color:#3a4150;margin-bottom:16px}
+.tick{display:flex;align-items:center;gap:8px;font-weight:600;font-size:.82rem;color:#3a4150;margin-bottom:8px}
+.tick i{width:16px;height:16px;border-radius:50%;background:color-mix(in srgb,#16a34a 16%,#fff);color:#16a34a;display:grid;place-items:center;font-size:.7rem;font-style:normal;flex:0 0 auto}
+.card{margin-top:20px;background:#fff;border:1px solid #e6eaf0;border-radius:16px;box-shadow:0 12px 40px rgba(16,24,40,.10);overflow:hidden}
+.card-head{padding:15px 18px;background:linear-gradient(120deg,${a1},${a2});color:#fff}
+.card-head .t{font-weight:800;font-size:.98rem;letter-spacing:-.02em}
+.card-head .s{font-size:.76rem;opacity:.9;margin-top:2px}
+.prog{padding:12px 18px 0}
+.pbar{height:6px;border-radius:6px;background:#e6eaf0;overflow:hidden}
+.pbar i{display:block;height:100%;width:0;background:linear-gradient(90deg,${a1},${a2})}
+.ptext{font-size:.68rem;color:#6b7280;margin-top:6px;font-weight:600}
+.body{padding:16px 18px 20px}
+.q{font-weight:800;font-size:1rem;letter-spacing:-.02em;margin-bottom:3px}
+.qs{font-size:.78rem;color:#6b7280;margin-bottom:14px}
+.opt{display:flex;align-items:center;justify-content:space-between;border:1.5px solid #e6eaf0;border-radius:12px;padding:13px 14px;font-size:.88rem;font-weight:600;margin-bottom:9px}
+.opt.sel{border-color:${a1};background:color-mix(in srgb,${a1} 7%,#fff);box-shadow:0 0 0 3px color-mix(in srgb,${a1} 14%,transparent)}
+.opt span{color:#9aa3b2}
+</style></head><body>
+<div class="top">
+  <div class="brand"><span class="spark"><svg width="14" height="14" viewBox="0 0 24 24"><path d="M13 2 4 14h6l-1 8 9-12h-6z"/></svg></span> ${e(brand)}</div>
+  <div class="navcta">Get my free quote</div>
+</div>
+<div class="wrap">
+  <span class="eyebrow"><span class="d"></span> Matching homeowners with local installers</span>
+  <h1>Free solar quotes from <span class="hl">one trusted local installer</span></h1>
+  <p class="sub">Answer four quick questions and ${e(brand)} matches you with a single CEC-accredited installer covering your postcode.</p>
+  <div class="tick"><i>&#10003;</i> One installer, matched to your postcode</div>
+  <div class="tick"><i>&#10003;</i> CEC-accredited &amp; pre-vetted only</div>
+  <div class="tick"><i>&#10003;</i> 100% free &amp; obligation-free</div>
+  <div class="card">
+    <div class="card-head"><div class="t">Get your free solar quote</div><div class="s">Takes under a minute · matched to your area</div></div>
+    <div class="prog"><div class="pbar"><i></i></div><div class="ptext">Step 1 of 5</div></div>
+    <div class="body">
+      <div class="q">Do you own your home?</div>
+      <div class="qs">Rebates and installer quotes require the property owner's go-ahead.</div>
+      <div class="opt sel">Yes, I own it <span>&#8594;</span></div>
+      <div class="opt">I own &amp; live here <span>&#8594;</span></div>
+      <div class="opt">I'm renting <span>&#8594;</span></div>
+    </div>
+  </div>
+</div>
+</body></html>`;
 }
 
-/* live preview: the REAL landing page rendered inside browser chrome. The
-   iframe loads the locally-hosted copy so it shows immediately; the clickable
-   address bar + "Open ↗" point at the brand's live domain so installers can
-   walk the funnel exactly as a homeowner would. Falls back to the mock shot if
-   there's no domain yet. */
+/* live preview: the branded landing page rendered inside browser chrome. The
+   preview document is coded in above and injected via srcdoc (set in openModal);
+   the clickable address bar + "Open ↗" point at the brand's live domain so
+   installers can open the real funnel in a new tab. Falls back to the mock shot
+   if there's no domain yet. */
 function liveShot(item){
-  const live  = previewUrl(item);        // https://<domain>/  (real site)
-  const local = localPreviewUrl(item);   // previews/<domain>.html (always renders)
-  if(!live || !local) return shot(item, true);
+  const live = previewUrl(item);   // https://<domain>/ (real site)
+  if(!live) return shot(item, true);
   return `
   <div class="chrome live">
     <div class="chrome-bar">
@@ -457,7 +525,7 @@ function liveShot(item){
       <a class="open-live" href="${esc(live)}" target="_blank" rel="noopener">Open ↗</a>
     </div>
     <div class="live-frame">
-      <iframe src="${esc(local)}" loading="lazy" title="${esc(item.brand_name || 'Landing page')} preview" referrerpolicy="no-referrer"></iframe>
+      <iframe title="${esc(item.brand_name || 'Landing page')} preview" sandbox=""></iframe>
       <a class="live-fallback" href="${esc(live)}" target="_blank" rel="noopener">Open live landing page ↗</a>
     </div>
   </div>`;
@@ -578,6 +646,8 @@ function showRentStep(){
 function openModal(item){
   active = item;
   $('#modalShot').innerHTML = liveShot(item);
+  const pframe = $('#modalShot iframe');
+  if(pframe) pframe.srcdoc = buildPreviewDoc(item);
   $('#modalMeta').textContent = `${item.area} · ${item.tier} (${item.code}) · ${item.price} +GST / 30 days`;
   $('#modalTitle').textContent = item.brand_name || '';
   showPreviewStep();
