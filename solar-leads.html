@@ -326,7 +326,6 @@
   <div class="nav-in">
     <div class="brand-wrap" style="display:flex;align-items:center;gap:9px;min-width:0">
       <a href="/" class="brand" aria-label="Lead Gen Rentals home"><img src="LeadGen-Rentals-Logo.png" alt="Lead Gen Rentals" class="brand-logo"></a>
-      <span class="nav-tag">/ Solar Leads</span>
     </div>
     <div class="nav-r">
       <a href="#why" class="nav-l">Why</a>
@@ -377,21 +376,7 @@
           </div>
         </div>
 
-        <div class="counter-out" id="out">
-          <div class="res">
-            <span class="res-k">Area</span>
-            <span class="res-v" id="rArea">—<small id="rTrade"></small></span>
-            <span class="res-r"><span class="pill open">Assets open</span></span>
-          </div>
-          <div class="res">
-            <span class="res-k">Class</span>
-            <span class="res-v">Starter <small>10 leads guaranteed · typically 10–14 · cancel any time</small></span>
-            <span class="res-r">
-              <span class="res-v">$1,200<small style="text-align:right">per 30 days</small></span>
-              <a href="#pricing" class="btn btn-primary btn-sm">Claim</a>
-            </span>
-          </div>
-        </div>
+        <div class="counter-out" id="out"></div>
       </div>
   </div>
 
@@ -431,7 +416,7 @@
             <tr><th>&nbsp;</th><th class="them">Pay-per-lead marketplaces</th><th class="us">Lead Gen Rentals</th></tr>
           </thead>
           <tbody>
-            <tr><td>Installers per lead</td><td>3–5, simultaneously</td><td class="us">1 - yours</td></tr>
+            <tr><td>Installers per lead</td><td>3-5, simultaneously</td><td class="us">1 - yours</td></tr>
             <tr><td>Who carries the ad spend</td><td>You, buried in the lead price</td><td class="us">We do</td></tr>
             <tr><td><b>When ad costs fall</b></td><td>They keep the spread. You pay the same.</td><td class="us">You get more leads. Same fee.</td></tr>
             <tr><td><b>When ad costs rise</b></td><td>Your price follows the market</td><td class="us">We absorb it. Same fee.</td></tr>
@@ -586,7 +571,7 @@
         <div class="tier">
           <div class="tier-class"><span class="tier-code">T1</span><span class="tier-name">Starter</span></div>
           <div class="tier-price">$1,200<small>per 30 days · flat · +GST</small></div>
-          <div class="tier-range"><b>Typically 10–14 leads</b><span>in a 30-day period</span></div>
+          <div class="tier-range"><b>Typically 10-14 leads</b><span>in a 30-day period</span></div>
           <div class="tier-floor">
             <div class="tf"><span class="k">Guaranteed floor</span><span class="v">10 leads</span></div>
             <div class="tf"><span class="k">Most you'd pay / lead</span><span class="v">$120</span></div>
@@ -605,7 +590,7 @@
           <span class="tier-badge">Most popular</span>
           <div class="tier-class"><span class="tier-code">T2</span><span class="tier-name">Growth</span></div>
           <div class="tier-price">$2,400<small>per 30 days · flat · +GST</small></div>
-          <div class="tier-range"><b>Typically 20–28 leads</b><span>roughly 2× the range</span></div>
+          <div class="tier-range"><b>Typically 20-28 leads</b><span>roughly 2× the range</span></div>
           <div class="tier-floor">
             <div class="tf"><span class="k">Guaranteed floor</span><span class="v">20 leads</span></div>
             <div class="tf"><span class="k">Most you'd pay / lead</span><span class="v">$120</span></div>
@@ -622,7 +607,7 @@
         <div class="tier">
           <div class="tier-class"><span class="tier-code">T3</span><span class="tier-name">Scale</span></div>
           <div class="tier-price">$3,600<small>per 30 days · flat · +GST</small></div>
-          <div class="tier-range"><b>Typically 30–42 leads</b><span>roughly 3× the range</span></div>
+          <div class="tier-range"><b>Typically 30-42 leads</b><span>roughly 3× the range</span></div>
           <div class="tier-floor">
             <div class="tf"><span class="k">Guaranteed floor</span><span class="v">30 leads</span></div>
             <div class="tf"><span class="k">Most you'd pay / lead</span><span class="v">$120</span></div>
@@ -701,11 +686,15 @@
     <div class="foot-top">
       <a href="/" class="brand" aria-label="Lead Gen Rentals home"><img src="LeadGen-Rentals-Logo-White.png" alt="Lead Gen Rentals" class="brand-logo"></a>
       <nav class="foot-nav">
-        <a href="#">About</a>
-        <a href="#">Blog</a>
-        <a href="#">Contact</a>
-        <a href="#">Terms</a>
-        <a href="#">Privacy</a>
+        <a href="/">Home</a>
+        <a href="/solar-leads">Solar</a>
+        <a href="/hvac-leads">HVAC</a>
+        <a href="/roofing-leads">Roofing</a>
+        <a href="/renovations-leads">Renovations</a>
+        <a href="/about">About</a>
+        <a href="/contact">Contact</a>
+        <a href="/terms">Terms</a>
+        <a href="/privacy-policy">Privacy</a>
       </nav>
     </div>
     <div class="foot">
@@ -774,7 +763,7 @@
     if(count > 0){
       const cheapest = assets.slice().sort((a,b)=>a.monthly_price_aud-b.monthly_price_aud)[0];
       const name = TIER_NAME[cheapest.tier] || cap(cheapest.tier);
-      const range = (cheapest.typical_min && cheapest.typical_max) ? `typically ${cheapest.typical_min}–${cheapest.typical_max}` : '';
+      const range = (cheapest.typical_min && cheapest.typical_max) ? `typically ${cheapest.typical_min}-${cheapest.typical_max}` : '';
       classRow = `<div class="res">
         <span class="res-k">Class</span>
         <span class="res-v">${esc(name)} <small>${cheapest.floor_leads} leads guaranteed · ${esc(range)} · cancel any time</small></span>

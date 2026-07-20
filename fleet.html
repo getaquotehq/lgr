@@ -135,7 +135,7 @@
     z-index:50;display:none;align-items:center;justify-content:center;padding:24px}
   .modal.on{display:flex}
   .modal-in{background:var(--bg);border-radius:14px;max-width:520px;width:100%;
-    overflow:hidden;box-shadow:var(--sh-lg);animation:pop .22s ease}
+    max-height:calc(100dvh - 48px);overflow-y:auto;overflow-x:hidden;box-shadow:var(--sh-lg);animation:pop .22s ease}
   @keyframes pop{from{opacity:0;transform:scale(.97)}to{opacity:1;transform:none}}
   .modal-shot{background:var(--bg);padding:22px 22px 0;height:210px;border-bottom:1px solid var(--line)}
   .modal-body{padding:24px}
@@ -216,7 +216,6 @@
   <div class="nav-in">
     <div class="brand-wrap" style="display:flex;align-items:center;gap:9px;min-width:0">
       <a href="/" class="brand" aria-label="Lead Gen Rentals home"><img src="LeadGen-Rentals-Logo.png" alt="Lead Gen Rentals" class="brand-logo"></a>
-      <span class="nav-tag">/ available assets</span>
     </div>
     <div class="nav-r">
       <a href="/solar-leads" class="nav-l" id="backLink">← Solar leads</a>
@@ -230,7 +229,7 @@
   <div id="checkoutBanner"></div>
 
   <div class="head">
-    <h1>Assets available near <span id="regionLabel">—</span></h1>
+    <h1>Assets available near <span id="regionLabel">-</span></h1>
     <p class="sub">Each one is a ready-to-run <span id="nicheLabel">lead</span> engine. Rent an asset and it's locked to you - every lead it produces is yours alone, never shared, with your business name on the consent.</p>
   </div>
 
@@ -290,7 +289,7 @@
 
       <!-- STEP 2: rental details (revealed on "Rent this asset") -->
       <form id="rentForm" style="display:none">
-        <p style="margin-bottom:16px">You're renting <b id="rentAssetName"></b>. Enter your details and we'll take you to secure Stripe checkout — your business name goes on every lead's consent.</p>
+        <p style="margin-bottom:16px">You're renting <b id="rentAssetName"></b>. Enter your details and we'll take you to secure Stripe checkout - your business name goes on every lead's consent.</p>
         <div class="rf-grid">
           <div class="rf-f"><label for="rf-business">Business name<span class="req">*</span></label><input id="rf-business" type="text" placeholder="e.g. Bright Spark Electrical" autocomplete="organization"></div>
           <div class="rf-f"><label for="rf-contact">Your name</label><input id="rf-contact" type="text" placeholder="Full name" autocomplete="name"></div>
@@ -324,7 +323,7 @@ const money = n => '$' + Number(n).toLocaleString('en-AU');
 const cap = s => s ? s.charAt(0).toUpperCase() + s.slice(1) : s;
 const TIER_CODE = { starter:'T1', growth:'T2', scale:'T3' };
 
-// Per-niche copy — matches the tailored landing pages. Fleet is niche-aware
+// Per-niche copy - matches the tailored landing pages. Fleet is niche-aware
 // via ?niche=<slug> (defaults to solar).
 const NICHE_CFG = {
   solar:       { label:'Residential Solar', noun:'solar project',       quote:'Get your free solar quote',      page:'/solar-leads',       back:'← Solar leads',       fields:['Postcode','Average quarterly power bill','How soon are you looking to install?'] },
@@ -350,9 +349,9 @@ const _back = $('#backLink'); if(_back){ _back.textContent = NC.back; _back.href
   const state = q.get('checkout');
   const el = $('#checkoutBanner'); if(!el || !state) return;
   if(state === 'success'){
-    el.innerHTML = `<div class="banner ok"><span>✓</span><span><b>Payment received — your asset is now yours.</b> We'll email a welcome note shortly and your engine goes live within days. Every lead it makes is delivered to you alone.</span></div>`;
+    el.innerHTML = `<div class="banner ok"><span>✓</span><span><b>Payment received - your asset is now yours.</b> We'll email a welcome note shortly and your engine goes live within days. Every lead it makes is delivered to you alone.</span></div>`;
   } else if(state === 'cancelled'){
-    el.innerHTML = `<div class="banner info"><span>↩</span><span><b>Checkout cancelled — no charge was made.</b> The asset is still open. Pick it below whenever you're ready.</span></div>`;
+    el.innerHTML = `<div class="banner info"><span>↩</span><span><b>Checkout cancelled - no charge was made.</b> The asset is still open. Pick it below whenever you're ready.</span></div>`;
   }
 })();
 
@@ -433,7 +432,7 @@ function render(){
     (curTier === "all" || x.tier === curTier) &&
     (curStatus === "all" || x.status === curStatus));
 
-  $('#regionLabel').textContent = curRegion || '—';
+  $('#regionLabel').textContent = curRegion || '-';
   const open = INVENTORY.filter(x => (!curRegion || x.region === curRegion) && x.status === "open").length;
   $('#countLine').innerHTML = `<span><b>${open} available</b>&nbsp;in ${esc(curRegion || 'all regions')}</span>`;
 
@@ -481,7 +480,7 @@ function showRentStep(){
   $('#modalPreview').style.display = 'none';
   $('#rentForm').style.display = '';
   $('#rentSecure').style.display = '';
-  $('#rentAssetName').textContent = `${active.brand_name} — ${active.tier} (${active.area})`;
+  $('#rentAssetName').textContent = `${active.brand_name} - ${active.tier} (${active.area})`;
   $('#rentTotal').innerHTML = `${esc(active.price)} <small>+GST per 30 days · floor ${active.floor} leads guaranteed</small>`;
   $('#rentErr').classList.remove('on');
   const claim = $('#modalClaim');
@@ -554,7 +553,7 @@ function mapRow(a){
     price: money(a.monthly_price_aud),
     price_aud: a.monthly_price_aud,
     floor: a.floor_leads,
-    leads: (a.typical_min && a.typical_max) ? `${a.typical_min}–${a.typical_max}` : `${a.floor_leads}+`,
+    leads: (a.typical_min && a.typical_max) ? `${a.typical_min}-${a.typical_max}` : `${a.floor_leads}+`,
     status: a.status === 'available' ? 'open' : 'taken',
     brand_name: a.brand_name,                       // {{brand_name}} slot
     brand_domain: a.brand_domain                    // {{brand_domain}} slot
@@ -601,11 +600,14 @@ loadInventory();
       <a href="/" class="brand" aria-label="Lead Gen Rentals home"><img src="LeadGen-Rentals-Logo-White.png" alt="Lead Gen Rentals" class="brand-logo"></a>
       <nav class="foot-nav">
         <a href="/">Home</a>
-        <a href="/solar-leads">Solar leads</a>
-        <a href="#">About</a>
-        <a href="#">Contact</a>
-        <a href="#">Terms</a>
-        <a href="#">Privacy</a>
+        <a href="/solar-leads">Solar</a>
+        <a href="/hvac-leads">HVAC</a>
+        <a href="/roofing-leads">Roofing</a>
+        <a href="/renovations-leads">Renovations</a>
+        <a href="/about">About</a>
+        <a href="/contact">Contact</a>
+        <a href="/terms">Terms</a>
+        <a href="/privacy-policy">Privacy</a>
       </nav>
     </div>
     <div class="foot">
