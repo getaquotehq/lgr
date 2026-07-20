@@ -83,11 +83,41 @@ function longestNameInConsent(names: (string | null | undefined)[], consentText:
 }
 
 // Core fields the leads table knows about by name; everything else → extra.
+// (website/hp/elapsed_ms are anti-spam signals — consumed here, never stored.)
 const CORE = new Set([
   "asset_id", "brand_domain", "asset_slug", "niche", "lead_type",
   "full_name", "name", "first_name", "last_name",
   "phone", "email", "postcode",
+  "website", "hp", "elapsed_ms",
 ]);
+
+// Known disposable / throwaway email domains — a cheap hard spam block.
+const DISPOSABLE = new Set([
+  "mailinator.com", "guerrillamail.com", "10minutemail.com", "tempmail.com", "temp-mail.org",
+  "trashmail.com", "yopmail.com", "sharklasers.com", "getnada.com", "dispostable.com",
+  "maildrop.cc", "throwawaymail.com", "fakeinbox.com", "mailnesia.com", "emailondeck.com",
+]);
+
+// Real-number check via the Veriphone API (https://veriphone.io). Confirms the
+// number exists and is a mobile before we ever create a lead. Fails OPEN when the
+// key is unset or the API is unreachable, so an outage never blocks real leads —
+// set VERIPHONE_API_KEY to turn the hard block on.
+async function veriphoneCheck(phone: string): Promise<{ checked: boolean; valid: boolean; mobile: boolean; type: string }> {
+  const key = Deno.env.get("VERIPHONE_API_KEY");
+  if (!key) return { checked: false, valid: true, mobile: true, type: "" };
+  try {
+    const url = `https://api.veriphone.io/v2/verify?phone=${encodeURIComponent(phone)}&key=${key}&default_country=AU`;
+    const res = await fetch(url, { signal: AbortSignal.timeout(4000) });
+    if (!res.ok) return { checked: false, valid: true, mobile: true, type: "" };
+    const d = await res.json();
+    const type = String(d.phone_type || "");
+    const valid = d.phone_valid === true;
+    const mobile = type === "mobile" || type === "fixed_line_or_mobile";
+    return { checked: true, valid, mobile, type };
+  } catch {
+    return { checked: false, valid: true, mobile: true, type: "" };
+  }
+}
 
 type AssetRow = {
   id: string;
@@ -123,6 +153,29 @@ Deno.serve(async (req: Request) => {
     // ── postcode (required, 4-digit AU — the whole model is postcode-matched) ─
     const postcode: string = (body.postcode || "").toString().replace(/\s/g, "");
     if (!/^[0-9]{4}$/.test(postcode)) return json({ error: "invalid_postcode" }, 400);
+
+    // ── hard anti-spam gate ──────────────────────────────────────────────────
+    // Silent drops (bots get a fake 200 so they don't learn they were caught);
+    // only the real-number failure is surfaced, so a genuine user can fix a typo.
+    // 1) honeypot — a hidden field only bots fill.
+    if ((body.website || body.hp || "").toString().trim()) {
+      return json({ success: true, status: "ok", stored: false });
+    }
+    // 2) time-to-complete — a human can't fill this form in under ~2.5s.
+    const elapsedMs = Number(body.elapsed_ms || 0);
+    if (elapsedMs > 0 && elapsedMs < 2500) {
+      return json({ success: true, status: "ok", stored: false });
+    }
+    // 3) disposable / throwaway email domains.
+    if (email) {
+      const dom = (email.split("@")[1] || "").toLowerCase();
+      if (DISPOSABLE.has(dom)) return json({ success: true, status: "ok", stored: false });
+    }
+    // 4) real-number check (Veriphone) — must be a valid, reachable mobile.
+    const vp = await veriphoneCheck(phone);
+    if (vp.checked && !(vp.valid && vp.mobile)) {
+      return json({ error: "invalid_phone_number", detail: vp.type || "not a valid mobile" }, 400);
+    }
 
     const supabase = createClient(
       Deno.env.get("SUPABASE_URL")!,
