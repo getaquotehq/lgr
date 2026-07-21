@@ -473,30 +473,30 @@ function buildPreviewDoc(item){
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:'Outfit',system-ui,-apple-system,sans-serif;color:${ink};-webkit-font-smoothing:antialiased;
-  background:radial-gradient(900px 420px at 115% -10%, color-mix(in srgb,${a1} 16%,transparent), transparent 60%),radial-gradient(700px 400px at -12% 6%, color-mix(in srgb,${a2} 13%,transparent), transparent 58%),${bg}}
+  background:${bg}}
 .top{position:sticky;top:0;display:flex;align-items:center;justify-content:space-between;height:56px;padding:0 20px;background:rgba(246,247,251,.82);backdrop-filter:blur(12px);border-bottom:1px solid #e7e9f0}
 .brand{display:flex;align-items:center;gap:9px;font-weight:800;font-size:1.02rem;letter-spacing:-.03em}
-.spark{width:28px;height:28px;border-radius:8px;background:linear-gradient(140deg,${a1},${a2});display:grid;place-items:center}
+.spark{width:28px;height:28px;border-radius:8px;background:${a1};display:grid;place-items:center}
 .spark svg{fill:#fff}
-.navcta{background:linear-gradient(140deg,${a1},${a2});color:#fff;border-radius:100px;padding:8px 16px;font-weight:700;font-size:.78rem}
+.navcta{background:${a1};color:#fff;border-radius:100px;padding:8px 16px;font-weight:700;font-size:.78rem}
 .wrap{padding:28px 20px 36px}
 .eyebrow{display:inline-flex;align-items:center;gap:7px;background:#fff;border:1px solid #e7e9f0;color:#3d4757;font-weight:600;font-size:.72rem;padding:6px 12px;border-radius:100px;margin-bottom:16px;box-shadow:0 2px 8px rgba(16,24,40,.04)}
 .eyebrow .d{width:7px;height:7px;border-radius:50%;background:#16a34a}
 h1{font-family:${headFont};font-size:2rem;line-height:1.05;letter-spacing:-.03em;font-weight:${headWt};margin-bottom:14px}
-h1 .hl{font-family:${accFont};font-style:italic;font-weight:600;background:linear-gradient(100deg,${a1},${a2});-webkit-background-clip:text;background-clip:text;color:transparent}
+h1 .hl{font-family:${accFont};font-style:italic;font-weight:600;color:${a1}}
 .sub{font-size:.94rem;color:#3d4757;margin-bottom:18px}
 .tick{display:flex;align-items:center;gap:9px;font-weight:600;font-size:.85rem;color:#3d4757;margin-bottom:9px}
 .wrap.center{max-width:540px;margin:0 auto;text-align:center}
 .wrap.center .tick{justify-content:center}
 .wrap.center .card{text-align:left}
 .tick i{color:#16a34a;font-style:normal;font-weight:800}
-.card{margin-top:22px;background:#fff;border:1px solid #e7e9f0;border-radius:${rad}px;overflow:hidden;box-shadow:0 40px 80px -34px color-mix(in srgb,${a1} 40%,rgba(16,24,40,.5)),0 12px 30px -12px rgba(16,24,40,.12)}
-.card-head{padding:18px 20px;background:linear-gradient(135deg,${a1},${a2});color:#fff}
+.card{margin-top:22px;background:#fff;border:1px solid #e7e9f0;border-radius:${rad}px;overflow:hidden;box-shadow:0 1px 2px rgba(16,24,40,.05),0 20px 44px -26px rgba(16,24,40,.20)}
+.card-head{padding:18px 20px;background:${a1};color:#fff}
 .card-head .t{font-family:${headFont};font-weight:${headWt};font-size:1.05rem;letter-spacing:-.02em}
 .card-head .s{font-size:.8rem;opacity:.92;margin-top:2px}
 .prog{padding:14px 20px 0}
 .pbar{height:6px;border-radius:100px;background:#e7e9f0;overflow:hidden}
-.pbar i{display:block;height:100%;width:0;border-radius:100px;background:linear-gradient(90deg,${a1},${a2})}
+.pbar i{display:block;height:100%;width:0;border-radius:100px;background:${a1}}
 .ptext{font-size:.7rem;color:#6b7686;margin-top:7px;font-weight:600}
 .body{padding:18px 20px 22px}
 .q{font-weight:800;font-size:1.12rem;letter-spacing:-.03em;margin-bottom:4px}
