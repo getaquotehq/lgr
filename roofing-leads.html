@@ -764,7 +764,7 @@
     `<div class="res"><span class="res-v" style="color:var(--muted);font-weight:450">${esc(msg)}</span></div>`;
 
   function renderCounter(region, typed, assets){
-    const areaName = region ? region.name : (typed || '{{area_name}}');
+    const areaName = region ? region.name : (typed || 'Coming Soon');
     const count = assets.length;
     const pill = count > 0
       ? `<span class="pill open">${count} asset${count>1?'s':''} open</span>`
