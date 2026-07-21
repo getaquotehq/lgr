@@ -252,11 +252,36 @@ Deno.serve(async (req: Request) => {
       if (n?.id) q = q.eq("niche_id", n.id);
     }
 
+    // ── the "held" pool ──────────────────────────────────────────────────────
+    // No gate on becoming a lead; the gate is on DELIVERY. When nothing can be
+    // delivered to (no covering client / consent names nobody), the lead is not
+    // dropped — it's parked in pending_leads until a matching client exists.
+    const rawConsent = typeof body.consent_text === "string" ? body.consent_text.trim() : null;
+    const storePending = async (reason: string) => {
+      const { data: pl } = await supabase
+        .from("pending_leads")
+        .insert({
+          brand_domain: domain,
+          niche: nicheSlug,
+          source: (body.source || "").toString().trim() || null,
+          full_name: name,
+          phone,
+          email,
+          postcode,
+          consent_text: rawConsent,
+          reason,
+          extra,
+        })
+        .select("id")
+        .maybeSingle();
+      return json({ success: true, status: "pending", stored: true, pending_id: pl?.id ?? null });
+    };
+
     const { data: candData } = await q;
     const candidates = (candData || []) as AssetRow[];
 
-    // No live inventory to match → store nothing, but let the funnel show success.
-    if (!candidates.length) return json({ success: true, status: "no_match", stored: false });
+    // No live inventory to match → hold it, don't drop it.
+    if (!candidates.length) return await storePending("no_inventory");
 
     // ── effective service area per candidate (asset override else region) ────
     const regionIds = [...new Set(candidates.map((c) => c.region_id).filter(Boolean))] as string[];
@@ -307,7 +332,7 @@ Deno.serve(async (req: Request) => {
 
     if (!matched) {
       const reason = postcodeFiltered.length === 0 ? "out_of_area" : "unmatched_consent";
-      return json({ success: true, status: reason, stored: false });
+      return await storePending(reason);
     }
 
     // ── capture via insert_lead() — attribution + 30-day dedup live in the RPC ─
