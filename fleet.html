@@ -441,31 +441,36 @@ function previewUrl(item){
 }
 
 /* Per-brand accent colours for the coded-in preview (match each live LP). */
-const PREVIEW_THEME = {
-  'clearsolarquotes.com.au':   ['#2563eb', '#22d3ee'],
-  'ausolarquotes.com.au':      ['#0e9f6e', '#f5c400'],
-  'premiumsolarquotes.com.au': ['#7c3aed', '#e0b64d'],
+/* Each brand's real personality, so the preview matches the live site:
+   au = bold Outfit/Lora green-gold, premium = Fraunces serif cream editorial,
+   clear = Outfit + Fraunces-italic accent, airy blue. */
+const PREVIEW_CFG = {
+  'clearsolarquotes.com.au':   {a1:'#2563eb',a2:'#22d3ee',bg:'#eef4fc',ink:'#101725',serifHead:false,accSerif:true,rad:22},
+  'ausolarquotes.com.au':      {a1:'#0e9f6e',a2:'#f5c400',bg:'#f6f7fb',ink:'#101725',serifHead:false,accSerif:false,rad:20},
+  'premiumsolarquotes.com.au': {a1:'#b8912e',a2:'#16324a',bg:'#f7f3ea',ink:'#15304a',serifHead:true, accSerif:true, rad:12},
 };
 
 /* Build the landing-page preview as a self-contained HTML document, coded in
    here (no hosted file) and fed to the iframe via srcdoc. It mirrors the real
    LP — same hero + branded survey card the homeowner sees — but is pure
-   HTML/CSS with no scripts, so it renders instantly and can never send a code
-   or a lead. */
+   HTML/CSS with no scripts, so it renders instantly and can never send a lead. */
 function buildPreviewDoc(item){
   const domain = (item.brand_domain || '').trim().toLowerCase();
   const brand  = item.brand_name || 'Solar Quotes';
-  const theme  = PREVIEW_THEME[domain] || ['#2563eb', '#06b6d4'];
-  const a1 = theme[0], a2 = theme[1];
-  const e = s => (s==null?'':String(s)).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const c = PREVIEW_CFG[domain] || PREVIEW_CFG['ausolarquotes.com.au'];
+  const a1 = c.a1, a2 = c.a2, bg = c.bg, ink = c.ink, rad = c.rad;
+  const headFont = c.serifHead ? "'Fraunces',Georgia,serif" : "'Outfit',system-ui,-apple-system,sans-serif";
+  const headWt   = c.serifHead ? 600 : 900;
+  const accFont  = c.accSerif ? "'Fraunces',Georgia,serif" : "'Lora',Georgia,serif";
+  const e = s => (s==null?'':String(s)).replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
   return `<!doctype html><html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800;900&family=Lora:ital,wght@1,600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800;900&family=Lora:ital,wght@1,600&family=Fraunces:ital,opsz,wght@0,9..144,600;1,9..144,600&display=swap" rel="stylesheet">
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
-body{font-family:'Outfit',system-ui,-apple-system,sans-serif;color:#101725;-webkit-font-smoothing:antialiased;
-  background:radial-gradient(900px 420px at 115% -10%, color-mix(in srgb,${a1} 16%,transparent), transparent 60%),radial-gradient(700px 400px at -12% 6%, color-mix(in srgb,${a2} 13%,transparent), transparent 58%),#f6f7fb}
+body{font-family:'Outfit',system-ui,-apple-system,sans-serif;color:${ink};-webkit-font-smoothing:antialiased;
+  background:radial-gradient(900px 420px at 115% -10%, color-mix(in srgb,${a1} 16%,transparent), transparent 60%),radial-gradient(700px 400px at -12% 6%, color-mix(in srgb,${a2} 13%,transparent), transparent 58%),${bg}}
 .top{position:sticky;top:0;display:flex;align-items:center;justify-content:space-between;height:56px;padding:0 20px;background:rgba(246,247,251,.82);backdrop-filter:blur(12px);border-bottom:1px solid #e7e9f0}
 .brand{display:flex;align-items:center;gap:9px;font-weight:800;font-size:1.02rem;letter-spacing:-.03em}
 .spark{width:28px;height:28px;border-radius:8px;background:linear-gradient(140deg,${a1},${a2});display:grid;place-items:center}
@@ -474,14 +479,14 @@ body{font-family:'Outfit',system-ui,-apple-system,sans-serif;color:#101725;-webk
 .wrap{padding:28px 20px 36px}
 .eyebrow{display:inline-flex;align-items:center;gap:7px;background:#fff;border:1px solid #e7e9f0;color:#3d4757;font-weight:600;font-size:.72rem;padding:6px 12px;border-radius:100px;margin-bottom:16px;box-shadow:0 2px 8px rgba(16,24,40,.04)}
 .eyebrow .d{width:7px;height:7px;border-radius:50%;background:#16a34a}
-h1{font-size:2rem;line-height:1.05;letter-spacing:-.045em;font-weight:900;margin-bottom:14px}
-h1 .hl{font-family:'Lora',Georgia,serif;font-style:italic;font-weight:600;background:linear-gradient(100deg,${a1},${a2});-webkit-background-clip:text;background-clip:text;color:transparent}
+h1{font-family:${headFont};font-size:2rem;line-height:1.05;letter-spacing:-.03em;font-weight:${headWt};margin-bottom:14px}
+h1 .hl{font-family:${accFont};font-style:italic;font-weight:600;background:linear-gradient(100deg,${a1},${a2});-webkit-background-clip:text;background-clip:text;color:transparent}
 .sub{font-size:.94rem;color:#3d4757;margin-bottom:18px}
 .tick{display:flex;align-items:center;gap:9px;font-weight:600;font-size:.85rem;color:#3d4757;margin-bottom:9px}
 .tick i{color:#16a34a;font-style:normal;font-weight:800}
-.card{margin-top:22px;background:#fff;border:1px solid #e7e9f0;border-radius:20px;overflow:hidden;box-shadow:0 40px 80px -34px color-mix(in srgb,${a1} 40%,rgba(16,24,40,.5)),0 12px 30px -12px rgba(16,24,40,.12)}
+.card{margin-top:22px;background:#fff;border:1px solid #e7e9f0;border-radius:${rad}px;overflow:hidden;box-shadow:0 40px 80px -34px color-mix(in srgb,${a1} 40%,rgba(16,24,40,.5)),0 12px 30px -12px rgba(16,24,40,.12)}
 .card-head{padding:18px 20px;background:linear-gradient(135deg,${a1},${a2});color:#fff}
-.card-head .t{font-weight:800;font-size:1.05rem;letter-spacing:-.02em}
+.card-head .t{font-family:${headFont};font-weight:${headWt};font-size:1.05rem;letter-spacing:-.02em}
 .card-head .s{font-size:.8rem;opacity:.92;margin-top:2px}
 .prog{padding:14px 20px 0}
 .pbar{height:6px;border-radius:100px;background:#e7e9f0;overflow:hidden}
