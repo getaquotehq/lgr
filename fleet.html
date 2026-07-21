@@ -443,7 +443,7 @@ function shot(item, big){
   <div class="chrome">
     <div class="chrome-bar">
       <span class="dot"></span><span class="dot"></span><span class="dot"></span>
-      <span class="url">${esc(item.brand_domain || '')}</span>
+      <span class="url">${esc(previewLabel(item) || item.brand_domain || '')}</span>
     </div>
     <div class="lp">
       <div class="lp-brand"></div>
@@ -458,10 +458,27 @@ function shot(item, big){
   </div>`;
 }
 
-/* the live landing page URL for an asset (its brand_domain) */
+/* the bare domain for an asset (host only, no path) */
+function assetDomain(item){
+  return (item.brand_domain || '').trim().replace(/^https?:\/\//,'').replace(/\/.*$/,'');
+}
+/* the live landing page URL for an asset: each asset is region-specific, so it
+   points at that region's area page — https://<domain>/<region-slug>/ — which
+   is where its exclusive postcodes actually convert. Falls back to the root
+   domain when an asset has no region slug. */
 function previewUrl(item){
-  const d = (item.brand_domain || '').trim().replace(/^https?:\/\//,'').replace(/\/.*$/,'');
-  return d ? 'https://' + d + '/' : null;
+  const d = assetDomain(item);
+  if(!d) return null;
+  const slug = (item.region_slug || '').trim().toLowerCase();
+  return slug ? 'https://' + d + '/' + slug + '/' : 'https://' + d + '/';
+}
+/* the address-bar label: domain + /area so installers see exactly which page
+   their rent covers (e.g. clearsolarquotes.com.au/brisbane). */
+function previewLabel(item){
+  const d = assetDomain(item);
+  if(!d) return '';
+  const slug = (item.region_slug || '').trim().toLowerCase();
+  return slug ? d + '/' + slug : d;
 }
 
 /* Per-brand accent colours for the coded-in preview (match each live LP). */
@@ -562,7 +579,7 @@ function miniShot(item){
   <div class="chrome card-live">
     <div class="chrome-bar">
       <span class="dot"></span><span class="dot"></span><span class="dot"></span>
-      <span class="url">${esc(item.brand_domain || '')}</span>
+      <span class="url">${esc(previewLabel(item) || item.brand_domain || '')}</span>
     </div>
     <div class="mini-frame"><iframe data-pv="${item._i}" scrolling="no" sandbox="" title="${esc(item.brand_name || 'Landing page')} preview" aria-hidden="true" tabindex="-1"></iframe></div>
   </div>`;
@@ -588,7 +605,7 @@ function liveShot(item){
   <div class="chrome live">
     <div class="chrome-bar">
       <span class="dot"></span><span class="dot"></span><span class="dot"></span>
-      <a class="url" href="${esc(live)}" target="_blank" rel="noopener">${esc(item.brand_domain || '')}</a>
+      <a class="url" href="${esc(live)}" target="_blank" rel="noopener">${esc(previewLabel(item) || item.brand_domain || '')}</a>
       <a class="open-live" href="${esc(live)}" target="_blank" rel="noopener">Open ↗</a>
     </div>
     <div class="live-frame">
