@@ -442,9 +442,9 @@ function previewUrl(item){
 
 /* Per-brand accent colours for the coded-in preview (match each live LP). */
 const PREVIEW_THEME = {
-  'clearsolarquotes.com.au':   ['#2563eb', '#06b6d4'],
-  'ausolarquotes.com.au':      ['#059669', '#f59e0b'],
-  'premiumsolarquotes.com.au': ['#7c3aed', '#d4af37'],
+  'clearsolarquotes.com.au':   ['#2563eb', '#22d3ee'],
+  'ausolarquotes.com.au':      ['#0e9f6e', '#f5c400'],
+  'premiumsolarquotes.com.au': ['#7c3aed', '#e0b64d'],
 };
 
 /* Build the landing-page preview as a self-contained HTML document, coded in
@@ -460,43 +460,46 @@ function buildPreviewDoc(item){
   const e = s => (s==null?'':String(s)).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   return `<!doctype html><html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800;900&family=Lora:ital,wght@1,600&display=swap" rel="stylesheet">
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
-body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;color:#0e1117;background:#f6f8fb;-webkit-font-smoothing:antialiased}
-.top{position:sticky;top:0;display:flex;align-items:center;justify-content:space-between;height:52px;padding:0 18px;background:rgba(255,255,255,.92);border-bottom:1px solid #e6eaf0}
-.brand{display:flex;align-items:center;gap:8px;font-weight:800;font-size:.98rem;letter-spacing:-.02em}
-.spark{width:26px;height:26px;border-radius:7px;background:linear-gradient(135deg,${a1},${a2});display:grid;place-items:center}
+body{font-family:'Outfit',system-ui,-apple-system,sans-serif;color:#101725;-webkit-font-smoothing:antialiased;
+  background:radial-gradient(900px 420px at 115% -10%, color-mix(in srgb,${a1} 16%,transparent), transparent 60%),radial-gradient(700px 400px at -12% 6%, color-mix(in srgb,${a2} 13%,transparent), transparent 58%),#f6f7fb}
+.top{position:sticky;top:0;display:flex;align-items:center;justify-content:space-between;height:56px;padding:0 20px;background:rgba(246,247,251,.82);backdrop-filter:blur(12px);border-bottom:1px solid #e7e9f0}
+.brand{display:flex;align-items:center;gap:9px;font-weight:800;font-size:1.02rem;letter-spacing:-.03em}
+.spark{width:28px;height:28px;border-radius:8px;background:linear-gradient(140deg,${a1},${a2});display:grid;place-items:center}
 .spark svg{fill:#fff}
-.navcta{background:${a1};color:#fff;border-radius:50px;padding:7px 14px;font-weight:700;font-size:.76rem}
-.wrap{padding:26px 18px 34px}
-.eyebrow{display:inline-flex;align-items:center;gap:6px;background:rgba(0,0,0,.04);border:1px solid #e6eaf0;color:#3a4150;font-weight:600;font-size:.68rem;padding:4px 10px;border-radius:50px;margin-bottom:12px}
-.eyebrow .d{width:6px;height:6px;border-radius:50%;background:#16a34a}
-h1{font-size:1.7rem;line-height:1.08;letter-spacing:-.035em;font-weight:900;margin-bottom:12px}
-h1 .hl{background:linear-gradient(120deg,${a1},${a2});-webkit-background-clip:text;background-clip:text;color:transparent}
-.sub{font-size:.9rem;color:#3a4150;margin-bottom:16px}
-.tick{display:flex;align-items:center;gap:8px;font-weight:600;font-size:.82rem;color:#3a4150;margin-bottom:8px}
-.tick i{width:16px;height:16px;border-radius:50%;background:color-mix(in srgb,#16a34a 16%,#fff);color:#16a34a;display:grid;place-items:center;font-size:.7rem;font-style:normal;flex:0 0 auto}
-.card{margin-top:20px;background:#fff;border:1px solid #e6eaf0;border-radius:16px;box-shadow:0 12px 40px rgba(16,24,40,.10);overflow:hidden}
-.card-head{padding:15px 18px;background:linear-gradient(120deg,${a1},${a2});color:#fff}
-.card-head .t{font-weight:800;font-size:.98rem;letter-spacing:-.02em}
-.card-head .s{font-size:.76rem;opacity:.9;margin-top:2px}
-.prog{padding:12px 18px 0}
-.pbar{height:6px;border-radius:6px;background:#e6eaf0;overflow:hidden}
-.pbar i{display:block;height:100%;width:0;background:linear-gradient(90deg,${a1},${a2})}
-.ptext{font-size:.68rem;color:#6b7280;margin-top:6px;font-weight:600}
-.body{padding:16px 18px 20px}
-.q{font-weight:800;font-size:1rem;letter-spacing:-.02em;margin-bottom:3px}
-.qs{font-size:.78rem;color:#6b7280;margin-bottom:14px}
-.opt{display:flex;align-items:center;justify-content:space-between;border:1.5px solid #e6eaf0;border-radius:12px;padding:13px 14px;font-size:.88rem;font-weight:600;margin-bottom:9px}
-.opt.sel{border-color:${a1};background:color-mix(in srgb,${a1} 7%,#fff);box-shadow:0 0 0 3px color-mix(in srgb,${a1} 14%,transparent)}
-.opt span{color:#9aa3b2}
+.navcta{background:linear-gradient(140deg,${a1},${a2});color:#fff;border-radius:100px;padding:8px 16px;font-weight:700;font-size:.78rem}
+.wrap{padding:28px 20px 36px}
+.eyebrow{display:inline-flex;align-items:center;gap:7px;background:#fff;border:1px solid #e7e9f0;color:#3d4757;font-weight:600;font-size:.72rem;padding:6px 12px;border-radius:100px;margin-bottom:16px;box-shadow:0 2px 8px rgba(16,24,40,.04)}
+.eyebrow .d{width:7px;height:7px;border-radius:50%;background:#16a34a}
+h1{font-size:2rem;line-height:1.05;letter-spacing:-.045em;font-weight:900;margin-bottom:14px}
+h1 .hl{font-family:'Lora',Georgia,serif;font-style:italic;font-weight:600;background:linear-gradient(100deg,${a1},${a2});-webkit-background-clip:text;background-clip:text;color:transparent}
+.sub{font-size:.94rem;color:#3d4757;margin-bottom:18px}
+.tick{display:flex;align-items:center;gap:9px;font-weight:600;font-size:.85rem;color:#3d4757;margin-bottom:9px}
+.tick i{color:#16a34a;font-style:normal;font-weight:800}
+.card{margin-top:22px;background:#fff;border:1px solid #e7e9f0;border-radius:20px;overflow:hidden;box-shadow:0 40px 80px -34px color-mix(in srgb,${a1} 40%,rgba(16,24,40,.5)),0 12px 30px -12px rgba(16,24,40,.12)}
+.card-head{padding:18px 20px;background:linear-gradient(135deg,${a1},${a2});color:#fff}
+.card-head .t{font-weight:800;font-size:1.05rem;letter-spacing:-.02em}
+.card-head .s{font-size:.8rem;opacity:.92;margin-top:2px}
+.prog{padding:14px 20px 0}
+.pbar{height:6px;border-radius:100px;background:#e7e9f0;overflow:hidden}
+.pbar i{display:block;height:100%;width:0;border-radius:100px;background:linear-gradient(90deg,${a1},${a2})}
+.ptext{font-size:.7rem;color:#6b7686;margin-top:7px;font-weight:600}
+.body{padding:18px 20px 22px}
+.q{font-weight:800;font-size:1.12rem;letter-spacing:-.03em;margin-bottom:4px}
+.qs{font-size:.82rem;color:#6b7686;margin-bottom:16px}
+.opt{display:flex;align-items:center;justify-content:space-between;border:1.5px solid #dfe2ec;border-radius:14px;padding:15px 16px;font-size:.92rem;font-weight:600;margin-bottom:10px}
+.opt span{color:#9aa4b2}
+.opt.sel{border-color:${a1};background:color-mix(in srgb,${a1} 7%,#fff);box-shadow:0 0 0 3px color-mix(in srgb,${a1} 15%,transparent)}
 </style></head><body>
 <div class="top">
-  <div class="brand"><span class="spark"><svg width="14" height="14" viewBox="0 0 24 24"><path d="M13 2 4 14h6l-1 8 9-12h-6z"/></svg></span> ${e(brand)}</div>
+  <div class="brand"><span class="spark"><svg width="15" height="15" viewBox="0 0 24 24"><path d="M13 2 4 14h6l-1 8 9-12h-6z"/></svg></span> ${e(brand)}</div>
   <div class="navcta">Get my free quote</div>
 </div>
 <div class="wrap">
-  <span class="eyebrow"><span class="d"></span> Matching homeowners with local installers</span>
+  <span class="eyebrow"><span class="d"></span> Now matching homeowners with local installers</span>
   <h1>Free solar quotes from <span class="hl">a trusted local installer</span></h1>
   <p class="sub">Answer four quick questions and ${e(brand)} matches you with a single accredited installer covering your postcode.</p>
   <div class="tick"><i>&#10003;</i> One installer, matched to your postcode</div>
