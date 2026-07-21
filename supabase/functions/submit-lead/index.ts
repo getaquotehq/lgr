@@ -89,6 +89,7 @@ const CORE = new Set([
   "full_name", "name", "first_name", "last_name",
   "phone", "email", "postcode",
   "website", "hp", "elapsed_ms",
+  "fingerprint", "device_hash",
 ]);
 
 // Known disposable / throwaway email domains — a cheap hard spam block.
@@ -154,9 +155,22 @@ Deno.serve(async (req: Request) => {
     const postcode: string = (body.postcode || "").toString().replace(/\s/g, "");
     if (!/^[0-9]{4}$/.test(postcode)) return json({ error: "invalid_postcode" }, 400);
 
+    // ── visitor identity (never surfaced to the client) ──────────────────────
+    const fingerprint = (body.fingerprint || "").toString().slice(0, 128) || null;
+    const deviceHash = (body.device_hash || "").toString().slice(0, 128) || null;
+    const ip = (req.headers.get("x-forwarded-for") || "").split(",")[0].trim()
+      || req.headers.get("x-real-ip") || null;
+    const userAgent = (req.headers.get("user-agent") || "").slice(0, 400) || null;
+
+    const supabase = createClient(
+      Deno.env.get("SUPABASE_URL")!,
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
+    );
+
     // ── hard anti-spam gate ──────────────────────────────────────────────────
     // Silent drops (bots get a fake 200 so they don't learn they were caught);
-    // only the real-number failure is surfaced, so a genuine user can fix a typo.
+    // the block and the invalid-number case use generic messages that never
+    // reveal which signal tripped them.
     // 1) honeypot — a hidden field only bots fill.
     if ((body.website || body.hp || "").toString().trim()) {
       return json({ success: true, status: "ok", stored: false });
@@ -171,16 +185,41 @@ Deno.serve(async (req: Request) => {
       const dom = (email.split("@")[1] || "").toLowerCase();
       if (DISPOSABLE.has(dom)) return json({ success: true, status: "ok", stored: false });
     }
-    // 4) real-number check (Veriphone) — must be a valid, reachable mobile.
+    // 4) per-visitor cooldown (30m after any submission, escalating on repeat
+    //    violations). Runs BEFORE Veriphone so a blocked repeat visitor never
+    //    burns a phone-validation lookup. Enforcement + logging live in the RPC.
+    {
+      const { data: cd } = await supabase.rpc("enforce_lead_cooldown", {
+        p_fingerprint: fingerprint,
+        p_device_hash: deviceHash,
+        p_ip: ip,
+        p_phone: phone,
+        p_email: email,
+        p_postcode: postcode,
+        p_brand_domain: (body.brand_domain || "").toString() || null,
+        p_user_agent: userAgent,
+      });
+      if (cd && (cd as { blocked?: boolean }).blocked) {
+        return json({
+          error: "too_many_requests",
+          message: "You've recently submitted a request. Please try again later.",
+        }, 429);
+      }
+    }
+    // 5) real-number check (Veriphone) — must be a valid, reachable mobile.
     const vp = await veriphoneCheck(phone);
     if (vp.checked && !(vp.valid && vp.mobile)) {
       return json({ error: "invalid_phone_number", detail: vp.type || "not a valid mobile" }, 400);
     }
 
-    const supabase = createClient(
-      Deno.env.get("SUPABASE_URL")!,
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
-    );
+    // Accepted as a genuine submission → stamp the 30-minute cooldown now (this
+    // is what a later repeat submit will trip against). Any match outcome below
+    // still counts as a submission for cooldown purposes.
+    await supabase.rpc("record_lead_submission", {
+      p_fingerprint: fingerprint,
+      p_device_hash: deviceHash,
+      p_ip: ip,
+    });
 
     // ── pack any extra fields into leads.extra ───────────────────────────────
     const extra: Record<string, unknown> = {};
