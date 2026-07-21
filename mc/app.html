@@ -87,6 +87,7 @@ body::after{content:'';position:fixed;inset:0;background-image:radial-gradient(c
 .navbtn:hover{background:var(--s3);color:var(--ink)}
 .navbtn.active{background:var(--acc-dim);color:var(--acc-ink);font-weight:600}
 .navbtn.active .ni{color:var(--acc)}
+.navbadge{margin-left:auto;background:var(--amb);color:#1a1205;font-size:10.5px;font-weight:800;min-width:18px;height:18px;padding:0 5px;border-radius:9px;display:inline-flex;align-items:center;justify-content:center;line-height:1}
 .ni{width:17px;height:17px;flex-shrink:0;display:flex;align-items:center;justify-content:center;color:var(--ink3);transition:color .14s}
 .ni svg{width:17px;height:17px;stroke:currentColor;stroke-width:1.8;fill:none;stroke-linecap:round;stroke-linejoin:round}
 .navbtn:hover .ni{color:var(--ink2)}
@@ -300,6 +301,9 @@ td.mono{font-family:var(--mono);font-size:12px}
           <button class="navbtn" data-panel="leads" onclick="nav('leads',this)">
             <span class="ni"><svg viewBox="0 0 24 24"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg></span>Leads
           </button>
+          <button class="navbtn" data-panel="pending" onclick="nav('pending',this)">
+            <span class="ni"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></span>Pending<span class="navbadge" id="nav-pending-badge" style="display:none"></span>
+          </button>
         </div>
         <div class="sb-divider"></div>
         <div class="sb-group">
@@ -453,6 +457,45 @@ td.mono{font-family:var(--mono);font-size:12px}
         </div>
       </div>
 
+      <!-- ═══ PENDING ═══ -->
+      <div class="panel" id="panel-pending">
+        <div class="ph">
+          <div class="ph-left"><h1>Pending Leads</h1><p>Captured but not yet deliverable · held until a client covers the postcode</p></div>
+          <div class="ph-right">
+            <select class="fs" id="pf-reason" onchange="loadPending()" style="width:auto">
+              <option value="">All reasons</option>
+              <option value="out_of_area">Out of area</option>
+              <option value="unmatched_consent">Unmatched consent</option>
+              <option value="no_inventory">No inventory</option>
+            </select>
+            <select class="fs" id="pf-status" onchange="loadPending()" style="width:auto">
+              <option value="pending">Pending</option>
+              <option value="delivered">Delivered</option>
+              <option value="discarded">Discarded</option>
+              <option value="">All</option>
+            </select>
+            <button class="btn btn-sm" onclick="loadPending()">↻ Refresh</button>
+            <button class="btn btn-sm" onclick="exportPendingCsv()">↓ CSV</button>
+          </div>
+        </div>
+        <div class="kg c4 mb4">
+          <div class="kpi"><div class="klabel">Pending now</div><div class="kval" id="pd-pending" style="color:var(--amb)">—</div><div class="ksub">awaiting a covering client</div></div>
+          <div class="kpi"><div class="klabel">Out of area</div><div class="kval blu" id="pd-oa">—</div></div>
+          <div class="kpi"><div class="klabel">Unmatched consent</div><div class="kval" id="pd-uc">—</div></div>
+          <div class="kpi"><div class="klabel">No inventory</div><div class="kval red" id="pd-ni">—</div></div>
+        </div>
+        <div class="sl">Held leads <div class="sl-line"></div></div>
+        <div class="twrap">
+          <table>
+            <thead><tr>
+              <th>Received</th><th>Name</th><th>Phone</th><th>Email</th><th>Postcode</th>
+              <th>Brand</th><th>Niche</th><th>Reason</th><th>Status</th><th>Actions</th>
+            </tr></thead>
+            <tbody id="pd-tbody"><tr><td colspan="10" class="empty">Loading…</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+
       <!-- ═══ NICHES ═══ -->
       <div class="panel" id="panel-niches">
         <div class="ph">
@@ -491,6 +534,7 @@ td.mono{font-family:var(--mono);font-size:12px}
     <button class="bnbtn" data-panel="rentals" onclick="nav('rentals',this)"><span class="bnbtn-icon"><svg viewBox="0 0 24 24"><circle cx="17" cy="17" r="3"/><circle cx="7" cy="7" r="3"/><path d="M20 7h-9M14 17H5"/></svg></span><span class="bnbtn-lbl">Rentals</span></button>
     <button class="bnbtn" data-panel="installers" onclick="nav('installers',this)"><span class="bnbtn-icon"><svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/></svg></span><span class="bnbtn-lbl">Installers</span></button>
     <button class="bnbtn" data-panel="leads" onclick="nav('leads',this)"><span class="bnbtn-icon"><svg viewBox="0 0 24 24"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg></span><span class="bnbtn-lbl">Leads</span></button>
+    <button class="bnbtn" data-panel="pending" onclick="nav('pending',this)"><span class="bnbtn-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></span><span class="bnbtn-lbl">Pending</span></button>
   </div>
 </div>
 
@@ -681,6 +725,7 @@ async function doLogout(){ if(!confirm('Sign out?')) return; if(db) await db.aut
 /* ── reference data ──────────────────────────────────────────────────────── */
 async function bootData(){
   await loadRefData();
+  refreshPendingBadge();
   nav('dashboard');
 }
 async function loadRefData(){
@@ -710,7 +755,14 @@ function fillSelect(id, allLabel, opts){
 }
 const nicheName = id => (_niches.find(x=>x.id===id)||{}).name || '—';
 const regionName = id => (_regions.find(x=>x.id===id)||{}).name || '—';
+const regionSlug = id => (_regions.find(x=>x.id===id)||{}).slug || '';
 const installerName = id => (_installers.find(x=>x.id===id)||{}).business_name || '—';
+// each asset is region-specific → its live page is <domain>/<area>, congruent
+// with the fleet previews. Falls back to the root domain if no region slug.
+const assetPreviewHref = a => a.brand_domain
+  ? 'https://'+a.brand_domain+'/'+(regionSlug(a.region_id)?regionSlug(a.region_id)+'/':'') : null;
+const assetPreviewText = a => a.brand_domain
+  ? a.brand_domain+(regionSlug(a.region_id)?'/'+regionSlug(a.region_id):'') : '';
 
 /* ── router ──────────────────────────────────────────────────────────────── */
 function nav(panel, el){
@@ -723,6 +775,7 @@ function nav(panel, el){
   if(panel==='rentals') loadRentals();
   if(panel==='installers') loadInstallers();
   if(panel==='leads') loadLeads(true);
+  if(panel==='pending') loadPending();
   if(panel==='niches') loadNiches();
   if(panel==='regions') loadRegions();
 }
@@ -880,7 +933,7 @@ function renderAssets(){
     return `<tr${del}>
       <td><strong>${esc(a.brand_name)}</strong>${a.deleted_at?' <span class="badge bg-red">deleted</span>':''}</td>
       <td class="mono dim">${a.brand_domain
-        ? `<a href="https://${esc(a.brand_domain)}/" target="_blank" rel="noopener" title="Open live landing page" style="color:var(--acc);text-decoration:none">${esc(a.brand_domain)} ↗</a>`
+        ? `<a href="${assetPreviewHref(a)}" target="_blank" rel="noopener" title="Open live landing page" style="color:var(--acc);text-decoration:none">${esc(assetPreviewText(a))} ↗</a>`
         : '—'}</td>
       <td>${esc(nicheName(a.niche_id))}</td>
       <td>${esc(regionName(a.region_id))}</td>
@@ -902,7 +955,7 @@ function assetQuickMenu(a){
     <div class="qmenu-pop">
       ${statuses.map(s=>`<button class="qmenu-item" onclick="markAssetStatus('${a.id}','${s}')">Mark ${s}</button>`).join('')}
       <div class="qmenu-sep"></div>
-      ${a.brand_domain?`<a class="qmenu-item" href="https://${esc(a.brand_domain)}/" target="_blank" rel="noopener" style="text-decoration:none;display:block">Open preview ↗</a>`:''}
+      ${a.brand_domain?`<a class="qmenu-item" href="${assetPreviewHref(a)}" target="_blank" rel="noopener" style="text-decoration:none;display:block">Open preview ↗</a>`:''}
       <button class="qmenu-item" onclick="duplicateAsset('${a.id}')">Duplicate</button>
       <button class="qmenu-item danger" onclick="softDeleteAsset('${a.id}')">Soft-delete</button>
       <button class="qmenu-item danger" onclick="hardDeleteAsset('${a.id}')">Hard delete (permanent)</button>
@@ -1408,6 +1461,86 @@ function exportLeadsCsv(){
   const a=document.createElement('a'); a.href=url; a.download=`lgr-leads-${new Date().toISOString().slice(0,10)}.csv`;
   a.click(); URL.revokeObjectURL(url);
   toast(`Exported ${_leadsView.length} leads ✓`);
+}
+
+/* ════════════════════════════════════════════════════════════════════════
+   PENDING LEADS (the held pool — captured but not yet deliverable)
+   ════════════════════════════════════════════════════════════════════════ */
+let _pendingView = [];
+const REASON_LABEL = { out_of_area:'Out of area', unmatched_consent:'Unmatched consent', no_inventory:'No inventory' };
+const REASON_CLASS = { out_of_area:'bg-blu', unmatched_consent:'bg-amb', no_inventory:'bg-red' };
+
+async function refreshPendingBadge(){
+  const { count } = await db.from('pending_leads').select('id',{count:'exact',head:true}).eq('status','pending');
+  const b=$('nav-pending-badge'); if(!b) return;
+  if(count){ b.textContent=count; b.style.display=''; } else { b.style.display='none'; }
+}
+
+async function loadPending(){
+  const reason=$('pf-reason').value, status=$('pf-status').value;
+  $('pd-tbody').innerHTML='<tr><td colspan="10" class="empty">Loading…</td></tr>';
+  let q=db.from('pending_leads').select('*').order('created_at',{ascending:false}).limit(500);
+  if(status) q=q.eq('status',status);
+  if(reason) q=q.eq('reason',reason);
+  const { data, error } = await q;
+  if(error){ $('pd-tbody').innerHTML=`<tr><td colspan="10" class="empty" style="color:var(--red)">${esc(error.message)}</td></tr>`; return; }
+  _pendingView = data||[];
+
+  // KPI counts (always over the full pending set, independent of filters)
+  const { data: all } = await db.from('pending_leads').select('reason,status');
+  const pend=(all||[]).filter(x=>x.status==='pending');
+  $('pd-pending').textContent = pend.length;
+  $('pd-oa').textContent = pend.filter(x=>x.reason==='out_of_area').length;
+  $('pd-uc').textContent = pend.filter(x=>x.reason==='unmatched_consent').length;
+  $('pd-ni').textContent = pend.filter(x=>x.reason==='no_inventory').length;
+  refreshPendingBadge();
+
+  $('pd-tbody').innerHTML = _pendingView.length ? _pendingView.map(p=>{
+    const rc=REASON_CLASS[p.reason]||'bg-gray', rl=REASON_LABEL[p.reason]||p.reason||'—';
+    const sc=p.status==='pending'?'bg-amb':p.status==='delivered'?'bg-grn':'bg-gray';
+    return `<tr${p.status!=='pending'?' style="opacity:.55"':''}>
+      <td class="mono dim">${fmtDate(p.created_at)}</td>
+      <td><strong>${esc(p.full_name||'—')}</strong></td>
+      <td class="mono">${esc(p.phone||'—')}</td>
+      <td class="mono dim">${esc(p.email||'—')}</td>
+      <td class="mono">${esc(p.postcode||'—')}</td>
+      <td class="mono dim">${esc(p.brand_domain||'—')}</td>
+      <td>${esc(p.niche||'—')}</td>
+      <td><span class="badge ${rc}">${esc(rl)}</span></td>
+      <td><span class="badge ${sc}">${esc(p.status)}</span></td>
+      <td class="acts">${p.status==='pending'
+        ? `<button class="btn btn-xs" onclick="discardPending('${p.id}')">Discard</button>`
+        : p.status==='discarded'
+          ? `<button class="btn btn-xs" onclick="restorePending('${p.id}')">Restore</button>`
+          : '—'}</td>
+    </tr>`;
+  }).join('') : '<tr><td colspan="10" class="empty">No pending leads.</td></tr>';
+}
+
+async function discardPending(id){
+  if(!confirm('Discard this pending lead? It will no longer be held for delivery.')) return;
+  const { error } = await db.from('pending_leads').update({ status:'discarded', resolved_at:new Date().toISOString() }).eq('id',id);
+  if(error){ toast(error.message, true); return; }
+  toast('Lead discarded'); loadPending();
+}
+async function restorePending(id){
+  const { error } = await db.from('pending_leads').update({ status:'pending', resolved_at:null }).eq('id',id);
+  if(error){ toast(error.message, true); return; }
+  toast('Lead restored to pending'); loadPending();
+}
+
+function exportPendingCsv(){
+  if(!_pendingView.length){ toast('Nothing to export', true); return; }
+  const cols=['created_at','full_name','phone','email','postcode','brand_domain','niche','reason','status'];
+  const rows=_pendingView.map(p=>[p.created_at,p.full_name,p.phone,p.email||'',p.postcode||'',p.brand_domain||'',p.niche||'',p.reason||'',p.status]);
+  const csv=[cols.join(','), ...rows.map(r=>r.map(v=>{
+    const s=String(v ?? ''); return /[",\n]/.test(s)?'"'+s.replace(/"/g,'""')+'"':s;
+  }).join(','))].join('\n');
+  const blob=new Blob([csv],{type:'text/csv'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a'); a.href=url; a.download=`lgr-pending-${new Date().toISOString().slice(0,10)}.csv`;
+  a.click(); URL.revokeObjectURL(url);
+  toast(`Exported ${_pendingView.length} pending leads ✓`);
 }
 
 /* ════════════════════════════════════════════════════════════════════════
