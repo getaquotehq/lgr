@@ -445,9 +445,12 @@ function previewUrl(item){
    au = bold Outfit/Lora green-gold, premium = Fraunces serif cream editorial,
    clear = Outfit + Fraunces-italic accent, airy blue. */
 const PREVIEW_CFG = {
-  'clearsolarquotes.com.au':   {a1:'#2563eb',a2:'#22d3ee',bg:'#eef4fc',ink:'#101725',serifHead:false,accSerif:true,rad:22},
-  'ausolarquotes.com.au':      {a1:'#0e9f6e',a2:'#f5c400',bg:'#f6f7fb',ink:'#101725',serifHead:false,accSerif:false,rad:20},
-  'premiumsolarquotes.com.au': {a1:'#b8912e',a2:'#16324a',bg:'#f7f3ea',ink:'#15304a',serifHead:true, accSerif:true, rad:12},
+  'clearsolarquotes.com.au':   {a1:'#2563eb',a2:'#22d3ee',bg:'#eef4fc',ink:'#101725',serifHead:false,accSerif:true,rad:22,centered:false,
+    eyebrow:'Now matching homeowners with local installers', h1:'Clear solar quotes from <span class="hl">one trusted local installer</span>.'},
+  'ausolarquotes.com.au':      {a1:'#0e9f6e',a2:'#f5c400',bg:'#f6f7fb',ink:'#101725',serifHead:false,accSerif:false,rad:20,centered:true,
+    eyebrow:'Matched to installers Australia-wide', h1:'Solar quotes for <span class="hl">every Aussie postcode</span>.'},
+  'premiumsolarquotes.com.au': {a1:'#b8912e',a2:'#16324a',bg:'#f7f3ea',ink:'#15304a',serifHead:true, accSerif:true, rad:12,centered:false,
+    eyebrow:'By vetted, accredited installers', h1:'Premium solar, <span class="hl">quoted properly</span>.'},
 };
 
 /* Build the landing-page preview as a self-contained HTML document, coded in
@@ -483,6 +486,9 @@ h1{font-family:${headFont};font-size:2rem;line-height:1.05;letter-spacing:-.03em
 h1 .hl{font-family:${accFont};font-style:italic;font-weight:600;background:linear-gradient(100deg,${a1},${a2});-webkit-background-clip:text;background-clip:text;color:transparent}
 .sub{font-size:.94rem;color:#3d4757;margin-bottom:18px}
 .tick{display:flex;align-items:center;gap:9px;font-weight:600;font-size:.85rem;color:#3d4757;margin-bottom:9px}
+.wrap.center{max-width:540px;margin:0 auto;text-align:center}
+.wrap.center .tick{justify-content:center}
+.wrap.center .card{text-align:left}
 .tick i{color:#16a34a;font-style:normal;font-weight:800}
 .card{margin-top:22px;background:#fff;border:1px solid #e7e9f0;border-radius:${rad}px;overflow:hidden;box-shadow:0 40px 80px -34px color-mix(in srgb,${a1} 40%,rgba(16,24,40,.5)),0 12px 30px -12px rgba(16,24,40,.12)}
 .card-head{padding:18px 20px;background:linear-gradient(135deg,${a1},${a2});color:#fff}
@@ -503,9 +509,9 @@ h1 .hl{font-family:${accFont};font-style:italic;font-weight:600;background:linea
   <div class="brand"><span class="spark"><svg width="15" height="15" viewBox="0 0 24 24"><path d="M13 2 4 14h6l-1 8 9-12h-6z"/></svg></span> ${e(brand)}</div>
   <div class="navcta">Get Quote</div>
 </div>
-<div class="wrap">
-  <span class="eyebrow"><span class="d"></span> Now matching homeowners with local installers</span>
-  <h1>Free solar quotes from <span class="hl">a trusted local installer</span></h1>
+<div class="wrap${c.centered?' center':''}">
+  <span class="eyebrow"><span class="d"></span> ${c.eyebrow}</span>
+  <h1>${c.h1}</h1>
   <p class="sub">Answer four quick questions and ${e(brand)} matches you with a single accredited installer covering your postcode.</p>
   <div class="tick"><i>&#10003;</i> One installer, matched to your postcode</div>
   <div class="tick"><i>&#10003;</i> Qualified electricians &amp; accredited installers only</div>
