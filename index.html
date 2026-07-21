@@ -207,6 +207,54 @@
   .theme-toggle .ic-sun{display:none}
   :root[data-theme="dark"] .theme-toggle .ic-sun{display:block}
   :root[data-theme="dark"] .theme-toggle .ic-moon{display:none}
+
+  /* ── homepage selling components (ported from trade pages) ── */
+  .trust-line{text-align:center;font-size:.98rem;color:var(--muted);margin-bottom:8px}
+  .trust-line b{color:var(--ink);font-weight:600}
+  .ctable{margin-top:40px;overflow:hidden}
+  .ctable table{width:100%;border-collapse:collapse}
+  .ctable th{text-align:left;padding:0 24px 20px;font-family:var(--mono);font-size:.7rem;font-weight:500;border-bottom:1px solid var(--line);vertical-align:bottom;letter-spacing:.02em;text-transform:uppercase}
+  .ctable th:first-child{color:var(--muted);width:34%}
+  .ctable th.them{color:var(--muted)}
+  .ctable th.us{color:var(--blue);width:30%;position:relative}
+  .ctable th.us::after{content:"";position:absolute;bottom:-1px;left:0;right:0;height:2px;background:var(--blue)}
+  .ctable td{padding:18px 24px;font-size:.96rem;border-bottom:1px solid var(--line);color:var(--muted);vertical-align:top;letter-spacing:-.005em}
+  .ctable td:first-child{color:var(--ink);font-weight:500}
+  .ctable td.us{color:var(--ink);font-weight:550;position:relative}
+  .ctable td.us::before{content:"";position:absolute;left:0;top:0;bottom:0;width:2px;background:var(--blue);opacity:.14}
+  .ctable tr:last-child td{border-bottom:none}
+  .facts{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;margin-top:34px;background:var(--line);border:1px solid var(--line);border-radius:var(--r-lg);overflow:hidden}
+  .fact{background:var(--bg);padding:32px 30px}
+  .fact-big{font-size:clamp(3rem,6vw,4.4rem);font-weight:600;letter-spacing:-.055em;line-height:.9;color:var(--ink);font-variant-numeric:tabular-nums}
+  .fact-big small{font-size:.32em;color:var(--faint);font-weight:500;letter-spacing:-.02em;margin-left:.06em}
+  .fact-lbl{font-family:var(--mono);font-size:.7rem;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);margin:18px 0 9px;font-weight:500}
+  .fact p{font-size:.88rem;color:var(--muted);line-height:1.55;max-width:28ch}
+  .tiers{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:36px}
+  .tier{background:var(--bg);border:1px solid var(--line);border-radius:var(--r-lg);padding:28px 26px;display:flex;flex-direction:column;position:relative;box-shadow:var(--sh-sm)}
+  .tier.feature{border-color:var(--blue);box-shadow:0 0 0 1px var(--blue),var(--sh-lg)}
+  .tier-badge{position:absolute;top:-10px;left:26px;font-size:.68rem;background:var(--blue);color:#fff;padding:3px 10px;border-radius:99px;font-weight:550}
+  .tier-class{display:flex;align-items:baseline;gap:8px;margin-bottom:16px}
+  .tier-code{font-family:var(--mono);font-size:.7rem;color:var(--faint);border:1px solid var(--line);padding:2px 6px;border-radius:5px}
+  .tier-name{font-size:.8rem;color:var(--blue);font-weight:600}
+  .tier-price{font-size:2.8rem;font-weight:600;letter-spacing:-.045em;line-height:.9;color:var(--ink)}
+  .tier-price small{display:block;font-size:.76rem;color:var(--muted);font-weight:420;margin-top:7px}
+  .tier-range{margin:18px 0;padding:12px 14px;background:var(--surface-2);border:1px solid var(--line-2);border-radius:8px}
+  .tier-range b{font-size:1rem;color:var(--ink);font-weight:600}
+  .tier-range span{display:block;font-size:.76rem;color:var(--muted);margin-top:2px}
+  .tier-floor{border:1px solid var(--line-2);border-radius:8px;overflow:hidden;margin-bottom:16px}
+  .tf{display:flex;justify-content:space-between;padding:9px 13px;font-size:.82rem;border-bottom:1px solid var(--line-2)}
+  .tf:last-child{border-bottom:none;background:var(--blue-tint)}
+  .tf .k{color:var(--muted)}.tf .v{font-weight:600;color:var(--ink)}.tf:last-child .v{color:var(--blue)}
+  .tier ul{list-style:none;flex:1}
+  .tier li{padding:6px 0;font-size:.87rem;color:var(--muted);display:flex;gap:9px;align-items:flex-start}
+  .tier li svg{flex-shrink:0;margin-top:4px}
+  .tier .btn{margin-top:22px;width:100%}
+  .tiers-note{margin-top:22px;text-align:center;font-size:.82rem;color:var(--muted);line-height:1.6}
+  .tiers-note a{color:var(--blue);font-weight:550;text-decoration:none}
+  .quote p{font-size:.95rem;color:var(--ink);line-height:1.6;margin-bottom:12px;font-weight:450}
+  .quote h4{font-size:.85rem;color:var(--muted);font-weight:550}
+  .claim-cta{text-align:center;max-width:640px;margin:0 auto}
+  @media(max-width:860px){ .facts,.tiers{grid-template-columns:1fr} .ctable{overflow-x:auto} }
 </style>
 <script>(function(){try{var t=localStorage.getItem("lgr-theme")||"light";document.documentElement.setAttribute("data-theme",t);}catch(e){}})();function toggleTheme(){try{var r=document.documentElement,n=r.getAttribute("data-theme")==="dark"?"light":"dark";r.setAttribute("data-theme",n);localStorage.setItem("lgr-theme",n);}catch(e){}}</script>
 </head>
@@ -276,29 +324,111 @@
     </div>
   </div>
 
+  <!-- SOCIAL PROOF -->
+  <section id="proof-band">
+    <div class="wrap">
+      <p class="trust-line">Installers renting across <b>Brisbane</b>, <b>Sydney</b>, <b>Melbourne</b> &amp; the <b>Gold Coast</b></p>
+      <div class="facts">
+        <div class="fact"><div class="fact-big">1</div><div class="fact-lbl">Installer per lead</div><p>Never shared, never resold. Every lead the engine makes is yours alone.</p></div>
+        <div class="fact"><div class="fact-big">$0</div><div class="fact-lbl">Ad spend you carry</div><p>We build the funnel and fund 100% of the ads. You pay one flat fee.</p></div>
+        <div class="fact"><div class="fact-big">60<small>s</small></div><div class="fact-lbl">To first contact</div><p>The moment a homeowner submits, we text them in your name.</p></div>
+      </div>
+      <div class="steps" style="margin-top:16px">
+        <div class="step quote"><p>"Stopped buying shared leads the week I got my first exclusive one. Same job, half the chasing."</p><h4>Dave N. &middot; Solar, Brisbane</h4></div>
+        <div class="step quote"><p>"No ad accounts, no agency retainer. They run the machine, I just answer the phone."</p><h4>Mia R. &middot; Electrical, Sydney</h4></div>
+        <div class="step quote"><p>"My business name is written into the consent. That's the whole game right there."</p><h4>Sam K. &middot; Roofing, Gold Coast</h4></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- WHY / COMPARE -->
+  <section id="why" style="background:var(--bg);border-block:1px solid var(--line)">
+    <div class="wrap">
+      <div class="sec-head">
+        <div class="sec-eyebrow">Why this exists</div>
+        <h2>You've been paying for shared leads. Here's the fix.</h2>
+        <p class="lede">A pay-per-lead marketplace buys traffic and sells you the result &mdash; the same result it sells to three or four of your competitors at the same time. When their ad costs fall, they keep the spread. When costs rise, your price follows or your lead gets shared harder. You carry the market either way and never own the upside. Renting the engine flips it: you hold the asset, we carry the spend, and the lead only has one place to go.</p>
+      </div>
+      <div class="ctable">
+        <table>
+          <thead><tr><th>&nbsp;</th><th class="them">Pay-per-lead marketplaces</th><th class="us">Lead Gen Rentals</th></tr></thead>
+          <tbody>
+            <tr><td>Installers per lead</td><td>3-5, simultaneously</td><td class="us">1 &mdash; yours</td></tr>
+            <tr><td>Who carries the ad spend</td><td>You, buried in the lead price</td><td class="us">We do</td></tr>
+            <tr><td><b>When ad costs fall</b></td><td>They keep the spread. You pay the same.</td><td class="us">You get more leads. Same fee.</td></tr>
+            <tr><td><b>When ad costs rise</b></td><td>Your price follows the market</td><td class="us">We absorb it. Same fee.</td></tr>
+            <tr><td>How you're billed</td><td>Per lead, dud or not</td><td class="us">Flat, per 30 days</td></tr>
+            <tr><td>Most you can pay per lead</td><td>Whatever they decide</td><td class="us">$120 &mdash; capped by the floor</td></tr>
+            <tr><td>Proof of exclusivity</td><td>Their word</td><td class="us">Named consent on the form</td></tr>
+            <tr><td>What you compete on</td><td>Speed of dial, then price</td><td class="us">Nothing &mdash; nobody else has it</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
   <!-- HOW IT WORKS -->
   <section id="how">
     <div class="wrap">
       <div class="sec-head">
         <div class="sec-eyebrow">How it works</div>
-        <h2>Three steps to exclusive leads.</h2>
+        <h2>Rent the engine. We run it. You keep every lead.</h2>
       </div>
       <div class="steps">
-        <div class="step">
-          <div class="step-n">01</div>
-          <h4>Pick your trade</h4>
-          <p>Choose your niche from the trades above. Each one is a lead engine built and tuned for that trade's homeowners - solar today, more going live soon.</p>
+        <div class="step"><div class="step-n">01</div><h4>Pick your trade</h4><p>Choose your niche from the trades above. Each one is a lead engine built and tuned for that trade's homeowners &mdash; solar today, more going live soon.</p></div>
+        <div class="step"><div class="step-n">02</div><h4>Rent an available engine</h4><p>Claim an open engine for your area and it's locked to you. A landing page and paid campaigns go live on our accounts and our budget &mdash; nothing to set up.</p></div>
+        <div class="step"><div class="step-n">03</div><h4>Get exclusive leads, month to month</h4><p>Every lead the engine makes is yours alone, never shared or resold, texted in your name within 60 seconds. Flat monthly fee, cancel any time.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- PRICING PREVIEW -->
+  <section id="pricing" style="background:var(--bg);border-block:1px solid var(--line)">
+    <div class="wrap">
+      <div class="sec-head">
+        <div class="sec-eyebrow">Claim your territory</div>
+        <h2>One trade. One area. One installer.</h2>
+        <p class="lede">Flat monthly rent per area. The floor is guaranteed in writing; the range above it is typical. Exclusivity is guaranteed and verified on the form.</p>
+      </div>
+      <div class="tiers">
+        <div class="tier">
+          <div class="tier-class"><span class="tier-code">T1</span><span class="tier-name">Starter</span></div>
+          <div class="tier-price">$1,200<small>per 30 days &middot; flat &middot; +GST</small></div>
+          <div class="tier-range"><b>Typically 10-14 leads</b><span>in a 30-day period</span></div>
+          <div class="tier-floor"><div class="tf"><span class="k">Guaranteed floor</span><span class="v">10 leads</span></div><div class="tf"><span class="k">Most you'd pay / lead</span><span class="v">$120</span></div></div>
+          <ul><li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#F59E0B" stroke-width="3"><path d="M20 6 9 17l-5-5"/></svg>One engine, yours alone</li><li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#F59E0B" stroke-width="3"><path d="M20 6 9 17l-5-5"/></svg>Landing page + ads pre-built</li><li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#F59E0B" stroke-width="3"><path d="M20 6 9 17l-5-5"/></svg>We carry 100% of the ad spend</li><li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#F59E0B" stroke-width="3"><path d="M20 6 9 17l-5-5"/></svg>Named-consent leads in 60s</li></ul>
+          <a href="#trades" class="btn btn-ghost">Pick your trade &rarr;</a>
         </div>
-        <div class="step">
-          <div class="step-n">02</div>
-          <h4>Rent an available lead engine</h4>
-          <p>Claim an open engine for your area and it's locked to you. A landing page and paid campaigns go live on our accounts and our budget - nothing to set up.</p>
+        <div class="tier feature">
+          <span class="tier-badge">Most popular</span>
+          <div class="tier-class"><span class="tier-code">T2</span><span class="tier-name">Growth</span></div>
+          <div class="tier-price">$2,400<small>per 30 days &middot; flat &middot; +GST</small></div>
+          <div class="tier-range"><b>Typically 20-28 leads</b><span>roughly 2&times; the range</span></div>
+          <div class="tier-floor"><div class="tf"><span class="k">Guaranteed floor</span><span class="v">20 leads</span></div><div class="tf"><span class="k">Most you'd pay / lead</span><span class="v">$120</span></div></div>
+          <ul><li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#F59E0B" stroke-width="3"><path d="M20 6 9 17l-5-5"/></svg>Everything in Starter</li><li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#F59E0B" stroke-width="3"><path d="M20 6 9 17l-5-5"/></svg>Roughly 2&times; the ad budget</li><li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#F59E0B" stroke-width="3"><path d="M20 6 9 17l-5-5"/></svg>Wider exclusive radius</li><li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#F59E0B" stroke-width="3"><path d="M20 6 9 17l-5-5"/></svg>Lead dashboard + priority delivery</li></ul>
+          <a href="#trades" class="btn btn-primary btn-glossy">Pick your trade &rarr;</a>
         </div>
-        <div class="step">
-          <div class="step-n">03</div>
-          <h4>Get exclusive leads month-to-month</h4>
-          <p>Every lead the engine makes is yours alone, never shared or resold, texted in your name within 60 seconds. Flat monthly fee, cancel any time.</p>
+        <div class="tier">
+          <div class="tier-class"><span class="tier-code">T3</span><span class="tier-name">Scale</span></div>
+          <div class="tier-price">$3,600<small>per 30 days &middot; flat &middot; +GST</small></div>
+          <div class="tier-range"><b>Typically 30-42 leads</b><span>roughly 3&times; the range</span></div>
+          <div class="tier-floor"><div class="tf"><span class="k">Guaranteed floor</span><span class="v">30 leads</span></div><div class="tf"><span class="k">Most you'd pay / lead</span><span class="v">$120</span></div></div>
+          <ul><li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#F59E0B" stroke-width="3"><path d="M20 6 9 17l-5-5"/></svg>Everything in Growth</li><li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#F59E0B" stroke-width="3"><path d="M20 6 9 17l-5-5"/></svg>Region-wide exclusivity</li><li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#F59E0B" stroke-width="3"><path d="M20 6 9 17l-5-5"/></svg>Roughly 3&times; the ad budget</li><li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#F59E0B" stroke-width="3"><path d="M20 6 9 17l-5-5"/></svg>Fastest delivery + co-invest option</li></ul>
+          <a href="#trades" class="btn btn-ghost">Pick your trade &rarr;</a>
         </div>
+      </div>
+      <p class="tiers-note">Prices are per area, per trade. <a href="#trades">Pick your trade above</a> to see live availability. The floor is guaranteed; the range above it is typical, not promised.</p>
+    </div>
+  </section>
+
+  <!-- URGENCY CLOSE -->
+  <section id="claim">
+    <div class="wrap">
+      <div class="claim-cta">
+        <div class="sec-eyebrow" style="justify-content:center">One per area</div>
+        <h2>When your postcode's taken, it's taken.</h2>
+        <p class="lede" style="margin:12px auto 26px">Each engine locks to a single installer per area. There's no bidding, no sharing, and no getting it back once a competitor claims your patch. Pick your trade and see what's still open near you.</p>
+        <a href="#trades" class="btn btn-primary btn-glossy" style="padding:14px 30px;font-size:1rem">Pick your trade &rarr;</a>
       </div>
     </div>
   </section>
