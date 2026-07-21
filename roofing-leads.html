@@ -773,11 +773,35 @@
       });
   }
 
+  // postcode -> region slug: metro ranges first, then state-wide by leading digit.
+  // Ranges are approximate metro coverage; anything unmatched falls to the
+  // state-wide region we stock (e.g. 4310 -> Queensland), never a random area.
+  var PC_METRO = [
+    [2000,2249,'sydney'],[2555,2574,'sydney'],[2740,2786,'sydney'],
+    [2250,2263,'central-coast'],[2280,2310,'newcastle'],[2500,2530,'wollongong'],
+    [2600,2620,'canberra'],[2900,2920,'canberra'],
+    [2340,2349,'tamworth'],[2440,2447,'port-macquarie'],[2448,2456,'coffs-harbour'],[2640,2641,'albury-wodonga'],
+    [3000,3207,'melbourne'],[3335,3341,'melbourne'],[3427,3442,'melbourne'],[3750,3810,'melbourne'],[3910,3920,'melbourne'],[3975,3980,'melbourne'],
+    [3175,3175,'dandenong'],[3199,3201,'frankston-mornington-peninsula'],[3211,3230,'geelong'],
+    [3350,3360,'ballarat'],[3550,3564,'bendigo'],[3500,3509,'mildura'],[3630,3639,'shepparton'],[3820,3825,'warragul'],
+    [4000,4206,'brisbane'],[4300,4305,'brisbane'],[4207,4287,'gold-coast'],
+    [4350,4361,'toowoomba'],[4550,4575,'sunshine-coast'],[4655,4662,'hervey-bay'],[4670,4676,'bundaberg'],[4700,4709,'rockhampton'],[4870,4879,'cairns'],
+    [5000,5199,'adelaide'],[5800,5999,'adelaide'],
+    [6000,6199,'perth'],[6800,6997,'perth'],[6210,6214,'mandurah'],[6230,6237,'bunbury']
+  ];
+  var PC_STATE = {'2':'new-south-wales','3':'victoria','8':'victoria','4':'queensland','9':'queensland','5':'south-australia','6':'western-australia'};
+  function bySlug(slug){ return NICHE_REGIONS.find(function(r){ return r.slug===slug; }) || null; }
   function matchRegion(input){
-    const q = (input||'').trim().toLowerCase();
+    var q = (input||'').trim().toLowerCase();
     if(!q) return null;
-    return NICHE_REGIONS.find(r => r.name.toLowerCase() === q || r.slug === q)
-        || NICHE_REGIONS.find(r => r.name.toLowerCase().includes(q) || q.includes(r.name.toLowerCase()))
+    if(/^\d{4}$/.test(q)){
+      var pc = parseInt(q,10);
+      for(var i=0;i<PC_METRO.length;i++){ if(pc>=PC_METRO[i][0] && pc<=PC_METRO[i][1]){ var m=bySlug(PC_METRO[i][2]); if(m) return m; } }
+      var st = PC_STATE[q.charAt(0)]; if(st){ var s=bySlug(st); if(s) return s; }
+      return null;
+    }
+    return NICHE_REGIONS.find(function(r){ return r.name.toLowerCase()===q || r.slug===q; })
+        || NICHE_REGIONS.find(function(r){ return r.name.toLowerCase().includes(q) || q.includes(r.name.toLowerCase()); })
         || null;
   }
 
@@ -791,9 +815,11 @@
   function renderCounter(region, typed, assets){
     const areaName = region ? region.name : (typed || 'Coming Soon');
     const count = assets.length;
-    const pill = count > 0
-      ? `<span class="pill open">${count} asset${count>1?'s':''} open</span>`
-      : `<span class="pill taken">Fully booked</span>`;
+    const pill = !region
+      ? `<span class="pill taken">Not covered yet</span>`
+      : count > 0
+        ? `<span class="pill open">${count} asset${count>1?'s':''} open</span>`
+        : `<span class="pill taken">Fully booked</span>`;
     const claimHref = region ? `/fleet.html?niche=roofing&region=${encodeURIComponent(region.slug)}` : '/fleet.html?niche=roofing';
     let classRow;
     if(count > 0){
@@ -829,7 +855,8 @@
     out.classList.add('on');
     if(!sb){ out.innerHTML = errRow('Availability data temporarily unavailable.'); return; }
     out.innerHTML = loadingRow();
-    const region = matchRegion(typed) || NICHE_REGIONS[0] || null;
+    const region = matchRegion(typed);
+    if(!region){ renderCounter(null, typed, []); return; }
     try{
       let q = sb.from('assets')
         .select('tier,monthly_price_aud,floor_leads,typical_min,typical_max,status,regions!inner(slug,name),niches!inner(slug)')
