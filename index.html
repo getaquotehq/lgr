@@ -144,6 +144,13 @@
     display:flex;align-items:center;justify-content:center;margin-bottom:16px;flex-shrink:0}
   .step h4{font-size:1.04rem;font-weight:600;margin-bottom:7px;letter-spacing:-.015em;color:var(--ink)}
   .step p{font-size:.9rem;color:var(--muted);line-height:1.55}
+  /* guarantee grid */
+  .guar-lead{margin-top:30px;font-weight:600;color:var(--ink);font-size:1.06rem;letter-spacing:-.01em}
+  .guar{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:18px}
+  .gi{display:flex;gap:14px;align-items:flex-start;background:var(--surface);border:1px solid var(--line);border-radius:var(--r-lg);padding:22px 22px}
+  .gi-ic{flex:0 0 auto;width:28px;height:28px;border-radius:8px;background:var(--blue-tint);color:var(--blue);display:grid;place-items:center;margin-top:1px}
+  .gi h4{font-size:1.02rem;font-weight:600;letter-spacing:-.015em;margin-bottom:5px;color:var(--ink)}
+  .gi p{font-size:.9rem;color:var(--muted);line-height:1.55}
 
   footer{background:var(--ink);border-top:1px solid var(--ink);padding:56px 0 40px}
   .foot-top{display:flex;justify-content:space-between;align-items:center;
@@ -162,6 +169,7 @@
     .nav-burger{display:block}
     .trades{grid-template-columns:1fr}
     .steps{grid-template-columns:1fr}
+    .guar{grid-template-columns:1fr}
     .metabar-in{grid-template-columns:1fr 1fr}
     .mb-cell{padding:18px 20px}
     section{padding:60px 0}
@@ -340,6 +348,40 @@
             <tr><td>What you compete on</td><td>Speed of dial, then price</td><td class="us">Nothing &mdash; nobody else has it</td></tr>
           </tbody>
         </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- GUARANTEE -->
+  <section id="guarantee" style="border-top:1px solid var(--line)">
+    <div class="wrap">
+      <div class="sec-head">
+        <div class="sec-eyebrow">Why we can promise this</div>
+        <h2>Nobody else in Australian lead-gen is set up to do this.</h2>
+        <p class="lede">Marketplaces sell the same enquiry three to five ways. Resellers pocket the spread when ad costs drop and quietly share your leads harder when they rise. Either way, the risk lives with you &mdash; not them.</p>
+        <p class="lede" style="margin-top:14px">We flipped that. Rent an asset, pay a flat monthly fee, get a floor of leads in writing. If ad costs spike and we can't hit the floor, that's our problem, not yours &mdash; we refund at the floor rate, or run the campaign at our own cost until it lands.</p>
+      </div>
+      <p class="guar-lead">Which is why we can commit to this &mdash; in writing:</p>
+      <div class="guar">
+        <div class="gi">
+          <div class="gi-ic"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6 9 17l-5-5"/></svg></div>
+          <div><h4>$120 per lead, capped by your floor</h4><p>The hard ceiling on what a lead can cost you &mdash; the flat fee over your guaranteed floor. No surge pricing, ever. Usually you pay well under it.</p></div>
+        </div>
+        <div class="gi">
+          <div class="gi-ic"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6 9 17l-5-5"/></svg></div>
+          <div><h4>Miss the floor? We refund</h4><p>If ad costs spike and we can't hit your floor, we refund at the floor rate &mdash; or keep running the campaign at our own cost until it lands. In writing.</p></div>
+        </div>
+        <div class="gi">
+          <div class="gi-ic"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6 9 17l-5-5"/></svg></div>
+          <div><h4>Exclusive by consent, not promise</h4><p>Every lead legally names your business on the form the moment they submit. Exclusivity you can read &mdash; not a promise you have to take on trust.</p></div>
+        </div>
+        <div class="gi">
+          <div class="gi-ic"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6 9 17l-5-5"/></svg></div>
+          <div><h4>Month to month</h4><p>No lock-in, no exit fee. You stay because the leads land, not because a contract traps you.</p></div>
+        </div>
+      </div>
+      <div style="text-align:center;margin-top:34px">
+        <a href="#trades" class="btn btn-primary btn-glossy" style="padding:14px 30px;font-size:1rem">Claim your area &rarr;</a>
       </div>
     </div>
   </section>
