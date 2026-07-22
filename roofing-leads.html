@@ -208,6 +208,12 @@
   .fact p{font-size:.9rem;color:var(--muted);line-height:1.55;max-width:26ch}
 
   /* tiers - rental classes */
+  .price-hero{text-align:center;max-width:600px;margin:8px auto 4px}
+  .ph-label{font-family:var(--mono);font-size:.72rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+  .ph-num{font-size:clamp(3rem,8vw,4.6rem);font-weight:800;letter-spacing:-.045em;line-height:1;color:var(--blue);margin:8px 0 10px}
+  .ph-num small{font-size:.28em;font-weight:600;color:var(--muted);letter-spacing:-.01em;margin-left:6px}
+  .ph-sub{font-size:.94rem;color:var(--muted);line-height:1.5;display:block;max-width:440px;margin:0 auto}
+  .ph-sub b{color:var(--ink);font-weight:600}
   .tiers{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:36px}
   .tier{background:var(--bg);border:1px solid var(--line);border-radius:var(--r-lg);
     padding:28px 26px;display:flex;flex-direction:column;position:relative;box-shadow:var(--sh-sm)}
@@ -602,6 +608,11 @@
       <div class="sec-head">
         <div class="sec-eyebrow">Claim your asset</div>
         <h2>One trade. One area. One service business.</h2>
+      </div>
+      <div class="price-hero">
+        <span class="ph-label">Your typical price per lead</span>
+        <div class="ph-num">$85.71<small>/ lead</small></div>
+        <span class="ph-sub">The same on every tier &mdash; and <b>hard-capped at $120</b> even if we only ever hit your floor. Never more.</span>
       </div>
       <div class="tiers">
 
