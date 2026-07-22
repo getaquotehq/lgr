@@ -558,7 +558,7 @@ td.mono{font-family:var(--mono);font-size:12px}
       <div class="frow" id="ma-rentedby-row"><label class="flabel">Rented by</label><select class="fs" id="ma-rentedby"><option value="">- none -</option></select></div>
       <div class="frow" id="ma-renteduntil-row"><label class="flabel">Rented until</label><input class="fi" id="ma-until" type="date"></div>
     </div>
-    <div class="frow"><label class="flabel">Service postcodes (override)</label><textarea class="fta" id="ma-postcodes" style="font-family:var(--mono);font-size:11px" placeholder="blank = inherit this asset's region"></textarea><div class="fhint">Overrides the region's territory gate for this asset only. Blank = use the region list.</div></div>
+    <div class="frow"><label class="flabel">Service postcodes (override)</label><textarea class="fta" id="ma-postcodes" style="font-family:var(--mono);font-size:11px" placeholder="blank = inherit this asset's region"></textarea><div class="fhint">Overrides the region's postcode gate for this asset only. Blank = use the region list.</div></div>
     <div class="macts"><button class="btn" onclick="closeModal('m-asset')">Cancel</button><button class="btn btn-p" id="ma-save" onclick="saveAsset()">Save asset</button></div>
   </div>
 </div>
@@ -619,7 +619,7 @@ td.mono{font-family:var(--mono);font-size:12px}
       <div class="frow"><label class="flabel">State</label><input class="fi" id="mr-state" placeholder="QLD"></div>
       <div class="frow"><label class="flabel">Sort order</label><input class="fi" id="mr-sort" type="number" value="0"></div>
     </div>
-    <div class="frow"><label class="flabel">Service postcodes</label><textarea class="fta" id="mr-postcodes" style="font-family:var(--mono);font-size:11px" placeholder="4000, 4005, 4006 …  (blank = no territory gate)"></textarea><div class="fhint">Funnels in this region only accept these postcodes. Blank = accept all.</div></div>
+    <div class="frow"><label class="flabel">Service postcodes</label><textarea class="fta" id="mr-postcodes" style="font-family:var(--mono);font-size:11px" placeholder="4000, 4005, 4006 …  (blank = no postcode gate)"></textarea><div class="fhint">Funnels in this region only accept these postcodes. Blank = accept all.</div></div>
     <div class="macts"><button class="btn" onclick="closeModal('m-region')">Cancel</button><button class="btn btn-p" id="mr-save" onclick="saveRegion()">Save region</button></div>
   </div>
 </div>
