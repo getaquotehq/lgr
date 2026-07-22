@@ -157,6 +157,21 @@
   .gi-ic{flex:0 0 auto;width:28px;height:28px;border-radius:8px;background:var(--blue-tint);color:var(--blue);display:grid;place-items:center;margin-top:1px}
   .gi h4{font-size:1.02rem;font-weight:600;letter-spacing:-.015em;margin-bottom:5px;color:var(--ink)}
   .gi p{font-size:.9rem;color:var(--muted);line-height:1.55}
+  /* cost-per-job comparison */
+  .cpj-turn{margin:34px auto 0;max-width:680px;text-align:center}
+  .cpj-turn .lead-in{font-family:var(--mono);font-size:.72rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+  .cpj-turn h3{font-size:clamp(1.5rem,3.4vw,2.1rem);font-weight:700;letter-spacing:-.03em;line-height:1.12;margin:12px 0 0;color:var(--ink)}
+  .cpj-turn h3 b{color:var(--blue);font-weight:700}
+  .cpj{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:26px}
+  .cpj-card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-lg);padding:24px 22px;text-align:left}
+  .cpj-card.win{border-color:var(--blue-line);background:var(--blue-tint)}
+  .cpj-k{font-family:var(--mono);font-size:.68rem;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);margin-bottom:14px}
+  .cpj-rate{font-size:2.5rem;font-weight:800;letter-spacing:-.035em;line-height:1;color:var(--ink)}
+  .cpj-card.win .cpj-rate{color:var(--blue)}
+  .cpj-rate small{font-size:.4em;font-weight:600;color:var(--muted);letter-spacing:0;margin-left:6px}
+  .cpj-desc{font-size:.9rem;color:var(--muted);line-height:1.5;margin-top:12px}
+  .cpj-close{text-align:center;margin-top:22px;font-size:1.05rem;font-weight:600;color:var(--ink);letter-spacing:-.01em}
+  @media(max-width:720px){ .cpj{grid-template-columns:1fr} }
 
   footer{background:var(--ink);border-top:1px solid var(--ink);padding:56px 0 40px}
   .foot-top{display:flex;justify-content:space-between;align-items:center;
@@ -394,6 +409,37 @@
       <div style="text-align:center;margin-top:34px">
         <a href="#trades" class="btn btn-primary btn-glossy" style="padding:14px 30px;font-size:1rem">Claim your area &rarr;</a>
       </div>
+    </div>
+  </section>
+
+  <!-- WHY A RANGE + COST PER JOB -->
+  <section id="range" style="background:var(--bg);border-top:1px solid var(--line)">
+    <div class="wrap">
+      <div class="sec-head">
+        <div class="sec-eyebrow">The honest version</div>
+        <h2>Why the range, not a fixed number?</h2>
+        <p class="lede">Ad platforms don't deliver flat volume &mdash; costs swing with the season, the auction, the rebate cycle. Anyone promising a fixed count is padding the number for their worst month.</p>
+        <p class="lede" style="margin-top:14px">We do it honestly. <b style="color:var(--ink);font-weight:600">The floor is the guarantee. The range above it is what typically lands.</b></p>
+      </div>
+
+      <div class="cpj-turn">
+        <span class="lead-in">Which brings us to the metric everyone gets wrong</span>
+        <h3>Cost per lead is a trap. <b>Cost per job is what pays your rent.</b></h3>
+      </div>
+
+      <div class="cpj">
+        <div class="cpj-card">
+          <div class="cpj-k">Shared lead &middot; you dial fifth</div>
+          <div class="cpj-rate">1 in 20<small>closes</small></div>
+          <div class="cpj-desc">From an ad promising free panels, sold to three-to-five installers at once. Twenty leads to book a single install.</div>
+        </div>
+        <div class="cpj-card win">
+          <div class="cpj-k">Exclusive lead &middot; yours alone</div>
+          <div class="cpj-rate">1 in 5<small>closes</small></div>
+          <div class="cpj-desc">Warm from a 60-second SMS in your name, nobody else dialling. Same ad spend &mdash; four times the jobs.</div>
+        </div>
+      </div>
+      <p class="cpj-close">Same lead price. Very different bank balance.</p>
     </div>
   </section>
 
