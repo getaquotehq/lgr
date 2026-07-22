@@ -333,10 +333,10 @@ td.mono{font-family:var(--mono);font-size:12px}
           <div class="ph-right"><button class="btn btn-sm" onclick="loadDashboard()">↻ Refresh</button></div>
         </div>
         <div class="kg c4">
-          <div class="kpi"><div class="klabel">Active rentals</div><div class="kval blu" id="db-active">—</div><div class="ksub" id="db-active-sub"></div></div>
-          <div class="kpi"><div class="klabel">Leads this month</div><div class="kval grn" id="db-leads">—</div><div class="ksub" id="db-leads-sub"></div></div>
-          <div class="kpi"><div class="klabel">Below floor pace</div><div class="kval red" id="db-below">—</div><div class="ksub">Early-warning flags</div></div>
-          <div class="kpi"><div class="klabel">Available assets</div><div class="kval" id="db-avail">—</div><div class="ksub" id="db-avail-sub"></div></div>
+          <div class="kpi"><div class="klabel">Active rentals</div><div class="kval blu" id="db-active">-</div><div class="ksub" id="db-active-sub"></div></div>
+          <div class="kpi"><div class="klabel">Leads this month</div><div class="kval grn" id="db-leads">-</div><div class="ksub" id="db-leads-sub"></div></div>
+          <div class="kpi"><div class="klabel">Below floor pace</div><div class="kval red" id="db-below">-</div><div class="ksub">Early-warning flags</div></div>
+          <div class="kpi"><div class="klabel">Available assets</div><div class="kval" id="db-avail">-</div><div class="ksub" id="db-avail-sub"></div></div>
         </div>
 
         <div class="sl">Leads delivered · last 14 days<div class="sl-line"></div></div>
@@ -357,7 +357,7 @@ td.mono{font-family:var(--mono);font-size:12px}
       <!-- ═══ ASSETS ═══ -->
       <div class="panel" id="panel-assets">
         <div class="ph">
-          <div class="ph-left"><h1>Assets</h1><p>Rentable lead funnels — full CRUD</p></div>
+          <div class="ph-left"><h1>Assets</h1><p>Rentable lead funnels - full CRUD</p></div>
           <div class="ph-right"><button class="btn btn-p" onclick="openAssetModal()">+ New asset</button></div>
         </div>
         <div class="fbar">
@@ -397,7 +397,7 @@ td.mono{font-family:var(--mono);font-size:12px}
       <!-- ═══ INSTALLERS ═══ -->
       <div class="panel" id="panel-installers">
         <div class="ph">
-          <div class="ph-left"><h1>Installers</h1><p>The buyers — full CRUD</p></div>
+          <div class="ph-left"><h1>Installers</h1><p>The buyers - full CRUD</p></div>
           <div class="ph-right"><button class="btn btn-p" onclick="openInstallerModal()">+ New installer</button></div>
         </div>
         <div class="twrap">
@@ -423,11 +423,11 @@ td.mono{font-family:var(--mono);font-size:12px}
           </div>
         </div>
         <div class="kg c5 mb4">
-          <div class="kpi"><div class="klabel">Total received</div><div class="kval blu" id="ld-total">—</div><div class="ksub" id="ld-total-sub">matching filters</div></div>
-          <div class="kpi"><div class="klabel">Delivered</div><div class="kval grn" id="ld-delivered">—</div></div>
-          <div class="kpi"><div class="klabel">Duplicate</div><div class="kval" id="ld-duplicate" style="color:var(--amb)">—</div></div>
-          <div class="kpi"><div class="klabel">Invalid</div><div class="kval red" id="ld-invalid">—</div></div>
-          <div class="kpi"><div class="klabel">Outstanding to floor</div><div class="kval" id="ld-outstanding" style="color:var(--amb)">—</div><div class="ksub">rented assets · floor − cycle delivered</div></div>
+          <div class="kpi"><div class="klabel">Total received</div><div class="kval blu" id="ld-total">-</div><div class="ksub" id="ld-total-sub">matching filters</div></div>
+          <div class="kpi"><div class="klabel">Delivered</div><div class="kval grn" id="ld-delivered">-</div></div>
+          <div class="kpi"><div class="klabel">Duplicate</div><div class="kval" id="ld-duplicate" style="color:var(--amb)">-</div></div>
+          <div class="kpi"><div class="klabel">Invalid</div><div class="kval red" id="ld-invalid">-</div></div>
+          <div class="kpi"><div class="klabel">Outstanding to floor</div><div class="kval" id="ld-outstanding" style="color:var(--amb)">-</div><div class="ksub">rented assets · floor − cycle delivered</div></div>
         </div>
 
         <div class="sl" style="cursor:pointer;user-select:none" onclick="toggleLdBreakdown()">
@@ -479,10 +479,10 @@ td.mono{font-family:var(--mono);font-size:12px}
           </div>
         </div>
         <div class="kg c4 mb4">
-          <div class="kpi"><div class="klabel">Pending now</div><div class="kval" id="pd-pending" style="color:var(--amb)">—</div><div class="ksub">awaiting a covering client</div></div>
-          <div class="kpi"><div class="klabel">Out of area</div><div class="kval blu" id="pd-oa">—</div></div>
-          <div class="kpi"><div class="klabel">Unmatched consent</div><div class="kval" id="pd-uc">—</div></div>
-          <div class="kpi"><div class="klabel">No inventory</div><div class="kval red" id="pd-ni">—</div></div>
+          <div class="kpi"><div class="klabel">Pending now</div><div class="kval" id="pd-pending" style="color:var(--amb)">-</div><div class="ksub">awaiting a covering client</div></div>
+          <div class="kpi"><div class="klabel">Out of area</div><div class="kval blu" id="pd-oa">-</div></div>
+          <div class="kpi"><div class="klabel">Unmatched consent</div><div class="kval" id="pd-uc">-</div></div>
+          <div class="kpi"><div class="klabel">No inventory</div><div class="kval red" id="pd-ni">-</div></div>
         </div>
         <div class="sl">Held leads <div class="sl-line"></div></div>
         <div class="twrap">
@@ -499,7 +499,7 @@ td.mono{font-family:var(--mono);font-size:12px}
       <!-- ═══ NICHES ═══ -->
       <div class="panel" id="panel-niches">
         <div class="ph">
-          <div class="ph-left"><h1>Niches</h1><p>Trade categories — full CRUD</p></div>
+          <div class="ph-left"><h1>Niches</h1><p>Trade categories - full CRUD</p></div>
           <div class="ph-right"><button class="btn btn-p" onclick="openNicheModal()">+ New niche</button></div>
         </div>
         <div class="twrap">
@@ -513,7 +513,7 @@ td.mono{font-family:var(--mono);font-size:12px}
       <!-- ═══ REGIONS ═══ -->
       <div class="panel" id="panel-regions">
         <div class="ph">
-          <div class="ph-left"><h1>Regions</h1><p>Geographic areas — full CRUD</p></div>
+          <div class="ph-left"><h1>Regions</h1><p>Geographic areas - full CRUD</p></div>
           <div class="ph-right"><button class="btn btn-p" onclick="openRegionModal()">+ New region</button></div>
         </div>
         <div class="twrap">
@@ -555,7 +555,7 @@ td.mono{font-family:var(--mono);font-size:12px}
       <div class="frow"><label class="flabel">Floor leads *</label><input class="fi" id="ma-floor" type="number" min="0"></div>
       <div class="frow"><label class="flabel">Typical min / mo</label><input class="fi" id="ma-tmin" type="number" min="0"></div>
       <div class="frow"><label class="flabel">Typical max / mo</label><input class="fi" id="ma-tmax" type="number" min="0"></div>
-      <div class="frow" id="ma-rentedby-row"><label class="flabel">Rented by</label><select class="fs" id="ma-rentedby"><option value="">— none —</option></select></div>
+      <div class="frow" id="ma-rentedby-row"><label class="flabel">Rented by</label><select class="fs" id="ma-rentedby"><option value="">- none -</option></select></div>
       <div class="frow" id="ma-renteduntil-row"><label class="flabel">Rented until</label><input class="fi" id="ma-until" type="date"></div>
     </div>
     <div class="frow"><label class="flabel">Service postcodes (override)</label><textarea class="fta" id="ma-postcodes" style="font-family:var(--mono);font-size:11px" placeholder="blank = inherit this asset's region"></textarea><div class="fhint">Overrides the region's territory gate for this asset only. Blank = use the region list.</div></div>
@@ -628,7 +628,7 @@ td.mono{font-family:var(--mono);font-size:12px}
 <div class="overlay" id="m-test-lead">
   <div class="modal">
     <h2>Submit test lead</h2>
-    <div class="msub">Runs the real insert_lead() funnel — dedup &amp; delivery included</div>
+    <div class="msub">Runs the real insert_lead() funnel - dedup &amp; delivery included</div>
     <div class="frow"><label class="flabel">Asset (must be rented) *</label><select class="fs" id="tl-asset" onchange="onTestAssetChange()"></select><div class="fhint" id="tl-asset-hint"></div></div>
     <div class="fgrid2">
       <div class="frow"><label class="flabel">Full name *</label><input class="fi" id="tl-name" value="Jane Test"></div>
@@ -657,9 +657,9 @@ const setText = (id,v)=>{const e=$(id); if(e) e.textContent=v;};
 const setVal = (id,v)=>{const e=$(id); if(e) e.value = v ?? '';};
 const esc = s => String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 const now = ()=> new Date().toISOString();
-const fmtAud = n => (n==null||n==='') ? '—' : '$'+Number(n).toLocaleString('en-AU',{maximumFractionDigits:0});
-const fmtDate = d => d ? new Date(d).toLocaleDateString('en-AU',{day:'numeric',month:'short',year:'numeric'}) : '—';
-const fmtDateTime = d => d ? new Date(d).toLocaleString('en-AU',{day:'numeric',month:'short',hour:'numeric',minute:'2-digit',hour12:true}) : '—';
+const fmtAud = n => (n==null||n==='') ? '-' : '$'+Number(n).toLocaleString('en-AU',{maximumFractionDigits:0});
+const fmtDate = d => d ? new Date(d).toLocaleDateString('en-AU',{day:'numeric',month:'short',year:'numeric'}) : '-';
+const fmtDateTime = d => d ? new Date(d).toLocaleString('en-AU',{day:'numeric',month:'short',hour:'numeric',minute:'2-digit',hour12:true}) : '-';
 const daysBetween = (a,b)=> Math.max(0,(new Date(b)-new Date(a))/86400000);
 
 function toast(msg, err=false){
@@ -746,17 +746,17 @@ async function loadRefData(){
   fillSelect('lf-installer','All installers',instOpts);
   $('ma-niche').innerHTML = nicheOpts;
   $('ma-region').innerHTML = regionOpts;
-  $('ma-rentedby').innerHTML = '<option value="">— none —</option>'+instOpts;
+  $('ma-rentedby').innerHTML = '<option value="">- none -</option>'+instOpts;
 }
 function fillSelect(id, allLabel, opts){
   const el=$(id); if(!el) return; const cur=el.value;
   el.innerHTML = `<option value="">${allLabel}</option>`+opts;
   el.value = cur;
 }
-const nicheName = id => (_niches.find(x=>x.id===id)||{}).name || '—';
-const regionName = id => (_regions.find(x=>x.id===id)||{}).name || '—';
+const nicheName = id => (_niches.find(x=>x.id===id)||{}).name || '-';
+const regionName = id => (_regions.find(x=>x.id===id)||{}).name || '-';
 const regionSlug = id => (_regions.find(x=>x.id===id)||{}).slug || '';
-const installerName = id => (_installers.find(x=>x.id===id)||{}).business_name || '—';
+const installerName = id => (_installers.find(x=>x.id===id)||{}).business_name || '-';
 // each asset is region-specific → its live page is <domain>/<area>, congruent
 // with the fleet previews. Falls back to the root domain if no region slug.
 const assetPreviewHref = a => a.brand_domain
@@ -934,7 +934,7 @@ function renderAssets(){
       <td><strong>${esc(a.brand_name)}</strong>${a.deleted_at?' <span class="badge bg-red">deleted</span>':''}</td>
       <td class="mono dim">${a.brand_domain
         ? `<a href="${assetPreviewHref(a)}" target="_blank" rel="noopener" title="Open live landing page" style="color:var(--acc);text-decoration:none">${esc(assetPreviewText(a))} ↗</a>`
-        : '—'}</td>
+        : '-'}</td>
       <td>${esc(nicheName(a.niche_id))}</td>
       <td>${esc(regionName(a.region_id))}</td>
       <td><span class="tierpill">${esc(a.tier)}</span></td>
@@ -1103,7 +1103,7 @@ async function loadRentals(){
   if(error){ $('rentals-tbody').innerHTML=`<tr><td colspan="8" class="empty" style="color:var(--red)">${esc(error.message)}</td></tr>`; return; }
   _rentals=data||[]; renderRentals();
 }
-const assetName = id => (_assets.find(x=>x.id===id)||{}).brand_name || '—';
+const assetName = id => (_assets.find(x=>x.id===id)||{}).brand_name || '-';
 function renderRentals(){
   const fi=$('rf-installer').value, fa=$('rf-asset').value, fst=$('rf-state').value;
   let rows=_rentals.filter(r=>{
@@ -1119,7 +1119,7 @@ function renderRentals(){
       <td><strong>${esc(assetName(r.asset_id))}</strong></td>
       <td>${esc(installerName(r.installer_id))}</td>
       <td class="mono dim">${fmtDate(r.started_at)}</td>
-      <td class="mono dim">${r.ended_at?fmtDate(r.ended_at):'—'}</td>
+      <td class="mono dim">${r.ended_at?fmtDate(r.ended_at):'-'}</td>
       <td class="mono">${fmtAud(r.monthly_price_aud)}</td>
       <td class="mono">${r.floor_leads}</td>
       <td><span class="badge ${active?'bg-grn':'bg-gray'}">${active?'active':'ended'}</span>${r.stripe_subscription_id?` <span class="badge bg-blu" title="${esc(r.stripe_subscription_id)}">Stripe</span>`:''}</td>
@@ -1158,7 +1158,7 @@ async function loadInstallers(){
   const instOpts=_installers.map(x=>`<option value="${x.id}">${esc(x.business_name)}</option>`).join('');
   fillSelect('rf-installer','All installers',instOpts);
   fillSelect('lf-installer','All installers',instOpts);
-  $('ma-rentedby').innerHTML='<option value="">— none —</option>'+instOpts;
+  $('ma-rentedby').innerHTML='<option value="">- none -</option>'+instOpts;
   const rented = assetRes.data||[];
   if(insRes.error){ $('installers-tbody').innerHTML=`<tr><td colspan="6" class="empty" style="color:var(--red)">${esc(insRes.error.message)}</td></tr>`; return; }
   $('installers-tbody').innerHTML = _installers.length ? _installers.map(i=>{
@@ -1166,9 +1166,9 @@ async function loadInstallers(){
     const chips = mine.length ? mine.map(a=>`<span class="chip">${esc(a.brand_name)}<span class="dim mono" style="font-size:9px">→ ${fmtDate(a.rented_until)}</span></span>`).join('') : '<span class="dim">none</span>';
     return `<tr>
       <td><strong>${esc(i.business_name)}</strong></td>
-      <td>${esc(i.contact_name||'—')}</td>
+      <td>${esc(i.contact_name||'-')}</td>
       <td class="mono dim">${esc(i.email)}</td>
-      <td class="mono dim">${esc(i.phone||'—')}</td>
+      <td class="mono dim">${esc(i.phone||'-')}</td>
       <td>${mine.length ? `<button class="btn btn-xs" onclick="toggleInstallerAssets(this,'${i.id}')">${mine.length} asset${mine.length>1?'s':''}</button>` : '<span class="dim">0</span>'}</td>
       <td class="acts"><button class="btn btn-xs" onclick="openInstallerModal('${i.id}')">Edit</button><button class="btn btn-xs btn-red" onclick="deleteInstaller('${i.id}')">Del</button></td>
     </tr>
@@ -1264,7 +1264,7 @@ async function loadLeads(reset){
   $('ld-tbody').innerHTML='<tr><td colspan="10" class="empty">Loading…</td></tr>';
 
   const fn=$('lf-niche').value, fa=$('lf-asset').value, fi=$('lf-installer').value, fs=$('lf-status').value;
-  // asset scope from the niche filter (leads has no niche column — it's on the asset)
+  // asset scope from the niche filter (leads has no niche column - it's on the asset)
   const nicheAssetIds = fn ? _assets.filter(a=>a.niche_id===fn).map(a=>a.id) : null;
 
   const applyFilters = q => {
@@ -1311,9 +1311,9 @@ async function loadLeads(reset){
       <td><span class="tierpill">${esc(assetNiche(l.asset_id))}</span></td>
       <td><strong>${esc(l.full_name)}</strong>${l.email?`<div class="mono dim" style="font-size:10px">${esc(l.email)}</div>`:''}</td>
       <td class="mono">${esc(l.phone)}</td>
-      <td class="mono dim">${esc(l.postcode||'—')}</td>
+      <td class="mono dim">${esc(l.postcode||'-')}</td>
       <td>${esc(assetName(l.asset_id))}</td>
-      <td class="dim" style="max-width:200px;white-space:normal;font-size:11px">${extra||'—'}</td>
+      <td class="dim" style="max-width:200px;white-space:normal;font-size:11px">${extra||'-'}</td>
       <td><span class="badge ${badge}">${esc(l.status)}</span></td>
       <td>${esc(installerName(l.installer_id))}</td>
       <td class="acts">
@@ -1374,7 +1374,7 @@ async function renderLdBreakdown(){
         <td class="mono" style="color:var(--grn)">${s.delivered}</td>
         <td class="mono" style="color:var(--amb)">${s.duplicate}</td>
         <td class="mono" style="color:${s.invalid?'var(--red)':'var(--ink3)'}">${s.invalid}</td>
-        <td class="mono">${floor?`<span style="color:${under?'var(--red)':'var(--grn)'}">${s.delivered}</span> / ${floor}`:'—'}</td>
+        <td class="mono">${floor?`<span style="color:${under?'var(--red)':'var(--grn)'}">${s.delivered}</span> / ${floor}`:'-'}</td>
       </tr>`;
     }).join('')}</tbody></table></div>` : '<div class="empty">No leads in the last 30 days.</div>';
 }
@@ -1408,7 +1408,7 @@ function openTestLead(){
   const rented=_assets.filter(a=>a.status==='rented'&&!a.deleted_at);
   $('tl-asset').innerHTML = rented.length
     ? rented.map(a=>`<option value="${a.id}">${esc(a.brand_name)} → ${esc(installerName(a.rented_by))}</option>`).join('')
-    : '<option value="">No rented assets — rent one first</option>';
+    : '<option value="">No rented assets - rent one first</option>';
   $('tl-btn').disabled = !rented.length;
   $('tl-status').style.display='none';
   onTestAssetChange();
@@ -1441,7 +1441,7 @@ async function sendTestLead(){
   }
   const dup = data && data.is_duplicate;
   box.style.cssText=`display:block;padding:8px 10px;border-radius:6px;font-size:12px;margin-bottom:8px;background:${dup?'var(--acc-dim)':'var(--grn-dim)'};color:${dup?'var(--amb)':'var(--grn)'}`;
-  box.textContent = dup ? '⚠ Captured as DUPLICATE (same phone/asset/installer within 30 days) — did not count toward floor.' : '✓ Lead captured & delivered.';
+  box.textContent = dup ? '⚠ Captured as DUPLICATE (same phone/asset/installer within 30 days) - did not count toward floor.' : '✓ Lead captured & delivered.';
   toast(dup?'Duplicate captured':'Test lead delivered ✓');
   loadLeads(true);
 }
@@ -1464,7 +1464,7 @@ function exportLeadsCsv(){
 }
 
 /* ════════════════════════════════════════════════════════════════════════
-   PENDING LEADS (the held pool — captured but not yet deliverable)
+   PENDING LEADS (the held pool - captured but not yet deliverable)
    ════════════════════════════════════════════════════════════════════════ */
 let _pendingView = [];
 const REASON_LABEL = { out_of_area:'Out of area', unmatched_consent:'Unmatched consent', no_inventory:'No inventory' };
@@ -1496,23 +1496,23 @@ async function loadPending(){
   refreshPendingBadge();
 
   $('pd-tbody').innerHTML = _pendingView.length ? _pendingView.map(p=>{
-    const rc=REASON_CLASS[p.reason]||'bg-gray', rl=REASON_LABEL[p.reason]||p.reason||'—';
+    const rc=REASON_CLASS[p.reason]||'bg-gray', rl=REASON_LABEL[p.reason]||p.reason||'-';
     const sc=p.status==='pending'?'bg-amb':p.status==='delivered'?'bg-grn':'bg-gray';
     return `<tr${p.status!=='pending'?' style="opacity:.55"':''}>
       <td class="mono dim">${fmtDate(p.created_at)}</td>
-      <td><strong>${esc(p.full_name||'—')}</strong></td>
-      <td class="mono">${esc(p.phone||'—')}</td>
-      <td class="mono dim">${esc(p.email||'—')}</td>
-      <td class="mono">${esc(p.postcode||'—')}</td>
-      <td class="mono dim">${esc(p.brand_domain||'—')}</td>
-      <td>${esc(p.niche||'—')}</td>
+      <td><strong>${esc(p.full_name||'-')}</strong></td>
+      <td class="mono">${esc(p.phone||'-')}</td>
+      <td class="mono dim">${esc(p.email||'-')}</td>
+      <td class="mono">${esc(p.postcode||'-')}</td>
+      <td class="mono dim">${esc(p.brand_domain||'-')}</td>
+      <td>${esc(p.niche||'-')}</td>
       <td><span class="badge ${rc}">${esc(rl)}</span></td>
       <td><span class="badge ${sc}">${esc(p.status)}</span></td>
       <td class="acts">${p.status==='pending'
         ? `<button class="btn btn-xs" onclick="discardPending('${p.id}')">Discard</button>`
         : p.status==='discarded'
           ? `<button class="btn btn-xs" onclick="restorePending('${p.id}')">Restore</button>`
-          : '—'}</td>
+          : '-'}</td>
     </tr>`;
   }).join('') : '<tr><td colspan="10" class="empty">No pending leads.</td></tr>';
 }
@@ -1560,7 +1560,7 @@ async function loadNiches(){
   $('niches-tbody').innerHTML = _niches.length ? _niches.map(n=>`<tr>
       <td><strong>${esc(n.name)}</strong></td>
       <td class="mono dim">${esc(n.slug)}</td>
-      <td class="dim" style="white-space:normal;max-width:320px">${esc(n.short_desc||'—')}</td>
+      <td class="dim" style="white-space:normal;max-width:320px">${esc(n.short_desc||'-')}</td>
       <td><span class="badge ${statusBadge(n.status)}">${esc(n.status)}</span></td>
       <td class="mono">${n.sort_order??0}</td>
       <td class="mono">${cnt[n.id]||0}</td>
@@ -1592,7 +1592,7 @@ async function deleteNiche(id){
   const n=_niches.find(x=>x.id===id); if(!n) return;
   if(!confirm(`Delete niche "${n.name}"? (Blocked if assets use it.)`)) return;
   const { error } = await db.from('niches').delete().eq('id',id);
-  if(error){ toast(/foreign key|violates/.test(error.message)?'Assets use this niche — cannot delete.':'Error: '+error.message, true); return; }
+  if(error){ toast(/foreign key|violates/.test(error.message)?'Assets use this niche - cannot delete.':'Error: '+error.message, true); return; }
   toast('Deleted ✓'); await loadRefData(); loadNiches();
 }
 
@@ -1611,7 +1611,7 @@ async function loadRegions(){
   $('regions-tbody').innerHTML = _regions.length ? _regions.map(r=>`<tr>
       <td><strong>${esc(r.name)}</strong></td>
       <td class="mono dim">${esc(r.slug)}</td>
-      <td>${esc(r.state||'—')}</td>
+      <td>${esc(r.state||'-')}</td>
       <td class="mono">${r.sort_order??0}</td>
       <td class="mono">${cnt[r.id]||0}</td>
       <td class="acts"><button class="btn btn-xs" onclick="openRegionModal('${r.id}')">Edit</button><button class="btn btn-xs btn-red" onclick="deleteRegion('${r.id}')">Del</button></td>
@@ -1647,7 +1647,7 @@ async function deleteRegion(id){
   const r=_regions.find(x=>x.id===id); if(!r) return;
   if(!confirm(`Delete region "${r.name}"? (Blocked if assets use it.)`)) return;
   const { error } = await db.from('regions').delete().eq('id',id);
-  if(error){ toast(/foreign key|violates/.test(error.message)?'Assets use this region — cannot delete.':'Error: '+error.message, true); return; }
+  if(error){ toast(/foreign key|violates/.test(error.message)?'Assets use this region - cannot delete.':'Error: '+error.message, true); return; }
   toast('Deleted ✓'); await loadRefData(); loadRegions();
 }
 </script>

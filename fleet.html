@@ -463,7 +463,7 @@ function assetDomain(item){
   return (item.brand_domain || '').trim().replace(/^https?:\/\//,'').replace(/\/.*$/,'');
 }
 /* the live landing page URL for an asset: each asset is region-specific, so it
-   points at that region's area page — https://<domain>/<region-slug>/ — which
+   points at that region's area page - https://<domain>/<region-slug>/ - which
    is where its exclusive postcodes actually convert. Falls back to the root
    domain when an asset has no region slug. */
 function previewUrl(item){
@@ -496,7 +496,7 @@ const PREVIEW_CFG = {
 
 /* Build the landing-page preview as a self-contained HTML document, coded in
    here (no hosted file) and fed to the iframe via srcdoc. It mirrors the real
-   LP — same hero + branded survey card the homeowner sees — but is pure
+   LP - same hero + branded survey card the homeowner sees - but is pure
    HTML/CSS with no scripts, so it renders instantly and can never send a lead. */
 function buildPreviewDoc(item){
   const domain = (item.brand_domain || '').trim().toLowerCase();
@@ -572,7 +572,7 @@ h1 .hl{font-family:${accFont};font-style:italic;font-weight:600;color:${a1}}
 }
 
 /* card thumbnail: the same coded-in preview, rendered at half scale inside the
-   browser chrome so each card shows its real LP instead of a skeleton — the
+   browser chrome so each card shows its real LP instead of a skeleton - the
    srcdoc is set by hydrateCardPreviews() after the grid renders. */
 function miniShot(item){
   return `
