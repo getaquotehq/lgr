@@ -532,6 +532,7 @@
           <p class="lede">Most lead companies ask you to trust that a lead is exclusive. We don't. Every homeowner consents to be contacted by your business, by name, at the moment they submit. There's nowhere else the lead can go.</p>
         </div>
         <div class="form-card">
+          <div class="fc-tag" style="display:inline-flex;align-items:center;gap:6px;font-size:.64rem;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:var(--blue);background:color-mix(in srgb,var(--blue) 12%,transparent);border:1px solid color-mix(in srgb,var(--blue) 30%,transparent);padding:5px 10px;border-radius:100px;margin-bottom:16px">Preview &middot; what your leads see</div>
           <div class="fc-title">Get your free roofing quote</div>
           <div class="fc-f"><span>Full name</span><div class="fc-box">&nbsp;</div></div>
           <div class="fc-f"><span>Email</span><div class="fc-box">&nbsp;</div></div>
@@ -599,7 +600,7 @@
   <section id="pricing">
     <div class="wrap">
       <div class="sec-head">
-        <div class="sec-eyebrow">Claim your territory</div>
+        <div class="sec-eyebrow">Claim your asset</div>
         <h2>One trade. One area. One service business.</h2>
       </div>
       <div class="tiers">
@@ -634,7 +635,7 @@
           <ul>
             <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#F59E0B" stroke-width="3"><path d="M20 6 9 17l-5-5"/></svg>Everything in Starter</li>
             <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#F59E0B" stroke-width="3"><path d="M20 6 9 17l-5-5"/></svg>Roughly 2× the ad budget behind your area</li>
-            <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#F59E0B" stroke-width="3"><path d="M20 6 9 17l-5-5"/></svg>Wider exclusive radius</li>
+            <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#F59E0B" stroke-width="3"><path d="M20 6 9 17l-5-5"/></svg>Wider ad reach across your area</li>
             <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#F59E0B" stroke-width="3"><path d="M20 6 9 17l-5-5"/></svg>Lead dashboard + priority delivery</li>
           </ul>
           <button class="btn btn-primary buyBtn">Claim your asset</button>
@@ -650,7 +651,7 @@
           </div>
           <ul>
             <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#F59E0B" stroke-width="3"><path d="M20 6 9 17l-5-5"/></svg>Everything in Growth</li>
-            <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#F59E0B" stroke-width="3"><path d="M20 6 9 17l-5-5"/></svg>Region-wide exclusivity</li>
+            <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#F59E0B" stroke-width="3"><path d="M20 6 9 17l-5-5"/></svg>Maximum ad reach across your area</li>
             <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#F59E0B" stroke-width="3"><path d="M20 6 9 17l-5-5"/></svg>Roughly 3× the ad budget</li>
             <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#F59E0B" stroke-width="3"><path d="M20 6 9 17l-5-5"/></svg>Fastest delivery + co-invest option</li>
           </ul>
@@ -814,16 +815,20 @@
 
   function renderCounter(region, typed, assets){
     const areaName = region ? region.name : (typed || 'Coming Soon');
-    const count = assets.length;
+    const avail = assets.filter(a=>a.status==='available');
+    const count = avail.length;
+    const total = assets.length;
     const pill = !region
       ? `<span class="pill taken">Not covered yet</span>`
-      : count > 0
-        ? `<span class="pill open">${count} asset${count>1?'s':''} open</span>`
-        : `<span class="pill taken">Fully booked</span>`;
+      : total===0
+        ? `<span class="pill taken">Coming soon</span>`
+        : count > 0
+          ? `<span class="pill open">${count} of ${total} available</span>`
+          : `<span class="pill taken">Fully booked</span>`;
     const claimHref = region ? `/fleet.html?niche=roofing&region=${encodeURIComponent(region.slug)}` : '/fleet.html?niche=roofing';
     let classRow;
     if(count > 0){
-      const cheapest = assets.slice().sort((a,b)=>a.monthly_price_aud-b.monthly_price_aud)[0];
+      const cheapest = avail.slice().sort((a,b)=>a.monthly_price_aud-b.monthly_price_aud)[0];
       const name = TIER_NAME[cheapest.tier] || cap(cheapest.tier);
       const range = (cheapest.typical_min && cheapest.typical_max) ? `typically ${cheapest.typical_min}-${cheapest.typical_max}` : '';
       classRow = `<div class="res">
@@ -860,7 +865,7 @@
     try{
       let q = sb.from('assets')
         .select('tier,monthly_price_aud,floor_leads,typical_min,typical_max,status,regions!inner(slug,name),niches!inner(slug)')
-        .eq('niches.slug','roofing').eq('status','available');
+        .eq('niches.slug','roofing').is('deleted_at', null);
       if(region) q = q.eq('regions.slug', region.slug);
       const { data, error } = await q;
       if(error) throw error;
