@@ -791,8 +791,8 @@ async function loadDashboard(){
   const since = new Date(Date.now()-35*86400000).toISOString();
   const [assetsRes, monthLeadsRes, cycleLeadsRes] = await Promise.all([
     db.from('assets').select('*').is('deleted_at',null),
-    db.from('leads').select('id',{count:'exact',head:true}).eq('status','delivered').gte('captured_at', monthStart.toISOString()),
-    db.from('leads').select('asset_id,installer_id,captured_at,status').eq('status','delivered').gte('captured_at', since),
+    db.from('asset_leads').select('id',{count:'exact',head:true}).eq('status','delivered').gte('captured_at', monthStart.toISOString()),
+    db.from('asset_leads').select('asset_id,installer_id,captured_at,status').eq('status','delivered').gte('captured_at', since),
   ]);
   const assets = assetsRes.data||[];
   const rented = assets.filter(a=>a.status==='rented');
@@ -1072,7 +1072,7 @@ async function softDeleteAsset(id){
 async function hardDeleteAsset(id){
   const a=_assets.find(x=>x.id===id); if(!a) return;
   const [l,r,c]=await Promise.all([
-    db.from('leads').select('id',{count:'exact',head:true}).eq('asset_id',id),
+    db.from('asset_leads').select('id',{count:'exact',head:true}).eq('asset_id',id),
     db.from('rentals').select('id',{count:'exact',head:true}).eq('asset_id',id),
     db.from('rental_checkouts').select('id',{count:'exact',head:true}).eq('asset_id',id),
   ]);
@@ -1223,7 +1223,7 @@ async function saveInstaller(){
 async function deleteInstaller(id){
   const i=_installers.find(x=>x.id===id); if(!i) return;
   const [l,r]=await Promise.all([
-    db.from('leads').select('id',{count:'exact',head:true}).eq('installer_id',id),
+    db.from('asset_leads').select('id',{count:'exact',head:true}).eq('installer_id',id),
     db.from('rentals').select('id',{count:'exact',head:true}).eq('installer_id',id),
   ]);
   const msg=`PERMANENTLY delete "${i.business_name}"?\n\nThis also deletes everything linked to them:\n  • ${l.count||0} lead(s)\n  • ${r.count||0} rental record(s)\nand frees any asset they currently rent.\n\nThis cannot be undone.`;
@@ -1276,8 +1276,8 @@ async function loadLeads(reset){
   };
 
   // stats (all matching rows, lightweight) + paged table (with count) + delivery log
-  const statsQ = applyFilters(db.from('leads').select('status,installer_id,captured_at'));
-  const tableQ = applyFilters(db.from('leads').select('*',{count:'exact'}).order('captured_at',{ascending:false}))
+  const statsQ = applyFilters(db.from('asset_leads').select('status,installer_id,captured_at'));
+  const tableQ = applyFilters(db.from('asset_leads').select('*',{count:'exact'}).order('captured_at',{ascending:false}))
                    .range(ldPage*LD_PAGE, (ldPage+1)*LD_PAGE-1);
   const dlogQ = db.from('lead_delivery_log').select('*').order('created_at',{ascending:false}).limit(50);
 
@@ -1350,14 +1350,14 @@ async function computeOutstanding(){
   const rented=_assets.filter(a=>a.status==='rented' && !a.deleted_at);
   if(!rented.length){ setText('ld-outstanding','0'); return; }
   const since=new Date(Date.now()-30*86400000).toISOString();
-  const { data } = await db.from('leads').select('asset_id,installer_id').eq('status','delivered').gte('captured_at',since);
+  const { data } = await db.from('asset_leads').select('asset_id,installer_id').eq('status','delivered').gte('captured_at',since);
   const byAsset={}; (data||[]).forEach(l=>{ byAsset[l.asset_id]=(byAsset[l.asset_id]||0)+1; });
   const out=rented.reduce((s,a)=>s+Math.max(0,(a.floor_leads||0)-(byAsset[a.id]||0)),0);
   setText('ld-outstanding', out);
 }
 async function renderLdBreakdown(){
   const since=new Date(Date.now()-30*86400000).toISOString();
-  const { data } = await db.from('leads').select('installer_id,status').gte('captured_at',since);
+  const { data } = await db.from('asset_leads').select('installer_id,status').gte('captured_at',since);
   const m={}; (data||[]).forEach(l=>{
     if(!m[l.installer_id]) m[l.installer_id]={delivered:0,duplicate:0,invalid:0};
     m[l.installer_id][l.status]=(m[l.installer_id][l.status]||0)+1;
@@ -1380,7 +1380,7 @@ async function renderLdBreakdown(){
 }
 async function updateLeadStatus(id, status, sel){
   sel.disabled=true;
-  const { error } = await db.from('leads').update({ status, is_duplicate: status==='duplicate' }).eq('id',id);
+  const { error } = await db.from('asset_leads').update({ status, is_duplicate: status==='duplicate' }).eq('id',id);
   sel.disabled=false;
   if(error){ toast('Update failed: '+error.message, true); return; }
   toast(`Marked ${status} ✓`); loadLeads();

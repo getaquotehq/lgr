@@ -169,7 +169,7 @@ Deno.serve(async (req: Request) => {
     );
 
     // FETCH — lead + its asset (brand) + installer (recipient config)
-    const { data: lead } = await supabase.from("leads").select("*").eq("id", lead_id).single();
+    const { data: lead } = await supabase.from("asset_leads").select("*").eq("id", lead_id).single();
     if (!lead) return jsonResponse({ error: "lead not found" }, 404);
 
     const recipientId = (installer_id as string) || (lead.installer_id as string);
@@ -214,7 +214,7 @@ Deno.serve(async (req: Request) => {
 
     const anyOk = results.some((r) => r.status === "sent");
     const firstErr = results.find((r) => r.status === "failed")?.error || null;
-    await supabase.from("leads").update({
+    await supabase.from("asset_leads").update({
       delivered_at: anyOk ? new Date().toISOString() : (lead.delivered_at as string) || null,
       delivery_error: anyOk ? null : firstErr,
     }).eq("id", lead_id);
