@@ -55,7 +55,7 @@ function json(body: unknown, status = 200) {
 async function notifyCheckoutStarted(d: {
   business_name: string; contact_name: string; email: string; phone: string
   brand_name: string; niche: string; region: string; tier: string
-  price: number; floor: number; session_id: string
+  price: number; floor: number; session_id: string; is_trial: boolean
 }) {
   const apiKey = Deno.env.get('RESEND_API_KEY')
   const fromEmail = Deno.env.get('RESEND_FROM_EMAIL')
@@ -67,8 +67,9 @@ async function notifyCheckoutStarted(d: {
   const money = (n: number) => '$' + Number(n).toLocaleString('en-AU')
   const row = (k: string, v: string) =>
     `<tr><td style="padding:4px 14px 4px 0;color:#656D76">${k}</td><td><strong>${v}</strong></td></tr>`
+  const kind = d.is_trial ? '5-LEAD TRIAL' : 'Rental'
   const html = `
-    <h2 style="margin:0 0 14px;font-family:Arial,sans-serif">Checkout started - not yet paid</h2>
+    <h2 style="margin:0 0 14px;font-family:Arial,sans-serif">Checkout started (${esc(kind)}) - not yet paid</h2>
     <table style="border-collapse:collapse;font-size:14px;font-family:Arial,sans-serif">
       ${row('Business', esc(d.business_name))}
       ${row('Contact', esc(d.contact_name) || '-')}
@@ -76,6 +77,7 @@ async function notifyCheckoutStarted(d: {
       ${row('Phone', esc(d.phone) || '-')}
       ${row('Asset', esc(d.brand_name))}
       ${row('Trade', esc(d.niche) + (d.region ? ' - ' + esc(d.region) : '') + ' (' + esc(d.tier) + ')')}
+      ${d.is_trial ? row('Trial', '5 leads @ $78.57 = $392.85 + GST, then monthly after 14 days') : ''}
       ${row('Rental', money(d.price) + ' + GST / 30 days')}
       ${row('Floor', d.floor + ' leads')}
       ${row('Stripe session', `<code>${esc(d.session_id)}</code>`)}
@@ -89,7 +91,7 @@ async function notifyCheckoutStarted(d: {
       from: `Lead Gen Rentals <${fromEmail}>`,
       to: ['contact@leadgenrentals.com.au'],
       reply_to: d.email || 'contact@leadgenrentals.com.au',
-      subject: `New checkout started - ${d.business_name} (${d.email})`,
+      subject: `New ${d.is_trial ? 'TRIAL ' : ''}checkout started - ${d.business_name} (${d.email})`,
       html,
     }),
   })
@@ -250,6 +252,7 @@ serve(async (req) => {
       price,
       floor: asset.floor_leads,
       session_id: session.id,
+      is_trial: isTrial,
     }).catch((e) => console.error('notifyCheckoutStarted failed (non-fatal):', e))
 
     return json({ url: session.url })
