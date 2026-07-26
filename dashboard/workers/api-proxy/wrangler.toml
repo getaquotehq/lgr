@@ -1,0 +1,10 @@
+name = "qlhq-api-proxy"
+main = "src/index.ts"
+compatibility_date = "2025-04-01"
+compatibility_flags = ["nodejs_compat"]
+
+# Custom domain — configure in Cloudflare Dashboard → Workers → Triggers → Custom Domains
+# after deploying. Point leadgenrentals.com.au/api to this worker.
+
+[vars]
+SUPABASE_FUNCTION_URL = "https://tgujjtllrrhpwkcmmqap.supabase.co/functions/v1/api"

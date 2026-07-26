@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self' https://*.supabase.co; object-src 'none'; base-uri 'self';">
+<title>View Quote</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap');
+*{box-sizing:border-box;margin:0;padding:0}
+:root{--accent:#1f6fff;--bg:#f3f5f9;--surface:#fff;--border:#d8e0ec;--text:#121826;--muted:#667284;--radius:18px;--shadow:0 12px 30px rgba(17,24,39,.08);--green:#16a34a;--red:#dc2626}
+body{font-family:"Poppins",sans-serif;font-size:14px;background:radial-gradient(circle at top,rgba(31,111,255,.08),transparent 24%),var(--bg);color:var(--text);min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px}
+.quote-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);max-width:640px;width:100%;overflow:hidden}
+.quote-header{padding:32px 32px 24px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:flex-start;gap:16px}
+.quote-header h1{font-size:22px;font-weight:600;margin-bottom:4px}
+.quote-header p{color:var(--muted);font-size:13px}
+.company-logo{width:48px;height:48px;border-radius:12px;object-fit:cover;border:1px solid var(--border)}
+.company-placeholder{width:48px;height:48px;border-radius:12px;background:var(--accent);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:18px}
+.quote-body{padding:24px 32px}
+.quote-row{display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid #eef1f6}
+.quote-row:last-child{border-bottom:none}
+.quote-row .label{color:var(--muted);font-size:13px}
+.quote-row .value{font-weight:500}
+.quote-total{font-size:28px;font-weight:700;color:var(--accent);text-align:center;padding:24px;border-top:1px solid var(--border);border-bottom:1px solid var(--border)}
+.quote-notes{padding:16px 32px;background:#f9fafb;font-size:13px;color:var(--muted)}
+.quote-notes strong{color:var(--text)}
+.line-items{padding:0 32px 16px}
+.line-items h3{font-size:13px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);margin-bottom:8px}
+.line-item{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #eef1f6;font-size:13px}
+.quote-actions{padding:24px 32px;display:flex;gap:12px;justify-content:center}
+.btn{padding:12px 32px;border-radius:12px;font-weight:600;font-size:14px;border:none;cursor:pointer;transition:all .15s}
+.btn-accept{background:var(--green);color:#fff}
+.btn-accept:hover{background:#15803d}
+.btn-decline{background:var(--red);color:#fff}
+.btn-decline:hover{background:#b91c1c}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.status-badge{display:inline-block;padding:4px 12px;border-radius:99px;font-size:12px;font-weight:600;text-transform:uppercase}
+.status-draft{background:#e5e7eb;color:#374151}
+.status-sent,.status-viewed{background:#dbeafe;color:#1d4ed8}
+.status-accepted{background:#dcfce7;color:#15803d}
+.status-declined{background:#fee2e2;color:#b91c1c}
+.status-expired{background:#fef3c7;color:#92400e}
+.resolved-msg{padding:24px 32px;text-align:center;font-size:16px;font-weight:500}
+.resolved-msg.accepted{color:var(--green)}
+.resolved-msg.declined{color:var(--red)}
+.loading,.error{text-align:center;padding:64px 24px;font-size:16px;color:var(--muted)}
+.error{color:var(--red)}
+.chip{display:inline-block;padding:3px 10px;border-radius:99px;font-size:11px;font-weight:600;background:#eef1f6;color:var(--muted)}
+</style>
+</head>
+<body>
+
+<div class="quote-card" id="quoteCard">
+  <div class="loading" id="loadingState">Loading quote…</div>
+</div>
+
+<script>
+(function() {
+  const SUPABASE_URL = "https://tgujjtllrrhpwkcmmqap.supabase.co";
+
+  const params = new URLSearchParams(window.location.search);
+  const token = params.get("token");
+
+  const card = document.getElementById("quoteCard");
+
+  if (!token) {
+    const errDiv = document.createElement("div");
+    errDiv.className = "error";
+    errDiv.textContent = "Invalid quote link. No token provided.";
+    card.innerHTML = "";
+    card.appendChild(errDiv);
+    return;
+  }
+
+  function fmt(n) {
+    return "$" + Number(n || 0).toLocaleString("en-AU", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  }
+
+  function esc(str) {
+    if (str == null) return "";
+    return String(str)
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#39;");
+  }
+
+  function fmtDate(iso) {
+    if (!iso) return "-";
+    return new Date(iso).toLocaleDateString("en-AU", { day: "numeric", month: "short", year: "numeric" });
+  }
+
+  function statusClass(s) {
+    return "status-" + (s || "draft");
+  }
+
+  async function loadQuote() {
+    try {
+      const res = await fetch(`${SUPABASE_URL}/functions/v1/quote-public?token=${encodeURIComponent(token)}`);
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        const errDiv = document.createElement("div");
+        errDiv.className = "error";
+        errDiv.textContent = err.error || "Quote not found or link expired.";
+        card.innerHTML = "";
+        card.appendChild(errDiv);
+        return;
+      }
+
+      const { quote, company, lead } = await res.json();
+      renderQuote(quote, company, lead);
+    } catch (err) {
+      const errDiv = document.createElement("div");
+      errDiv.className = "error";
+      errDiv.textContent = "Failed to load quote. Please try again.";
+      card.innerHTML = "";
+      card.appendChild(errDiv);
+    }
+  }
+
+  function renderQuote(q, co, lead) {
+    const isResolved = q.status === "accepted" || q.status === "declined";
+    const companyInitial = esc((co.name || "Q")[0].toUpperCase());
+    const meta = q.metadata || {};
+
+    let lineItemsHtml = "";
+    if (q.line_items && q.line_items.length > 0) {
+      lineItemsHtml = `<div class="line-items"><h3>Scope of Work / Line Items</h3>${q.line_items.map(function(li) {
+        return '<div class="line-item"><span>' + esc(li.description || li.name || "Item") + (li.quantity ? " × " + esc(String(li.quantity)) : "") + '</span><span>' + fmt(li.total || li.price || 0) + '</span></div>';
+      }).join("")}` +
+      (q.subtotal ? '<div class="line-item" style="border-top:2px solid var(--border);font-weight:500"><span>Subtotal' + (meta.tax_mode === 'inclusive' ? ' (excl. GST)' : '') + '</span><span>' + fmt(q.subtotal) + '</span></div>' : '') +
+      (q.tax ? '<div class="line-item" style="font-weight:500"><span>GST' + (meta.tax_mode === 'inclusive' ? ' (incl.)' : '') + '</span><span>' + fmt(q.tax) + '</span></div>' : '') +
+      `</div>`;
+    }
+
+    let abnHtml = "";
+    if (meta.show_abn !== false && meta.abn) {
+      abnHtml = '<div class="quote-row"><span class="label">ABN / Business Registration</span><span class="value">' + esc(meta.abn) + '</span></div>';
+    }
+
+    let depositHtml = "";
+    if (meta.show_deposit !== false && (meta.deposit_terms || meta.deposit_method)) {
+      depositHtml = '<div class="quote-notes" style="border-top:1px solid var(--border)"><strong>Deposit:</strong> ' +
+        (meta.deposit_method ? esc(meta.deposit_method) + '. ' : '') +
+        esc(meta.deposit_terms || '') + '</div>';
+    }
+
+    let serviceTermsHtml = "";
+    if (meta.show_service_terms !== false && meta.service_terms) {
+      serviceTermsHtml = '<div class="quote-notes" style="border-top:1px solid var(--border)"><strong>Service Terms:</strong> ' + esc(meta.service_terms) + '</div>';
+    }
+
+    let actionsHtml = "";
+    if (isResolved) {
+      actionsHtml = '<div class="resolved-msg ' + esc(q.status) + '">' +
+        (q.status === "accepted" ? "You accepted this quote" : "You declined this quote") + "</div>";
+    } else if (q.status !== "expired") {
+      actionsHtml = '<div class="quote-actions">' +
+        '<button class="btn btn-accept" id="btnAccept">Accept Quote</button>' +
+        '<button class="btn btn-decline" id="btnDecline">Decline Quote</button>' +
+        '</div>';
+    }
+
+    // Build logo element safely using DOM to avoid src-injection XSS
+    let logoHtml;
+    if (co.logo_url) {
+      const img = document.createElement("img");
+      img.className = "company-logo";
+      img.src = co.logo_url;
+      img.alt = co.name || "";
+      logoHtml = img.outerHTML;
+    } else {
+      logoHtml = '<div class="company-placeholder">' + companyInitial + '</div>';
+    }
+
+    card.innerHTML =
+      '<div class="quote-header">' +
+        '<div>' +
+          '<h1>Quote #' + esc(q.quote_number || "-") + '</h1>' +
+          '<p>' + esc(co.name || "Company") + '</p>' +
+        '</div>' +
+        '<div>' + logoHtml + '</div>' +
+      '</div>' +
+      '<div class="quote-body">' +
+        '<div class="quote-row"><span class="label">Status</span><span class="' + statusClass(q.status) + ' status-badge">' + esc(q.status || "Draft") + '</span></div>' +
+        '<div class="quote-row"><span class="label">Prepared For</span><span class="value">' + esc(lead.name || lead.email || "-") + '</span></div>' +
+        (co.email ? '<div class="quote-row"><span class="label">Contact</span><span class="value">' + esc(co.email) + (co.phone ? " · " + esc(co.phone) : "") + '</span></div>' : '') +
+        abnHtml +
+        '<div class="quote-row"><span class="label">Date Issued</span><span class="value">' + fmtDate(q.created_at) + '</span></div>' +
+        ((meta.show_valid_until !== false && q.valid_until) ? '<div class="quote-row"><span class="label">Valid Until</span><span class="value">' + fmtDate(q.valid_until) + '</span></div>' : '') +
+      '</div>' +
+      lineItemsHtml +
+      '<div class="quote-total">' + fmt(q.total) + '</div>' +
+      (q.notes ? '<div class="quote-notes"><strong>Notes:</strong> ' + esc(q.notes) + '</div>' : '') +
+      depositHtml +
+      serviceTermsHtml +
+      actionsHtml;
+
+    // Attach action handlers
+    var acceptBtn = document.getElementById("btnAccept");
+    var declineBtn = document.getElementById("btnDecline");
+
+    if (acceptBtn) {
+      acceptBtn.addEventListener("click", function() { handleAction("accept"); });
+    }
+    if (declineBtn) {
+      declineBtn.addEventListener("click", function() { handleAction("decline"); });
+    }
+  }
+
+  async function handleAction(action) {
+    var acceptBtn = document.getElementById("btnAccept");
+    var declineBtn = document.getElementById("btnDecline");
+    if (acceptBtn) acceptBtn.disabled = true;
+    if (declineBtn) declineBtn.disabled = true;
+
+    try {
+      var res = await fetch(SUPABASE_URL + "/functions/v1/quote-public", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ token: token, action: action }),
+      });
+
+      var data = await res.json();
+      if (!res.ok) {
+        alert(data.error || "Something went wrong");
+        if (acceptBtn) acceptBtn.disabled = false;
+        if (declineBtn) declineBtn.disabled = false;
+        return;
+      }
+
+      // Re-render with updated status
+      loadQuote();
+    } catch (err) {
+      alert("Failed to process. Please try again.");
+      if (acceptBtn) acceptBtn.disabled = false;
+      if (declineBtn) declineBtn.disabled = false;
+    }
+  }
+
+  loadQuote();
+})();
+</script>
+</body>
+</html>
