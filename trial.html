@@ -47,6 +47,10 @@
   .theme-toggle svg{width:16px;height:16px}
   .ic-sun{display:none} :root[data-theme="dark"] .ic-sun{display:block}
   :root[data-theme="dark"] .ic-moon{display:none}
+  /* dark mode uses the white wordmark in both header and footer */
+  :root[data-theme="dark"] .brand-logo{content:url("LeadGen-Rentals-Logo-White.png")}
+  .foot-logo{height:44px;width:auto;display:block;margin:0 auto 16px}
+  :root[data-theme="dark"] .foot-logo{content:url("LeadGen-Rentals-Logo-White.png")}
 
   /* hero */
   .hero{padding:54px 0 6px;text-align:center}
@@ -203,16 +207,16 @@
 
   <div class="hero">
     <span class="tag">Invite only &middot; not listed publicly</span>
-    <h1>5 exclusive leads. <span class="hl">$78.57 each.</span><br>No fuck-around.</h1>
+    <h1>5 exclusive leads. <span class="hl">$78 each.</span><br>No fuck-around.</h1>
     <p class="lede">Brand new homeowner enquiries, carrier-verified, yours alone. You'll see exactly where they come from and exactly what they filled in. <b>Buy it, put your details in, done.</b></p>
 
     <div class="pricebox">
-      <div class="pb-num">$392.85<small>+GST</small></div>
-      <div class="pb-sub">5 guaranteed leads at a locked <b>$78.57 per lead</b>. Below our standard $110 floor rate, held for the whole trial.</div>
+      <div class="pb-num">$390<small>+GST</small></div>
+      <div class="pb-sub">5 guaranteed leads at a locked <b>$78 per lead</b>. Below our standard $110 floor rate, held for the whole trial.</div>
       <div class="pb-split">
         <div class="pb-cell"><span class="pb-k">Leads</span><span class="pb-v">5 guaranteed</span></div>
         <div class="pb-cell"><span class="pb-k">Delivered</span><span class="pb-v">7-14 days</span></div>
-        <div class="pb-cell"><span class="pb-k">Per lead</span><span class="pb-v">$78.57</span></div>
+        <div class="pb-cell"><span class="pb-k">Per lead</span><span class="pb-v">$78</span></div>
       </div>
     </div>
 
@@ -355,7 +359,7 @@
         <input class="fi" id="t-email" type="email" placeholder="you@business.com.au" autocomplete="email">
       </div>
 
-      <button class="btn" id="t-go" onclick="startTrial()">Buy 5 leads - $392.85 +GST &rarr;</button>
+      <button class="btn" id="t-go" onclick="startTrial()">Buy 5 leads - $390 +GST &rarr;</button>
 
       <div class="trustrow">
         <span><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg> Secured by Stripe</span>
@@ -364,15 +368,24 @@
       </div>
 
       <p class="fineprint">
-        You'll pay <b>$392.85 +GST</b> today for the 5-lead trial. Your ongoing monthly rental for that
+        You'll pay <b>$390 +GST</b> today for the 5-lead trial. Your ongoing monthly rental for that
         engine starts automatically 14 days later unless you cancel first - we'll email you before it does,
         and you can cancel from the link in your receipt. No lock-in, no exit fee.
+      </p>
+      <p class="fineprint" style="margin-top:10px">
+        <b>The short version:</b> 5 leads guaranteed. Duds are blocked before delivery, so there are no
+        replacements and all sales are final. If we don't deliver all 5 in the window, you choose - we keep
+        running at our cost, or we refund the shortfall.
+        <a href="/rental-terms" style="color:var(--blue);font-weight:600">Read the full rental terms &rarr;</a>
       </p>
     </div>
   </section>
 </main>
 
-<footer>&copy; <span id="yr"></span> Lead Gen Rentals</footer>
+<footer>
+  <a href="/" aria-label="Lead Gen Rentals"><img src="LeadGen-Rentals-Logo.png" alt="Lead Gen Rentals" class="foot-logo"></a>
+  <div>&copy; <span id="yr"></span> Lead Gen Rentals</div>
+</footer>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="supabase-config.js"></script>
@@ -483,7 +496,7 @@ async function startTrial(){
     window.location.href = data.url;
   }catch(e){
     say(e.message || 'We could not start checkout. Please try again.', false);
-    btn.disabled = false; btn.textContent = 'Buy 5 leads - $392.85 +GST →';
+    btn.disabled = false; btn.textContent = 'Buy 5 leads - $390 +GST →';
   }
 }
 

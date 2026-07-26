@@ -65,7 +65,7 @@ The Supabase backend URL is set in `wrangler.toml`:
 
 ```toml
 [vars]
-SUPABASE_FUNCTION_URL = "https://wjadekgptkstfdootuol.supabase.co/functions/v1/api"
+SUPABASE_FUNCTION_URL = "https://<your-project-ref>.supabase.co/functions/v1/api"
 ```
 
 To change it (e.g., for a staging environment), update the value and re-deploy.

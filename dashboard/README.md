@@ -13,7 +13,7 @@ leadgenrentals.com.au/dashboard/  this - the client platform
 ```
 
 It uses the **same Supabase project** as the rest of LGR
-(`tgujjtllrrhpwkcmmqap`), already wired up in the pages below - no extra config.
+, already wired up in the pages below - no extra config.
 
 Completely separate from QuoteLeads: different Supabase project, different
 Stripe, different Twilio. Nothing is shared with ql-hq at runtime.

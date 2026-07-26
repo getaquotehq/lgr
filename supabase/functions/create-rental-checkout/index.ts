@@ -77,7 +77,7 @@ async function notifyCheckoutStarted(d: {
       ${row('Phone', esc(d.phone) || '-')}
       ${row('Asset', esc(d.brand_name))}
       ${row('Trade', esc(d.niche) + (d.region ? ' - ' + esc(d.region) : '') + ' (' + esc(d.tier) + ')')}
-      ${d.is_trial ? row('Trial', '5 leads @ $78.57 = $392.85 + GST, then monthly after 14 days') : ''}
+      ${d.is_trial ? row('Trial', '5 leads @ $78 = $390 + GST, then monthly after 14 days') : ''}
       ${row('Rental', money(d.price) + ' + GST / 30 days')}
       ${row('Floor', d.floor + ' leads')}
       ${row('Stripe session', `<code>${esc(d.session_id)}</code>`)}
@@ -160,7 +160,7 @@ serve(async (req) => {
     // monthly plan auto-starts (auto checkout) when the trial window closes -
     // cancellable any time before then.
     const TRIAL_LEADS = 5
-    const TRIAL_RATE  = 78.57                                   // $/lead, locked
+    const TRIAL_RATE  = 78                                      // $/lead, locked
     const TRIAL_TOTAL = Math.round(TRIAL_LEADS * TRIAL_RATE * 100)  // cents
     const TRIAL_DAYS  = 14
 
