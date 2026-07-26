@@ -101,7 +101,8 @@ serve(async (req) => {
   if (req.method !== 'POST') return json({ error: 'method_not_allowed' }, 405)
 
   try {
-    const { asset_id, business_name, contact_name, email, phone } = await req.json()
+    const { asset_id, business_name, contact_name, email, phone, trial } = await req.json()
+    const isTrial = trial === true
 
     if (!asset_id || !business_name || !email) {
       return json({ error: 'Missing required fields (asset_id, business_name, email)' }, 400)
@@ -150,6 +151,17 @@ serve(async (req) => {
       quantity: 1,
     }
 
+    // ── 5-lead trial (unlisted /trial offer) ─────────────────────────────────
+    // Charged up-front as a one-off invoice item on the same Checkout Session:
+    // 5 guaranteed leads at the locked TRIAL_RATE, delivered over 7-14 days.
+    // The ongoing rental is created with a matching trial_period_days, so the
+    // monthly plan auto-starts (auto checkout) when the trial window closes -
+    // cancellable any time before then.
+    const TRIAL_LEADS = 5
+    const TRIAL_RATE  = 78.57                                   // $/lead, locked
+    const TRIAL_TOTAL = Math.round(TRIAL_LEADS * TRIAL_RATE * 100)  // cents
+    const TRIAL_DAYS  = 14
+
     const session = await stripe.checkout.sessions.create({
       mode: 'subscription',
       payment_method_types: ['card'],
@@ -158,8 +170,27 @@ serve(async (req) => {
       // apply to an API-created Checkout Session.
       automatic_tax: { enabled: true },
       line_items: [lineItem],
+      ...(isTrial
+        ? {
+          add_invoice_items: [{
+            price_data: {
+              currency: 'aud',
+              unit_amount: TRIAL_TOTAL,
+              tax_behavior: 'exclusive',
+              product_data: {
+                name: `${asset.brand_name} - ${TRIAL_LEADS}-lead trial`,
+                description:
+                  `${TRIAL_LEADS} exclusive ${nicheName} leads${regionName ? ' - ' + regionName : ''}, ` +
+                  `guaranteed and delivered over 7-14 days, at a locked $${TRIAL_RATE} per lead. ` +
+                  `Yours alone, never shared or resold.`,
+              },
+            },
+            quantity: 1,
+          }],
+        }
+        : {}),
       metadata: {
-        type: 'asset_rental',
+        type: isTrial ? 'asset_trial' : 'asset_rental',
         asset_id: String(asset_id),
         business_name: String(business_name).slice(0, 250),
         contact_name: String(contact_name || '').slice(0, 250),
@@ -167,12 +198,29 @@ serve(async (req) => {
         phone: String(phone || '').slice(0, 40),
         monthly_price_aud: String(price),
         floor_leads: String(asset.floor_leads),
+        ...(isTrial
+          ? {
+            trial_leads: String(TRIAL_LEADS),
+            trial_rate_aud: String(TRIAL_RATE),
+            trial_total_aud: String((TRIAL_TOTAL / 100).toFixed(2)),
+            trial_days: String(TRIAL_DAYS),
+          }
+          : {}),
       },
       subscription_data: {
-        metadata: { type: 'asset_rental', asset_id: String(asset_id) },
+        metadata: {
+          type: isTrial ? 'asset_trial' : 'asset_rental',
+          asset_id: String(asset_id),
+          ...(isTrial ? { trial_leads: String(TRIAL_LEADS) } : {}),
+        },
+        ...(isTrial ? { trial_period_days: TRIAL_DAYS } : {}),
       },
-      success_url: `${SITE}/fleet.html?checkout=success&asset=${encodeURIComponent(asset_id)}`,
-      cancel_url: `${SITE}/fleet.html?checkout=cancelled`,
+      success_url: isTrial
+        ? `${SITE}/trial.html?checkout=success&asset=${encodeURIComponent(asset_id)}`
+        : `${SITE}/fleet.html?checkout=success&asset=${encodeURIComponent(asset_id)}`,
+      cancel_url: isTrial
+        ? `${SITE}/trial.html?checkout=cancelled`
+        : `${SITE}/fleet.html?checkout=cancelled`,
     })
 
     // ── record the attempt (visible in Mission Control before payment) ────────
