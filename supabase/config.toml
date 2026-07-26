@@ -1,0 +1,95 @@
+
+[api]
+enabled = true
+port = 54321
+schemas = ["public", "graphql_public"]
+extra_search_path = ["public", "extensions"]
+max_rows = 1000
+
+[db]
+port = 54322
+major_version = 15
+
+[studio]
+enabled = true
+port = 54323
+
+[auth]
+enabled = true
+site_url = "http://localhost:3000"
+additional_redirect_urls = ["https://localhost:3000"]
+
+[auth.email]
+enable_signup = true
+enable_confirmations = true
+
+# ── Edge Functions ──────────────────────────────────────────────────
+# Gateway-level JWT verification is OFF for all functions (local dev).
+# IMPORTANT: Also turn OFF "Verify JWT" in the Supabase Dashboard UI
+# for each function — config.toml only applies locally.
+# Each function authenticates via auth.getUser(token) + admin fallback
+# internally, which is the Supabase-recommended approach.
+
+[functions.send-sms]
+verify_jwt = false
+
+[functions.invite-rep]
+verify_jwt = false
+
+[functions.voice-ai-provider]
+verify_jwt = false
+
+[functions.vapi-webhook]
+verify_jwt = false
+
+# Webhook / public functions — use alternative auth (Twilio signatures,
+# opaque quote tokens, or internal-only invocation) instead of JWT.
+[functions.quote-public]
+verify_jwt = false
+
+[functions.twilio-inbound-sms]
+verify_jwt = false
+
+[functions.quote-draft]
+verify_jwt = false
+
+[functions.resend-email]
+verify_jwt = false
+
+[functions.send-password-rest]
+verify_jwt = false
+
+[functions.complete-password-reset]
+verify_jwt = false
+
+[functions.verify-turnstile]
+verify_jwt = false
+
+[functions.signup]
+verify_jwt = false
+
+[functions.api]
+verify_jwt = false
+
+[functions.impersonate-user]
+verify_jwt = false
+
+[functions.create-user-silent]
+verify_jwt = false
+
+[functions.get-ppl-pricing]
+verify_jwt = false
+
+[functions.create-ppl-signup-checkout]
+verify_jwt = false
+
+[functions.create-advertising-checkout]
+verify_jwt = false
+
+[functions.get-magic-link]
+verify_jwt = false
+
+[functions.create-custom-ppl-checkout]
+verify_jwt = false
+# Super-admin-only. Verifies the caller's JWT + profiles.is_admin internally,
+# then creates a Stripe checkout link at an admin-set custom price.

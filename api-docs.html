@@ -1,0 +1,1015 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self'; object-src 'none'; base-uri 'self';">
+<title>API Documentation - LeadGenRentalsHQ</title>
+<meta name="description" content="LeadGenRentalsHQ REST API documentation. Programmatically create leads, read quotes, send SMS, and manage your pipeline.">
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,400;0,500;1,400;1,500&display=swap" rel="stylesheet"/>
+<style>
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+html { scroll-behavior: smooth; font-size: 16px; }
+:root[data-theme="dark"] {
+    --bg:          #0a0b0f;
+    --bg-lift:     #111318;
+    --bg-card:     #161820;
+    --bg-deep:     #0d0e12;
+    --border:      rgba(255,255,255,0.08);
+    --border-mid:  rgba(255,255,255,0.13);
+    --ink:         #f0f0ef;
+    --ink-soft:    #c4c4c0;
+    --ink-muted:   #808078;
+    --ink-faint:   #50504a;
+    --accent:      #4797FF;
+    --accent-dim:  rgba(71,151,255,0.10);
+    --accent-glow: rgba(71,151,255,0.16);
+    --green:       #22c55e;
+    --warn:        #f59e0b;
+    --red:         #ef4444;
+    --shadow-sm:   0 1px 3px rgba(0,0,0,0.3),0 1px 2px rgba(0,0,0,0.2);
+    --shadow:      0 4px 16px rgba(0,0,0,0.4),0 2px 6px rgba(0,0,0,0.2);
+    --shadow-lg:   0 20px 60px rgba(0,0,0,0.5),0 8px 24px rgba(0,0,0,0.3);
+    --serif: 'Poppins', system-ui, sans-serif;
+    --sans:  'Poppins', system-ui, sans-serif;
+    --code-bg: #1a1d26;
+    --code-border: rgba(255,255,255,0.08);
+    color-scheme: dark;
+}
+:root[data-theme="light"] {
+    --bg:          #f5f3ef;
+    --bg-lift:     #edeae5;
+    --bg-card:     #f9f8f5;
+    --bg-deep:     #e8e4de;
+    --border:      rgba(14,14,14,0.10);
+    --border-mid:  rgba(14,14,14,0.16);
+    --ink:         #0e0e0e;
+    --ink-soft:    #2a2a2a;
+    --ink-muted:   #6b6b6b;
+    --ink-faint:   #9a9a9a;
+    --accent:      #2563eb;
+    --accent-dim:  rgba(37,99,235,0.07);
+    --accent-glow: rgba(37,99,235,0.12);
+    --green:       #16a34a;
+    --warn:        #d97706;
+    --red:         #dc2626;
+    --shadow-sm:   0 1px 3px rgba(0,0,0,0.08),0 1px 2px rgba(0,0,0,0.04);
+    --shadow:      0 4px 16px rgba(0,0,0,0.08),0 2px 6px rgba(0,0,0,0.04);
+    --shadow-lg:   0 20px 60px rgba(0,0,0,0.12),0 8px 24px rgba(0,0,0,0.06);
+    --serif: 'Poppins', system-ui, sans-serif;
+    --sans:  'Poppins', system-ui, sans-serif;
+    --code-bg: #f0ede8;
+    --code-border: rgba(14,14,14,0.10);
+    color-scheme: light;
+}
+body {
+    font-family: var(--sans);
+    background: var(--bg);
+    color: var(--ink);
+    line-height: 1.65;
+    font-weight: 400;
+    overflow-x: hidden;
+    -webkit-font-smoothing: antialiased;
+    transition: background 0.3s, color 0.3s;
+}
+h1,h2,h3,h4,h5,h6 { font-weight: 500; }
+::-webkit-scrollbar{width:4px}
+::-webkit-scrollbar-track{background:var(--bg)}
+::-webkit-scrollbar-thumb{background:var(--border-mid);border-radius:2px}
+a { color: var(--accent); text-decoration: none; }
+a:hover { opacity: 0.85; }
+/* ICONS */
+.icon{width:20px;height:20px;stroke:currentColor;stroke-width:1.5;fill:none;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0}
+/* HEADER */
+.site-header {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 200;
+    padding: 0 48px;
+    background: rgba(10,11,15,0.88);
+    backdrop-filter: blur(20px);
+    border-bottom: 1px solid var(--border);
+    transition: background 0.3s, border-color 0.3s;
+}
+[data-theme="light"] .site-header { background: rgba(245,243,239,0.88); }
+.header-inner {
+    max-width: 1200px; margin: 0 auto;
+    display: flex; align-items: center; justify-content: space-between;
+    height: 68px;
+}
+.logo-product { display: flex; align-items: center; gap: 7px; text-decoration: none; }
+.logo-product img { width: 26px; height: 26px; border-radius: 7px; object-fit: contain; flex-shrink: 0; }
+.logo-dark  { display: inline; }
+.logo-light { display: none;   }
+[data-theme="light"] .logo-dark  { display: none !important;   }
+[data-theme="light"] .logo-light { display: inline !important; }
+.nav-links { display: flex; align-items: center; gap: 28px; }
+.nav-links > a {
+    font-size: 14px; font-weight: 400; color: var(--ink-muted);
+    text-decoration: none; transition: color 0.2s; padding: 8px 0;
+}
+.nav-links > a:hover { color: var(--ink); }
+.nav-links > a.active { color: var(--accent); }
+.nav-right { display: flex; align-items: center; gap: 12px; }
+.theme-btn {
+    width: 36px; height: 36px; border-radius: 8px;
+    border: 1px solid var(--border-mid); background: var(--bg-lift);
+    cursor: pointer; display: flex; align-items: center; justify-content: center;
+    color: var(--ink-muted); transition: all 0.2s; flex-shrink: 0;
+}
+.theme-btn:hover { color: var(--ink); border-color: var(--accent); }
+.theme-btn svg { width: 15px; height: 15px; stroke: currentColor; stroke-width: 2; fill: none; pointer-events: none; }
+.i-moon { display: block; }
+.i-sun  { display: none; }
+[data-theme="light"] .i-moon { display: none; }
+[data-theme="light"] .i-sun  { display: block; }
+.btn-nav-cta {
+    background: var(--accent); color: #fff;
+    padding: 10px 22px; border-radius: 6px; font-size: 14px; font-weight: 400;
+    text-decoration: none; display: inline-flex; align-items: center; gap: 6px;
+    transition: opacity 0.2s;
+}
+.btn-nav-cta:hover { opacity: 0.85; }
+.mob-btn { display: none; background: none; border: none; cursor: pointer; padding: 4px; }
+.mob-btn span { display: block; width: 22px; height: 1.5px; background: var(--ink); margin: 5px 0; transition: 0.3s; }
+.mob-menu {
+    display: none; position: absolute; top: 100%; left: 0; right: 0;
+    background: var(--bg); border-bottom: 1px solid var(--border); padding: 0 24px 20px;
+}
+.mob-menu.open { display: flex; flex-direction: column; gap: 0; }
+.mob-menu a {
+    padding: 14px 0; font-size: 16px; color: var(--ink-soft);
+    text-decoration: none; border-bottom: 1px solid var(--border);
+}
+.mob-menu a:hover { color: var(--ink); }
+/* FOOTER */
+footer { border-top: 1px solid var(--border); padding: 48px; display: flex; align-items: center; justify-content: space-between; gap: 24px; flex-wrap: wrap; }
+.foot-links { display: flex; gap: 28px; flex-wrap: wrap; }
+.foot-links a { font-size: 13px; color: var(--ink-faint); text-decoration: none; transition: color 0.2s; }
+.foot-links a:hover { color: var(--ink); }
+.foot-copy { font-size: 13px; color: var(--ink-faint); }
+.foot-by { font-size: 13px; color: var(--ink-faint); }
+.foot-by a { color: var(--ink-muted); text-decoration: none; transition: color 0.2s; }
+.foot-by a:hover { color: var(--ink); }
+/* DOCS LAYOUT */
+.docs-hero {
+    padding: 140px 40px 60px; text-align: center;
+    position: relative; overflow: hidden;
+}
+.docs-hero-grid {
+    position: absolute; inset: 0;
+    background-image: linear-gradient(var(--border) 1px, transparent 1px),
+                      linear-gradient(90deg, var(--border) 1px, transparent 1px);
+    background-size: 56px 56px;
+    mask-image: radial-gradient(ellipse 80% 65% at 50% 50%, black 0%, transparent 100%);
+    -webkit-mask-image: radial-gradient(ellipse 80% 65% at 50% 50%, black 0%, transparent 100%);
+    opacity: 0.3;
+}
+.docs-hero-glow {
+    position: absolute; width: 600px; height: 400px;
+    background: radial-gradient(ellipse, var(--accent-glow) 0%, transparent 70%);
+    top: 20%; left: 50%; transform: translateX(-50%); pointer-events: none;
+}
+.docs-hero h1 {
+    font-family: var(--serif); font-size: clamp(30px, 4.5vw, 52px);
+    font-weight: 500; line-height: 1.1; letter-spacing: -1.5px;
+    margin-bottom: 16px; color: var(--ink); position: relative; z-index: 1;
+}
+.docs-hero h1 em { font-style: italic; color: var(--accent); }
+.docs-hero-sub {
+    font-size: 17px; color: var(--ink-muted); max-width: 560px;
+    margin: 0 auto 28px; line-height: 1.7; position: relative; z-index: 1;
+}
+.docs-hero-base {
+    font-size: 13px; color: var(--ink-faint); position: relative; z-index: 1;
+    font-family: monospace; background: var(--code-bg); border: 1px solid var(--code-border);
+    display: inline-block; padding: 8px 20px; border-radius: 8px;
+}
+/* TOC */
+.docs-toc {
+    background: var(--bg-lift); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border);
+    padding: 20px 40px;
+}
+.docs-toc-inner {
+    max-width: 900px; margin: 0 auto;
+    display: flex; flex-wrap: wrap; gap: 10px 18px;
+    justify-content: center;
+}
+.docs-toc a {
+    font-size: 13px; color: var(--ink-muted); text-decoration: none;
+    padding: 5px 12px; border-radius: 6px; border: 1px solid var(--border);
+    transition: all 0.2s; background: var(--bg-card);
+}
+.docs-toc a:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-dim); }
+/* DOCS MAIN */
+.docs-main {
+    max-width: 900px; margin: 0 auto; padding: 60px 40px 80px;
+}
+.docs-section { margin-bottom: 64px; }
+.docs-section-title {
+    font-family: var(--serif); font-size: 28px; font-weight: 500;
+    letter-spacing: -0.8px; margin-bottom: 18px; color: var(--ink);
+    padding-top: 80px; margin-top: -80px;
+}
+.docs-section-title em { font-style: italic; color: var(--accent); }
+.docs-text { font-size: 15px; color: var(--ink-muted); line-height: 1.7; margin-bottom: 18px; }
+.docs-text code {
+    background: var(--code-bg); border: 1px solid var(--code-border);
+    padding: 2px 7px; border-radius: 4px; font-size: 13px; color: var(--ink-soft);
+}
+/* ENDPOINT CARDS */
+.endpoint {
+    background: var(--bg-card); border: 1px solid var(--border);
+    border-radius: 14px; margin-bottom: 18px; overflow: hidden;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+.endpoint:hover { border-color: var(--border-mid); box-shadow: var(--shadow-sm); }
+.endpoint-header {
+    display: flex; align-items: center; gap: 12px;
+    padding: 16px 20px; cursor: pointer; user-select: none;
+}
+.endpoint-method {
+    font-size: 11px; font-weight: 500; padding: 4px 10px;
+    border-radius: 5px; font-family: monospace; text-transform: uppercase;
+    letter-spacing: 0.5px; flex-shrink: 0;
+}
+.method-get  { background: rgba(34,197,94,0.12); color: var(--green); border: 1px solid rgba(34,197,94,0.25); }
+.method-post { background: rgba(71,151,255,0.12); color: var(--accent); border: 1px solid rgba(71,151,255,0.25); }
+.method-patch { background: rgba(245,158,11,0.12); color: var(--warn); border: 1px solid rgba(245,158,11,0.25); }
+.method-delete { background: rgba(239,68,68,0.12); color: var(--red); border: 1px solid rgba(239,68,68,0.25); }
+.endpoint-path {
+    font-family: monospace; font-size: 14px; color: var(--ink);
+    flex: 1;
+}
+.endpoint-desc {
+    font-size: 13px; color: var(--ink-muted); margin-left: auto;
+    text-align: right; white-space: nowrap;
+}
+.endpoint-toggle {
+    color: var(--ink-faint); transition: transform 0.2s; flex-shrink: 0;
+}
+.endpoint.open .endpoint-toggle { transform: rotate(180deg); }
+.endpoint-body {
+    display: none; padding: 0 20px 20px; border-top: 1px solid var(--border);
+}
+.endpoint.open .endpoint-body { display: block; }
+.endpoint-body h4 {
+    font-size: 12px; text-transform: uppercase; letter-spacing: 1.2px;
+    color: var(--ink-faint); margin: 16px 0 8px; font-weight: 400;
+}
+.endpoint-body p { font-size: 14px; color: var(--ink-muted); line-height: 1.6; margin-bottom: 10px; }
+/* SCOPE BADGE */
+.scope-badge {
+    display: inline-flex; align-items: center; gap: 4px;
+    font-size: 11px; font-family: monospace; padding: 3px 8px;
+    border-radius: 4px; background: var(--accent-dim); color: var(--accent);
+    border: 1px solid rgba(71,151,255,0.2);
+}
+/* PARAMS TABLE */
+.params-table { width: 100%; border-collapse: collapse; margin-bottom: 14px; }
+.params-table th {
+    text-align: left; font-size: 11px; text-transform: uppercase;
+    letter-spacing: 1px; color: var(--ink-faint); padding: 8px 12px;
+    border-bottom: 1px solid var(--border-mid); font-weight: 400;
+}
+.params-table td {
+    padding: 8px 12px; font-size: 13px; color: var(--ink-soft);
+    border-bottom: 1px solid var(--border);
+}
+.params-table td:first-child { font-family: monospace; color: var(--ink); font-size: 13px; }
+.param-required { color: var(--red); font-size: 11px; margin-left: 4px; }
+.param-optional { color: var(--ink-faint); font-size: 11px; margin-left: 4px; }
+/* CODE BLOCKS */
+.code-block {
+    background: var(--code-bg); border: 1px solid var(--code-border);
+    border-radius: 8px; padding: 16px; overflow-x: auto;
+    font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace;
+    font-size: 13px; line-height: 1.6; color: var(--ink-soft);
+    margin-bottom: 14px; position: relative;
+}
+.code-block .code-label {
+    position: absolute; top: 8px; right: 12px;
+    font-size: 10px; text-transform: uppercase; letter-spacing: 1px;
+    color: var(--ink-faint); font-family: var(--sans);
+}
+.code-block .kw { color: var(--accent); }
+.code-block .str { color: var(--green); }
+.code-block .num { color: var(--warn); }
+.code-block .cm { color: var(--ink-faint); }
+/* SCOPES LIST */
+.scopes-grid {
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 8px; margin-bottom: 18px;
+}
+.scope-item {
+    background: var(--bg-deep); border: 1px solid var(--border);
+    border-radius: 8px; padding: 12px 14px; transition: border-color 0.2s;
+}
+.scope-item:hover { border-color: var(--border-mid); }
+.scope-item-name { font-family: monospace; font-size: 13px; color: var(--accent); margin-bottom: 3px; }
+.scope-item-desc { font-size: 12px; color: var(--ink-muted); }
+/* WEBHOOK EVENTS */
+.event-item {
+    display: flex; align-items: center; gap: 12px;
+    padding: 10px 14px; background: var(--bg-deep); border: 1px solid var(--border);
+    border-radius: 8px; margin-bottom: 6px; transition: border-color 0.2s;
+}
+.event-item:hover { border-color: var(--border-mid); }
+.event-name { font-family: monospace; font-size: 13px; color: var(--ink); min-width: 160px; }
+.event-desc { font-size: 13px; color: var(--ink-muted); }
+/* STATUS CODES */
+.status-grid {
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 8px; margin-bottom: 18px;
+}
+.status-item {
+    display: flex; align-items: center; gap: 10px; padding: 10px 14px;
+    background: var(--bg-deep); border: 1px solid var(--border); border-radius: 8px;
+}
+.status-code { font-family: monospace; font-size: 14px; font-weight: 500; }
+.status-code.s2 { color: var(--green); }
+.status-code.s4 { color: var(--warn); }
+.status-code.s5 { color: var(--red); }
+.status-desc { font-size: 13px; color: var(--ink-muted); }
+/* RESPONSIVE */
+@media(max-width:900px) {
+    .nav-links { display: none; }
+    .mob-btn { display: block; }
+    .btn-nav-cta.desktop { display: none; }
+    .site-header { padding: 0 24px; }
+    .docs-hero { padding: 120px 20px 48px; }
+    .docs-toc { padding: 16px 20px; }
+    .docs-main { padding: 40px 20px 60px; }
+    footer { flex-direction: column; align-items: flex-start; gap: 20px; padding: 40px 24px; }
+    .endpoint-desc { display: none; }
+    .endpoint-header { gap: 8px; padding: 12px 14px; }
+}
+@media(max-width:480px) {
+    .scopes-grid { grid-template-columns: 1fr; }
+    .status-grid { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+<!-- HEADER -->
+<header class="site-header" id="mainNav">
+    <div class="header-inner">
+        <a href="/" class="logo-product">
+            <img class="logo-dark" src="leadgenrentals-logo-white-hq.png" alt="LeadGenRentalsHQ" onerror="this.style.display='none'"/><img class="logo-light" src="leadgenrentals-logo-black-hq.png" alt="LeadGenRentalsHQ" onerror="this.style.display='none'"/>
+        </a>
+        <nav class="nav-links">
+            <a href="/">Home</a>
+            <a href="/api-docs" class="active">API Docs</a>
+        </nav>
+        <div class="nav-right">
+            <button class="theme-btn" id="themeBtn" aria-label="Toggle theme">
+                <svg class="i-moon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+                <svg class="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+            </button>
+            <a href="/dashboard" class="btn-nav-cta desktop">Dashboard</a>
+        </div>
+        <button class="mob-btn" id="mobBtn" aria-label="Menu">
+            <span></span><span></span><span></span>
+        </button>
+    </div>
+    <nav class="mob-menu" id="mobMenu">
+        <a href="/">Home</a>
+        <a href="/api-docs">API Docs</a>
+        <a href="/dashboard">Dashboard</a>
+    </nav>
+</header>
+
+<!-- HERO -->
+<section class="docs-hero">
+    <div class="docs-hero-grid"></div>
+    <div class="docs-hero-glow"></div>
+    <h1>REST <em>API</em> Documentation</h1>
+    <p class="docs-hero-sub">Programmatically create leads, read quotes, send SMS, manage appointments, and query your pipeline - all authenticated with scoped API keys.</p>
+    <div class="docs-hero-base">Base URL: https://api.leadgenrentalshq.com/v1</div>
+</section>
+
+<!-- TABLE OF CONTENTS -->
+<nav class="docs-toc">
+    <div class="docs-toc-inner">
+        <a href="#authentication">Authentication</a>
+        <a href="#rate-limiting">Rate Limiting</a>
+        <a href="#pagination">Pagination</a>
+        <a href="#scopes">Scopes</a>
+        <a href="#leads">Leads</a>
+        <a href="#quotes">Quotes</a>
+        <a href="#sms">SMS</a>
+        <a href="#appointments">Appointments</a>
+        <a href="#pipeline">Pipeline</a>
+        <a href="#webhooks">Webhooks</a>
+        <a href="#errors">Errors</a>
+    </div>
+</nav>
+
+<!-- MAIN DOCS -->
+<main class="docs-main">
+
+    <!-- AUTHENTICATION -->
+    <section class="docs-section" id="authentication">
+        <h2 class="docs-section-title"><em>Authentication</em></h2>
+        <p class="docs-text">
+            All API requests must include a <code>Bearer</code> token in the <code>Authorization</code> header. Create API keys from the <strong>Integrations</strong> page in your dashboard. Tokens are hashed with SHA-256 - the raw key is only shown once at creation time.
+        </p>
+        <div class="code-block">
+            <span class="code-label">Request</span>
+<span class="kw">curl</span> https://api.leadgenrentalshq.com/v1/leads \
+  -H <span class="str">"Authorization: Bearer qlhq_your_api_token_here"</span>
+        </div>
+        <p class="docs-text">
+            If the token is invalid, revoked, or expired the API returns <code>401 Unauthorized</code>.
+        </p>
+    </section>
+
+    <!-- RATE LIMITING -->
+    <section class="docs-section" id="rate-limiting">
+        <h2 class="docs-section-title">Rate <em>Limiting</em></h2>
+        <p class="docs-text">
+            API requests are rate-limited to <strong>100 requests per minute</strong> per company. If you exceed the limit, the API returns <code>429 Too Many Requests</code>. Wait and retry after the window resets.
+        </p>
+    </section>
+
+    <!-- PAGINATION -->
+    <section class="docs-section" id="pagination">
+        <h2 class="docs-section-title"><em>Pagination</em></h2>
+        <p class="docs-text">
+            All list endpoints support pagination via query parameters. The response includes a <code>meta</code> object with the total count.
+        </p>
+        <table class="params-table">
+            <thead><tr><th>Parameter</th><th>Type</th><th>Default</th><th>Description</th></tr></thead>
+            <tbody>
+                <tr><td>page</td><td>integer</td><td>1</td><td>Page number (starts at 1)</td></tr>
+                <tr><td>per_page</td><td>integer</td><td>25</td><td>Items per page (max 100)</td></tr>
+            </tbody>
+        </table>
+        <div class="code-block">
+            <span class="code-label">Response Shape</span>
+{
+  <span class="str">"data"</span>: [ ... ],
+  <span class="str">"meta"</span>: {
+    <span class="str">"page"</span>: <span class="num">1</span>,
+    <span class="str">"per_page"</span>: <span class="num">25</span>,
+    <span class="str">"total"</span>: <span class="num">142</span>
+  }
+}
+        </div>
+    </section>
+
+    <!-- SCOPES -->
+    <section class="docs-section" id="scopes">
+        <h2 class="docs-section-title">API <em>Scopes</em></h2>
+        <p class="docs-text">
+            Each API token is created with specific scopes that control what resources it can access. If a token lacks the required scope, the API returns <code>403 Forbidden</code>.
+        </p>
+        <div class="scopes-grid">
+            <div class="scope-item"><div class="scope-item-name">leads:read</div><div class="scope-item-desc">List and get leads</div></div>
+            <div class="scope-item"><div class="scope-item-name">leads:write</div><div class="scope-item-desc">Create and update leads</div></div>
+            <div class="scope-item"><div class="scope-item-name">quotes:read</div><div class="scope-item-desc">List and get quotes</div></div>
+            <div class="scope-item"><div class="scope-item-name">sms:send</div><div class="scope-item-desc">Send SMS messages</div></div>
+            <div class="scope-item"><div class="scope-item-name">appointments:read</div><div class="scope-item-desc">List appointments</div></div>
+            <div class="scope-item"><div class="scope-item-name">pipeline:read</div><div class="scope-item-desc">Get pipeline summary</div></div>
+        </div>
+    </section>
+
+    <!-- LEADS -->
+    <section class="docs-section" id="leads">
+        <h2 class="docs-section-title"><em>Leads</em></h2>
+
+        <!-- List Leads -->
+        <div class="endpoint" id="list-leads">
+            <div class="endpoint-header" onclick="this.parentElement.classList.toggle('open')">
+                <span class="endpoint-method method-get">GET</span>
+                <span class="endpoint-path">/leads</span>
+                <span class="endpoint-desc">List all leads</span>
+                <svg class="icon endpoint-toggle" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
+            </div>
+            <div class="endpoint-body">
+                <p>Returns a paginated list of leads for your company. Supports filtering by pipeline stage, AI status, and text search.</p>
+                <span class="scope-badge">leads:read</span>
+
+                <h4>Query Parameters</h4>
+                <table class="params-table">
+                    <thead><tr><th>Parameter</th><th>Type</th><th>Description</th></tr></thead>
+                    <tbody>
+                        <tr><td>page<span class="param-optional">optional</span></td><td>integer</td><td>Page number (default 1)</td></tr>
+                        <tr><td>per_page<span class="param-optional">optional</span></td><td>integer</td><td>Results per page, max 100 (default 25)</td></tr>
+                        <tr><td>stage<span class="param-optional">optional</span></td><td>string</td><td>Filter by pipeline stage: <code>new_lead</code>, <code>follow_up</code>, <code>quote_in_progress</code>, <code>quoted</code>, <code>closed_won</code>, <code>closed_lost</code></td></tr>
+                        <tr><td>ai_status<span class="param-optional">optional</span></td><td>string</td><td>Filter by AI status: <code>hot</code>, <code>warm</code>, <code>cold</code>, <code>new</code></td></tr>
+                        <tr><td>search<span class="param-optional">optional</span></td><td>string</td><td>Search by name, phone, or email (case-insensitive)</td></tr>
+                    </tbody>
+                </table>
+
+                <h4>Example Request</h4>
+                <div class="code-block">
+<span class="kw">curl</span> <span class="str">"https://api.leadgenrentalshq.com/v1/leads?stage=new_lead&per_page=10"</span> \
+  -H <span class="str">"Authorization: Bearer qlhq_..."</span>
+                </div>
+
+                <h4>Example Response</h4>
+                <div class="code-block">
+{
+  <span class="str">"data"</span>: [
+    {
+      <span class="str">"id"</span>: <span class="str">"uuid-here"</span>,
+      <span class="str">"name"</span>: <span class="str">"Sarah Denton"</span>,
+      <span class="str">"email"</span>: <span class="str">"sarah@example.com"</span>,
+      <span class="str">"phone"</span>: <span class="str">"+61400000000"</span>,
+      <span class="str">"pipeline_stage"</span>: <span class="str">"new_lead"</span>,
+      <span class="str">"ai_status"</span>: <span class="str">"warm"</span>,
+      <span class="str">"ai_score"</span>: <span class="num">62</span>,
+      <span class="str">"source"</span>: <span class="str">"website"</span>,
+      <span class="str">"created_at"</span>: <span class="str">"2026-04-01T10:00:00Z"</span>
+    }
+  ],
+  <span class="str">"meta"</span>: { <span class="str">"page"</span>: <span class="num">1</span>, <span class="str">"per_page"</span>: <span class="num">10</span>, <span class="str">"total"</span>: <span class="num">47</span> }
+}
+                </div>
+            </div>
+        </div>
+
+        <!-- Create Lead -->
+        <div class="endpoint" id="create-lead">
+            <div class="endpoint-header" onclick="this.parentElement.classList.toggle('open')">
+                <span class="endpoint-method method-post">POST</span>
+                <span class="endpoint-path">/leads</span>
+                <span class="endpoint-desc">Create a new lead</span>
+                <svg class="icon endpoint-toggle" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
+            </div>
+            <div class="endpoint-body">
+                <p>Creates a new lead for your company. At least <code>name</code> or <code>phone</code> is required. Fires a <code>lead.created</code> webhook event.</p>
+                <span class="scope-badge">leads:write</span>
+
+                <h4>Request Body (JSON)</h4>
+                <table class="params-table">
+                    <thead><tr><th>Field</th><th>Type</th><th>Description</th></tr></thead>
+                    <tbody>
+                        <tr><td>name<span class="param-optional">optional</span></td><td>string</td><td>Full name of the lead</td></tr>
+                        <tr><td>first_name<span class="param-optional">optional</span></td><td>string</td><td>First name</td></tr>
+                        <tr><td>last_name<span class="param-optional">optional</span></td><td>string</td><td>Last name</td></tr>
+                        <tr><td>email<span class="param-optional">optional</span></td><td>string</td><td>Email address</td></tr>
+                        <tr><td>phone<span class="param-optional">optional</span></td><td>string</td><td>Phone number (E.164 format)</td></tr>
+                        <tr><td>pipeline_stage<span class="param-optional">optional</span></td><td>string</td><td>Initial pipeline stage (default: <code>new_lead</code>)</td></tr>
+                        <tr><td>source<span class="param-optional">optional</span></td><td>string</td><td>Lead source (e.g. "website", "zapier")</td></tr>
+                        <tr><td>custom_data<span class="param-optional">optional</span></td><td>object</td><td>Custom key-value data</td></tr>
+                        <tr><td>metadata<span class="param-optional">optional</span></td><td>object</td><td>Additional metadata</td></tr>
+                    </tbody>
+                </table>
+
+                <h4>Example Request</h4>
+                <div class="code-block">
+<span class="kw">curl</span> -X POST <span class="str">"https://api.leadgenrentalshq.com/v1/leads"</span> \
+  -H <span class="str">"Authorization: Bearer qlhq_..."</span> \
+  -H <span class="str">"Content-Type: application/json"</span> \
+  -d <span class="str">'{
+    "name": "Marcus Webb",
+    "phone": "+61412345678",
+    "email": "marcus@example.com",
+    "source": "website_form"
+  }'</span>
+                </div>
+
+                <h4>Example Response (201)</h4>
+                <div class="code-block">
+{
+  <span class="str">"data"</span>: {
+    <span class="str">"id"</span>: <span class="str">"c3f0e8a2-..."</span>,
+    <span class="str">"name"</span>: <span class="str">"Marcus Webb"</span>,
+    <span class="str">"phone"</span>: <span class="str">"+61412345678"</span>,
+    <span class="str">"email"</span>: <span class="str">"marcus@example.com"</span>,
+    <span class="str">"pipeline_stage"</span>: <span class="str">"new_lead"</span>,
+    <span class="str">"source"</span>: <span class="str">"website_form"</span>,
+    <span class="str">"created_at"</span>: <span class="str">"2026-04-03T10:30:00Z"</span>
+  }
+}
+                </div>
+            </div>
+        </div>
+
+        <!-- Get Lead -->
+        <div class="endpoint" id="get-lead">
+            <div class="endpoint-header" onclick="this.parentElement.classList.toggle('open')">
+                <span class="endpoint-method method-get">GET</span>
+                <span class="endpoint-path">/leads/:id</span>
+                <span class="endpoint-desc">Get a single lead</span>
+                <svg class="icon endpoint-toggle" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
+            </div>
+            <div class="endpoint-body">
+                <p>Returns the full details of a single lead by ID. Returns <code>404</code> if the lead doesn't exist or belongs to a different company.</p>
+                <span class="scope-badge">leads:read</span>
+
+                <h4>Example Request</h4>
+                <div class="code-block">
+<span class="kw">curl</span> <span class="str">"https://api.leadgenrentalshq.com/v1/leads/c3f0e8a2-..."</span> \
+  -H <span class="str">"Authorization: Bearer qlhq_..."</span>
+                </div>
+
+                <h4>Example Response</h4>
+                <div class="code-block">
+{
+  <span class="str">"data"</span>: {
+    <span class="str">"id"</span>: <span class="str">"c3f0e8a2-..."</span>,
+    <span class="str">"name"</span>: <span class="str">"Marcus Webb"</span>,
+    <span class="str">"phone"</span>: <span class="str">"+61412345678"</span>,
+    <span class="str">"email"</span>: <span class="str">"marcus@example.com"</span>,
+    <span class="str">"pipeline_stage"</span>: <span class="str">"new_lead"</span>,
+    <span class="str">"ai_status"</span>: <span class="str">"warm"</span>,
+    <span class="str">"ai_score"</span>: <span class="num">62</span>,
+    <span class="str">"ai_summary"</span>: <span class="str">"Interested in roof restoration..."</span>,
+    <span class="str">"source"</span>: <span class="str">"website_form"</span>,
+    <span class="str">"created_at"</span>: <span class="str">"2026-04-03T10:30:00Z"</span>
+  }
+}
+                </div>
+            </div>
+        </div>
+
+        <!-- Update Lead -->
+        <div class="endpoint" id="update-lead">
+            <div class="endpoint-header" onclick="this.parentElement.classList.toggle('open')">
+                <span class="endpoint-method method-patch">PATCH</span>
+                <span class="endpoint-path">/leads/:id</span>
+                <span class="endpoint-desc">Update a lead</span>
+                <svg class="icon endpoint-toggle" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
+            </div>
+            <div class="endpoint-body">
+                <p>Updates an existing lead. Only include the fields you want to change. Fires a <code>lead.updated</code> webhook event.</p>
+                <span class="scope-badge">leads:write</span>
+
+                <h4>Request Body (JSON)</h4>
+                <table class="params-table">
+                    <thead><tr><th>Field</th><th>Type</th><th>Description</th></tr></thead>
+                    <tbody>
+                        <tr><td>name<span class="param-optional">optional</span></td><td>string</td><td>Full name</td></tr>
+                        <tr><td>first_name<span class="param-optional">optional</span></td><td>string</td><td>First name</td></tr>
+                        <tr><td>last_name<span class="param-optional">optional</span></td><td>string</td><td>Last name</td></tr>
+                        <tr><td>email<span class="param-optional">optional</span></td><td>string</td><td>Email address</td></tr>
+                        <tr><td>phone<span class="param-optional">optional</span></td><td>string</td><td>Phone number</td></tr>
+                        <tr><td>pipeline_stage<span class="param-optional">optional</span></td><td>string</td><td>Pipeline stage</td></tr>
+                        <tr><td>source<span class="param-optional">optional</span></td><td>string</td><td>Lead source</td></tr>
+                        <tr><td>ai_enabled<span class="param-optional">optional</span></td><td>boolean</td><td>Enable/disable AI for this lead</td></tr>
+                        <tr><td>custom_data<span class="param-optional">optional</span></td><td>object</td><td>Custom data</td></tr>
+                        <tr><td>metadata<span class="param-optional">optional</span></td><td>object</td><td>Metadata</td></tr>
+                    </tbody>
+                </table>
+
+                <h4>Example Request</h4>
+                <div class="code-block">
+<span class="kw">curl</span> -X PATCH <span class="str">"https://api.leadgenrentalshq.com/v1/leads/c3f0e8a2-..."</span> \
+  -H <span class="str">"Authorization: Bearer qlhq_..."</span> \
+  -H <span class="str">"Content-Type: application/json"</span> \
+  -d <span class="str">'{ "pipeline_stage": "follow_up" }'</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- QUOTES -->
+    <section class="docs-section" id="quotes">
+        <h2 class="docs-section-title"><em>Quotes</em></h2>
+
+        <!-- List Quotes -->
+        <div class="endpoint" id="list-quotes">
+            <div class="endpoint-header" onclick="this.parentElement.classList.toggle('open')">
+                <span class="endpoint-method method-get">GET</span>
+                <span class="endpoint-path">/quotes</span>
+                <span class="endpoint-desc">List all quotes</span>
+                <svg class="icon endpoint-toggle" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
+            </div>
+            <div class="endpoint-body">
+                <p>Returns a paginated list of quotes. Optionally filter by status.</p>
+                <span class="scope-badge">quotes:read</span>
+
+                <h4>Query Parameters</h4>
+                <table class="params-table">
+                    <thead><tr><th>Parameter</th><th>Type</th><th>Description</th></tr></thead>
+                    <tbody>
+                        <tr><td>status<span class="param-optional">optional</span></td><td>string</td><td>Filter by status: <code>draft</code>, <code>sent</code>, <code>viewed</code>, <code>accepted</code>, <code>declined</code></td></tr>
+                        <tr><td>page<span class="param-optional">optional</span></td><td>integer</td><td>Page number</td></tr>
+                        <tr><td>per_page<span class="param-optional">optional</span></td><td>integer</td><td>Results per page</td></tr>
+                    </tbody>
+                </table>
+
+                <h4>Example Response</h4>
+                <div class="code-block">
+{
+  <span class="str">"data"</span>: [
+    {
+      <span class="str">"id"</span>: <span class="str">"uuid-here"</span>,
+      <span class="str">"quote_number"</span>: <span class="str">"Q-00042"</span>,
+      <span class="str">"status"</span>: <span class="str">"sent"</span>,
+      <span class="str">"subtotal"</span>: <span class="num">9400</span>,
+      <span class="str">"tax"</span>: <span class="num">940</span>,
+      <span class="str">"total"</span>: <span class="num">10340</span>,
+      <span class="str">"lead_id"</span>: <span class="str">"lead-uuid"</span>,
+      <span class="str">"created_at"</span>: <span class="str">"2026-04-02T14:00:00Z"</span>,
+      <span class="str">"sent_at"</span>: <span class="str">"2026-04-02T14:30:00Z"</span>,
+      <span class="str">"viewed_at"</span>: <span class="str">"2026-04-02T15:10:00Z"</span>
+    }
+  ],
+  <span class="str">"meta"</span>: { <span class="str">"page"</span>: <span class="num">1</span>, <span class="str">"per_page"</span>: <span class="num">25</span>, <span class="str">"total"</span>: <span class="num">12</span> }
+}
+                </div>
+            </div>
+        </div>
+
+        <!-- Get Quote -->
+        <div class="endpoint" id="get-quote">
+            <div class="endpoint-header" onclick="this.parentElement.classList.toggle('open')">
+                <span class="endpoint-method method-get">GET</span>
+                <span class="endpoint-path">/quotes/:id</span>
+                <span class="endpoint-desc">Get a single quote</span>
+                <svg class="icon endpoint-toggle" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
+            </div>
+            <div class="endpoint-body">
+                <p>Returns full details of a quote including line items and metadata.</p>
+                <span class="scope-badge">quotes:read</span>
+
+                <h4>Example Response</h4>
+                <div class="code-block">
+{
+  <span class="str">"data"</span>: {
+    <span class="str">"id"</span>: <span class="str">"uuid-here"</span>,
+    <span class="str">"quote_number"</span>: <span class="str">"Q-00042"</span>,
+    <span class="str">"status"</span>: <span class="str">"sent"</span>,
+    <span class="str">"subtotal"</span>: <span class="num">9400</span>,
+    <span class="str">"tax"</span>: <span class="num">940</span>,
+    <span class="str">"total"</span>: <span class="num">10340</span>,
+    <span class="str">"line_items"</span>: [
+      { <span class="str">"description"</span>: <span class="str">"Kitchen bench-top removal"</span>, <span class="str">"quantity"</span>: <span class="num">1</span>, <span class="str">"unit_price"</span>: <span class="num">2400</span> },
+      { <span class="str">"description"</span>: <span class="str">"Stone bench-top install"</span>, <span class="str">"quantity"</span>: <span class="num">1</span>, <span class="str">"unit_price"</span>: <span class="num">7000</span> }
+    ],
+    <span class="str">"metadata"</span>: { <span class="str">"abn"</span>: <span class="str">"12 345 678 901"</span>, <span class="str">"deposit_terms"</span>: <span class="str">"50% upfront"</span> },
+    <span class="str">"lead_id"</span>: <span class="str">"lead-uuid"</span>,
+    <span class="str">"created_at"</span>: <span class="str">"2026-04-02T14:00:00Z"</span>
+  }
+}
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- SMS -->
+    <section class="docs-section" id="sms">
+        <h2 class="docs-section-title"><em>SMS</em></h2>
+
+        <div class="endpoint" id="send-sms">
+            <div class="endpoint-header" onclick="this.parentElement.classList.toggle('open')">
+                <span class="endpoint-method method-post">POST</span>
+                <span class="endpoint-path">/sms</span>
+                <span class="endpoint-desc">Send an SMS</span>
+                <svg class="icon endpoint-toggle" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
+            </div>
+            <div class="endpoint-body">
+                <p>Send an SMS message to a lead via your company's configured Twilio number. The message is stored in the conversation thread. SMS credits are deducted automatically.</p>
+                <span class="scope-badge">sms:send</span>
+
+                <h4>Request Body (JSON)</h4>
+                <table class="params-table">
+                    <thead><tr><th>Field</th><th>Type</th><th>Description</th></tr></thead>
+                    <tbody>
+                        <tr><td>lead_id<span class="param-required">required</span></td><td>string</td><td>UUID of the lead to message</td></tr>
+                        <tr><td>message<span class="param-required">required</span></td><td>string</td><td>SMS body text</td></tr>
+                    </tbody>
+                </table>
+
+                <h4>Example Request</h4>
+                <div class="code-block">
+<span class="kw">curl</span> -X POST <span class="str">"https://api.leadgenrentalshq.com/v1/sms"</span> \
+  -H <span class="str">"Authorization: Bearer qlhq_..."</span> \
+  -H <span class="str">"Content-Type: application/json"</span> \
+  -d <span class="str">'{
+    "lead_id": "c3f0e8a2-...",
+    "message": "Hi Marcus, just following up on your enquiry!"
+  }'</span>
+                </div>
+
+                <h4>Example Response</h4>
+                <div class="code-block">
+{
+  <span class="str">"success"</span>: <span class="kw">true</span>,
+  <span class="str">"message"</span>: <span class="str">"SMS sent"</span>
+}
+                </div>
+
+                <h4>Error Responses</h4>
+                <table class="params-table">
+                    <thead><tr><th>Status</th><th>Description</th></tr></thead>
+                    <tbody>
+                        <tr><td>400</td><td>Missing <code>lead_id</code> or <code>message</code>, or lead has no phone</td></tr>
+                        <tr><td>402</td><td>Insufficient SMS credits</td></tr>
+                        <tr><td>404</td><td>Lead not found or belongs to different company</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+
+    <!-- APPOINTMENTS -->
+    <section class="docs-section" id="appointments">
+        <h2 class="docs-section-title"><em>Appointments</em></h2>
+
+        <div class="endpoint" id="list-appointments">
+            <div class="endpoint-header" onclick="this.parentElement.classList.toggle('open')">
+                <span class="endpoint-method method-get">GET</span>
+                <span class="endpoint-path">/appointments</span>
+                <span class="endpoint-desc">List appointments</span>
+                <svg class="icon endpoint-toggle" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
+            </div>
+            <div class="endpoint-body">
+                <p>Returns a paginated list of appointments, including the associated lead details. Optionally filter by type.</p>
+                <span class="scope-badge">appointments:read</span>
+
+                <h4>Query Parameters</h4>
+                <table class="params-table">
+                    <thead><tr><th>Parameter</th><th>Type</th><th>Description</th></tr></thead>
+                    <tbody>
+                        <tr><td>type<span class="param-optional">optional</span></td><td>string</td><td>Filter by appointment type: <code>callback</code>, <code>onsite</code></td></tr>
+                        <tr><td>page<span class="param-optional">optional</span></td><td>integer</td><td>Page number</td></tr>
+                        <tr><td>per_page<span class="param-optional">optional</span></td><td>integer</td><td>Results per page</td></tr>
+                    </tbody>
+                </table>
+
+                <h4>Example Response</h4>
+                <div class="code-block">
+{
+  <span class="str">"data"</span>: [
+    {
+      <span class="str">"id"</span>: <span class="str">"uuid-here"</span>,
+      <span class="str">"title"</span>: <span class="str">"Callback: Sarah Denton"</span>,
+      <span class="str">"status"</span>: <span class="str">"scheduled"</span>,
+      <span class="str">"appointment_type"</span>: <span class="str">"callback"</span>,
+      <span class="str">"start_time"</span>: <span class="str">"2026-04-04T09:00:00Z"</span>,
+      <span class="str">"end_time"</span>: <span class="str">"2026-04-04T09:30:00Z"</span>,
+      <span class="str">"booked_by"</span>: <span class="str">"ai"</span>,
+      <span class="str">"leads"</span>: {
+        <span class="str">"name"</span>: <span class="str">"Sarah Denton"</span>,
+        <span class="str">"phone"</span>: <span class="str">"+61400000000"</span>,
+        <span class="str">"email"</span>: <span class="str">"sarah@example.com"</span>
+      }
+    }
+  ],
+  <span class="str">"meta"</span>: { <span class="str">"page"</span>: <span class="num">1</span>, <span class="str">"per_page"</span>: <span class="num">25</span>, <span class="str">"total"</span>: <span class="num">8</span> }
+}
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- PIPELINE -->
+    <section class="docs-section" id="pipeline">
+        <h2 class="docs-section-title"><em>Pipeline</em></h2>
+
+        <div class="endpoint" id="get-pipeline">
+            <div class="endpoint-header" onclick="this.parentElement.classList.toggle('open')">
+                <span class="endpoint-method method-get">GET</span>
+                <span class="endpoint-path">/pipeline</span>
+                <span class="endpoint-desc">Pipeline summary</span>
+                <svg class="icon endpoint-toggle" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
+            </div>
+            <div class="endpoint-body">
+                <p>Returns the count of leads in each pipeline stage for your company.</p>
+                <span class="scope-badge">pipeline:read</span>
+
+                <h4>Example Response</h4>
+                <div class="code-block">
+{
+  <span class="str">"data"</span>: {
+    <span class="str">"new_lead"</span>: <span class="num">12</span>,
+    <span class="str">"follow_up"</span>: <span class="num">8</span>,
+    <span class="str">"quote_in_progress"</span>: <span class="num">3</span>,
+    <span class="str">"quoted"</span>: <span class="num">5</span>,
+    <span class="str">"closed_won"</span>: <span class="num">22</span>,
+    <span class="str">"closed_lost"</span>: <span class="num">7</span>
+  }
+}
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- WEBHOOKS -->
+    <section class="docs-section" id="webhooks">
+        <h2 class="docs-section-title"><em>Webhooks</em></h2>
+        <p class="docs-text">
+            Configure webhook endpoints in your dashboard under <strong>Integrations → Webhooks</strong>. When events occur, LeadGenRentalsHQ sends a <code>POST</code> request to your URL with the event payload. Each delivery is signed with HMAC-SHA256 using your webhook secret.
+        </p>
+        <p class="docs-text">
+            Verify the signature by computing <code>HMAC-SHA256(webhook_secret, request_body)</code> and comparing it to the <code>X-Webhook-Signature</code> header. The event type is in the <code>X-Webhook-Event</code> header.
+        </p>
+
+        <h4 style="font-size:12px;text-transform:uppercase;letter-spacing:1.2px;color:var(--ink-faint);margin:20px 0 10px;font-weight:400">Available Events</h4>
+        <div class="event-item"><span class="event-name">lead.created</span><span class="event-desc">A new lead was created (via API, SMS, or dashboard)</span></div>
+        <div class="event-item"><span class="event-name">lead.updated</span><span class="event-desc">A lead was updated (stage change, field edit, etc.)</span></div>
+        <div class="event-item"><span class="event-name">quote.accepted</span><span class="event-desc">A quote was accepted by the customer</span></div>
+        <div class="event-item"><span class="event-name">quote.declined</span><span class="event-desc">A quote was declined by the customer</span></div>
+        <div class="event-item"><span class="event-name">appointment.booked</span><span class="event-desc">An appointment was booked (callback or on-site visit)</span></div>
+        <div class="event-item"><span class="event-name">sale.completed</span><span class="event-desc">A deal was marked as closed/won</span></div>
+
+        <h4 style="font-size:12px;text-transform:uppercase;letter-spacing:1.2px;color:var(--ink-faint);margin:20px 0 10px;font-weight:400">Webhook Payload</h4>
+        <div class="code-block">
+{
+  <span class="str">"event"</span>: <span class="str">"lead.created"</span>,
+  <span class="str">"timestamp"</span>: <span class="str">"2026-04-03T10:30:00.000Z"</span>,
+  <span class="str">"data"</span>: {
+    <span class="str">"id"</span>: <span class="str">"c3f0e8a2-..."</span>,
+    <span class="str">"name"</span>: <span class="str">"Marcus Webb"</span>,
+    <span class="str">"phone"</span>: <span class="str">"+61412345678"</span>,
+    <span class="cm">// ... full resource object</span>
+  }
+}
+        </div>
+
+        <h4 style="font-size:12px;text-transform:uppercase;letter-spacing:1.2px;color:var(--ink-faint);margin:20px 0 10px;font-weight:400">Signature Verification (Node.js example)</h4>
+        <div class="code-block">
+<span class="kw">const</span> crypto = require(<span class="str">'crypto'</span>);
+
+<span class="kw">function</span> verifyWebhook(body, signature, secret) {
+  <span class="kw">const</span> expected = crypto
+    .createHmac(<span class="str">'sha256'</span>, secret)
+    .update(body)
+    .digest(<span class="str">'hex'</span>);
+  <span class="kw">return</span> crypto.timingSafeEqual(
+    Buffer.from(signature),
+    Buffer.from(expected)
+  );
+}
+        </div>
+    </section>
+
+    <!-- ERRORS -->
+    <section class="docs-section" id="errors">
+        <h2 class="docs-section-title">Error <em>Codes</em></h2>
+        <p class="docs-text">
+            The API uses standard HTTP status codes. All error responses include an <code>error</code> field with a human-readable message.
+        </p>
+        <div class="code-block">
+{
+  <span class="str">"error"</span>: <span class="str">"Lead not found"</span>
+}
+        </div>
+        <div class="status-grid">
+            <div class="status-item"><span class="status-code s2">200</span><span class="status-desc">Success</span></div>
+            <div class="status-item"><span class="status-code s2">201</span><span class="status-desc">Created</span></div>
+            <div class="status-item"><span class="status-code s4">400</span><span class="status-desc">Bad Request - missing or invalid params</span></div>
+            <div class="status-item"><span class="status-code s4">401</span><span class="status-desc">Unauthorized - invalid or expired token</span></div>
+            <div class="status-item"><span class="status-code s4">402</span><span class="status-desc">Payment Required - no SMS credits</span></div>
+            <div class="status-item"><span class="status-code s4">403</span><span class="status-desc">Forbidden - insufficient scope</span></div>
+            <div class="status-item"><span class="status-code s4">404</span><span class="status-desc">Not Found - resource doesn't exist</span></div>
+            <div class="status-item"><span class="status-code s4">429</span><span class="status-desc">Rate Limited - too many requests</span></div>
+            <div class="status-item"><span class="status-code s5">500</span><span class="status-desc">Server Error - internal failure</span></div>
+        </div>
+    </section>
+
+</main>
+
+<!-- FOOTER -->
+<footer>
+    <div class="foot-links">
+        <a href="/">Home</a>
+        <a href="/api-docs">API Docs</a>
+        <a href="mailto:contact@leadgenrentals.com.au">contact@leadgenrentals.com.au</a>
+    </div>
+    <div class="foot-copy">&copy; 2026 LeadGenRentalsHQ. All rights reserved.</div>
+    <div class="foot-by">by <a href="https://leadgenrentals.com.au" target="_blank" rel="noopener">Lead Gen Rentals</a></div>
+</footer>
+
+<script>
+// Theme
+(function(){
+    var saved = localStorage.getItem('ql-theme');
+    document.documentElement.setAttribute('data-theme', saved === 'light' ? 'light' : 'dark');
+})();
+function toggleTheme(){
+    var cur = document.documentElement.getAttribute('data-theme');
+    var next = cur === 'dark' ? 'light' : 'dark';
+    document.documentElement.setAttribute('data-theme', next);
+    localStorage.setItem('ql-theme', next);
+}
+document.getElementById('themeBtn').addEventListener('click', toggleTheme);
+// Mobile menu
+var mobBtn = document.getElementById('mobBtn');
+var mobMenu = document.getElementById('mobMenu');
+if(mobBtn && mobMenu){
+    mobBtn.addEventListener('click', function(){ mobMenu.classList.toggle('open'); });
+    mobMenu.querySelectorAll('a').forEach(function(a){
+        a.addEventListener('click', function(){ mobMenu.classList.remove('open'); });
+    });
+}
+// Nav scroll shadow
+var nav = document.getElementById('mainNav');
+window.addEventListener('scroll', function(){
+    nav.style.boxShadow = window.scrollY > 10 ? '0 4px 20px rgba(0,0,0,0.2)' : '';
+});
+// Smooth scroll
+document.querySelectorAll('a[href^="#"]').forEach(function(a){
+    a.addEventListener('click', function(e){
+        var target = document.querySelector(a.getAttribute('href'));
+        if(target){ e.preventDefault(); target.scrollIntoView({behavior:'smooth',block:'start'}); }
+    });
+});
+</script>
+</body>
+</html>

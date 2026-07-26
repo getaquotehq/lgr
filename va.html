@@ -1,0 +1,1034 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self' https://*.supabase.co wss://*.supabase.co; object-src 'none'; base-uri 'self';">
+<title>VA Panel · Lead Gen Rentals</title>
+<link rel="icon" href="/favicon.ico">
+<link rel="apple-touch-icon" href="/product-logo.png">
+<style>
+  :root{--bg:#15151b;--bg2:#1b1b22;--card:#1f1f27;--bd:#2c2c38;--ink:#eeeef3;--ink2:#a7a7b8;--ink3:#72728a;--accent:#4797ff;--grn:#10b981;--amb:#f59e0b;--red:#ef4444;--r:10px}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;font-size:14px;line-height:1.5}
+  a{color:var(--accent)}
+  .wrap{max-width:1000px;margin:0 auto;padding:20px 16px 60px}
+  .topbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;gap:12px;flex-wrap:wrap}
+  .topbar h1{font-size:18px;margin:0;display:flex;align-items:center;gap:10px}
+  .pill{font-size:10px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;padding:3px 8px;border-radius:100px;background:rgba(71,151,255,.14);color:var(--accent);border:1px solid rgba(71,151,255,.3)}
+  .btn{font:inherit;font-size:12px;padding:7px 14px;border-radius:8px;border:1px solid var(--bd);background:var(--bg2);color:var(--ink);cursor:pointer}
+  .btn:hover{border-color:var(--accent)}
+  .btn-p{background:var(--accent);border-color:var(--accent);color:#fff}
+  .card{background:var(--card);border:1px solid var(--bd);border-radius:var(--r);padding:16px;margin-bottom:12px}
+  .muted{color:var(--ink3)}
+  .empty{padding:28px;text-align:center;color:var(--ink3)}
+  .badge{font-size:10px;font-weight:700;padding:2px 8px;border-radius:100px;text-transform:uppercase;letter-spacing:.03em}
+  .badge.managed{background:rgba(245,158,11,.14);color:var(--amb);border:1px solid rgba(245,158,11,.3)}
+  .badge.ppl{background:rgba(16,185,129,.14);color:var(--grn);border:1px solid rgba(16,185,129,.3)}
+  .badge.other{background:rgba(160,160,184,.14);color:var(--ink2);border:1px solid var(--bd)}
+  .client-row{display:flex;align-items:center;justify-content:space-between;gap:12px;cursor:pointer}
+  .client-row:hover{border-color:var(--accent)}
+  .client-name{font-weight:600;font-size:15px}
+  .stat-row{display:flex;gap:18px;flex-wrap:wrap;margin-top:6px;font-size:12px;color:var(--ink2)}
+  .stat-row b{color:var(--ink)}
+  table{width:100%;border-collapse:collapse;font-size:12.5px}
+  th,td{text-align:left;padding:7px 8px;border-bottom:1px solid var(--bd);vertical-align:top}
+  th{color:var(--ink3);font-weight:500;font-size:11px;text-transform:uppercase;letter-spacing:.03em}
+  .sec-title{font-size:12px;text-transform:uppercase;letter-spacing:.05em;color:var(--ink3);margin:18px 0 8px;font-weight:600}
+  .kv{display:flex;gap:8px;padding:4px 0;font-size:13px}
+  .kv .k{color:var(--ink3);min-width:120px}
+  textarea{width:100%;background:var(--bg2);border:1px solid var(--bd);border-radius:8px;color:var(--ink);font:inherit;font-size:13px;padding:10px;resize:vertical;min-height:64px}
+  textarea:focus{outline:none;border-color:var(--accent)}
+  .note{background:var(--bg2);border:1px solid var(--bd);border-radius:8px;padding:10px 12px;margin-bottom:8px}
+  .note-meta{font-size:11px;color:var(--ink3);margin-top:6px}
+  .gate{display:flex;align-items:center;justify-content:center;min-height:60vh;color:var(--ink3)}
+  .vanav{display:flex;gap:6px;margin-bottom:18px}
+  .vanav button{font:inherit;font-size:13px;padding:8px 16px;border-radius:9px;border:1px solid var(--bd);background:var(--bg2);color:var(--ink2);cursor:pointer}
+  .vanav button.active{background:var(--card);color:var(--ink);border-color:var(--accent)}
+  .avail{border-collapse:collapse;width:100%;max-width:600px}
+  .avail th{font-size:11px;color:var(--ink3);font-weight:600;padding:5px 4px;text-align:center}
+  .avail td{border:1px solid var(--bd);height:28px}
+  .avail .avail-h{border:none;width:58px;font-size:11px;color:var(--ink3);text-align:right;padding-right:10px}
+  .avail-cell{cursor:pointer;background:var(--bg2);transition:background .08s}
+  .avail-cell:hover{background:var(--bd)}
+  .avail-cell.on{background:var(--accent)}
+  .avail.ro .avail-cell{cursor:default}
+  .avail.ro .avail-cell:hover{background:var(--bg2)}
+  .avail.ro .avail-cell.on{background:var(--accent)}
+  .hidden{display:none}
+  .badge.new{background:rgba(139,92,246,.16);color:#a78bfa;border:1px solid rgba(139,92,246,.4)}
+  .badge.due{background:rgba(245,158,11,.14);color:var(--amb);border:1px solid rgba(245,158,11,.35)}
+  .badge.paid{background:rgba(16,185,129,.14);color:var(--grn);border:1px solid rgba(16,185,129,.35)}
+  .badge.unpaid{background:rgba(239,68,68,.14);color:var(--red);border:1px solid rgba(239,68,68,.35)}
+  .badge.sent{background:rgba(71,151,255,.14);color:var(--accent);border:1px solid rgba(71,151,255,.35)}
+  .task{display:flex;align-items:flex-start;gap:10px;padding:10px 12px;border:1px solid var(--bd);border-radius:9px;margin-bottom:8px;background:var(--bg2)}
+  .task .ic{font-size:16px;line-height:1.2}
+  .task .tbody{flex:1}
+  .task.done{opacity:.5}
+  .task.done .tbody{text-decoration:line-through}
+  .chip{font-size:10px;font-weight:700;padding:2px 7px;border-radius:100px;border:1px solid var(--bd);color:var(--ink2);white-space:nowrap}
+  .chip.warn{background:rgba(245,158,11,.12);color:var(--amb);border-color:rgba(245,158,11,.35)}
+  input[type=text],input[type=date],select{background:var(--bg2);border:1px solid var(--bd);border-radius:8px;color:var(--ink);font:inherit;font-size:13px;padding:8px 10px}
+  input:focus,select:focus{outline:none;border-color:var(--accent)}
+  .inv-overlay{position:fixed;inset:0;background:rgba(0,0,0,.6);display:flex;align-items:flex-start;justify-content:center;padding:30px 14px;overflow-y:auto;z-index:50}
+  .inv-overlay.hidden{display:none}
+  .inv-modal{background:var(--card);border:1px solid var(--bd);border-radius:14px;padding:20px;max-width:760px;width:100%}
+  .inv-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .inv-lbl{display:flex;flex-direction:column;gap:4px;font-size:11px;color:var(--ink3);font-weight:600}
+  .inv-lbl input,.inv-lbl select{font-weight:400;color:var(--ink)}
+  .li-row{display:grid;grid-template-columns:1fr 60px 90px 90px 30px;gap:6px;margin-bottom:6px;align-items:center}
+  .li-row input{width:100%}
+  .dfyf{display:block;font-size:11px;color:var(--ink3);font-weight:600;margin-bottom:10px}
+  .dfyf textarea{margin-top:4px}
+  .dropzone{border:1.5px dashed var(--bd);border-radius:10px;padding:16px;text-align:center;color:var(--ink2);background:var(--bg2);transition:border-color .1s,background .1s}
+  .dropzone.drag{border-color:var(--accent);background:rgba(71,151,255,.08)}
+  .dz-browse{color:var(--accent);cursor:pointer;text-decoration:underline}
+  @media(max-width:600px){.inv-grid{grid-template-columns:1fr}.li-row{grid-template-columns:1fr 1fr}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="topbar">
+    <h1>VA Panel <span class="pill" id="modePill">Virtual Assistant</span></h1>
+    <div style="display:flex;gap:8px">
+      <a class="btn" href="dashboard.html">Dashboard</a>
+      <button class="btn" id="logoutBtn" type="button">Log out</button>
+    </div>
+  </div>
+
+  <!-- Admin preview: VA selector -->
+  <div id="adminBar" class="hidden" style="margin-bottom:16px">
+    <div class="card" style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+      <label style="font-size:12px;color:var(--ink3);font-weight:600">Preview as VA:</label>
+      <select id="vaSelect" class="btn" style="min-width:200px"></select>
+    </div>
+  </div>
+
+  <div class="vanav hidden" id="vaNav">
+    <button id="navClients" class="active" type="button">My Clients</button>
+    <button id="navAvail" type="button">My Availability</button>
+    <button id="navTpl" type="button">Email Templates</button>
+  </div>
+
+  <div id="gate" class="gate">Loading…</div>
+
+  <!-- CLIENT LIST -->
+  <div id="listView" class="hidden">
+    <p class="muted" id="listSub" style="margin-top:0">Clients assigned to you.</p>
+    <div id="clientList"></div>
+  </div>
+
+  <!-- CLIENT DETAIL -->
+  <div id="detailView" class="hidden">
+    <button class="btn" id="backBtn" type="button" style="margin-bottom:14px">← All clients</button>
+    <div id="detailBody"></div>
+  </div>
+
+  <!-- EMAIL TEMPLATES -->
+  <div id="tplView" class="hidden">
+    <p class="muted" style="margin-top:0">Reusable email templates. Shared with your admin - edits here update everywhere.</p>
+    <div style="margin-bottom:12px"><button class="btn btn-p" id="vaNewTplBtn" type="button">+ New template</button></div>
+    <div id="vaTplEditor" class="card hidden">
+      <input type="hidden" id="vaTplId">
+      <div class="kv"><span class="k">Name</span><input id="vaTplName" type="text" placeholder="e.g. Account manager intro" style="flex:1;background:var(--bg2);border:1px solid var(--bd);border-radius:8px;color:var(--ink);font:inherit;padding:8px 10px"></div>
+      <div class="kv"><span class="k">Subject</span><input id="vaTplSubject" type="text" style="flex:1;background:var(--bg2);border:1px solid var(--bd);border-radius:8px;color:var(--ink);font:inherit;padding:8px 10px"></div>
+      <textarea id="vaTplBody" placeholder="Hi {{first_name}}, …" style="min-height:140px;margin-top:8px"></textarea>
+      <div style="margin-top:10px;display:flex;gap:8px">
+        <button class="btn btn-p" id="vaSaveTplBtn" type="button">Save template</button>
+        <button class="btn" id="vaCancelTplBtn" type="button">Cancel</button>
+      </div>
+    </div>
+    <div id="vaTplList"></div>
+  </div>
+
+  <!-- AVAILABILITY -->
+  <div id="availView" class="hidden">
+    <p class="muted" style="margin-top:0">Tap the hours you're available to take calls each week. Your admin sees this. <span style="color:var(--ink3)">(Times in AEST)</span></p>
+    <div id="availGrid" style="overflow-x:auto"></div>
+    <div style="margin-top:16px;display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+      <button class="btn btn-p" id="saveAvailBtn" type="button">Save availability</button>
+      <button class="btn" id="clearAvailBtn" type="button">Clear all</button>
+      <span class="muted" id="availStatus"></span>
+    </div>
+  </div>
+</div>
+
+<!-- INVOICE MODAL -->
+<div id="invModal" class="inv-overlay hidden">
+  <div class="inv-modal">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+      <h2 style="margin:0;font-size:17px" id="invModalTitle">New invoice</h2>
+      <button class="btn" id="invCloseBtn" type="button">✕</button>
+    </div>
+    <div class="inv-grid">
+      <label class="inv-lbl">Client name<input id="invClientName" type="text"></label>
+      <label class="inv-lbl">Client email<input id="invClientEmail" type="text"></label>
+      <label class="inv-lbl">Offer type
+        <select id="invOfferType"><option value="managed">Managed Advertising</option><option value="ppl">Pay-Per-Lead</option></select>
+      </label>
+      <label class="inv-lbl">Vertical<input id="invVertical" type="text" placeholder="e.g. Solar"></label>
+      <label class="inv-lbl">Invoice date<input id="invDate" type="date"></label>
+      <label class="inv-lbl">Due date<input id="invDue" type="date"></label>
+      <label class="inv-lbl">Delivery period start<input id="invPeriodStart" type="date"></label>
+      <label class="inv-lbl">Delivery period end<input id="invPeriodEnd" type="date"></label>
+    </div>
+    <div class="sec-title">Line items</div>
+    <div id="invLineItems"></div>
+    <button class="btn" id="invAddLineBtn" type="button" style="margin-top:6px">+ Add line</button>
+    <div class="inv-grid" style="margin-top:14px">
+      <label class="inv-lbl">GST treatment
+        <select id="invGstType"><option value="exclusive">Add GST (10%)</option><option value="inclusive">GST inclusive</option><option value="none">No GST</option></select>
+      </label>
+      <div></div>
+    </div>
+    <div style="text-align:right;margin-top:10px;font-size:14px" id="invTotals"></div>
+    <div class="sec-title">Payment details</div>
+    <textarea id="invPaymentDetails" placeholder="Leave blank to use the business bank details on file" style="min-height:60px"></textarea>
+    <div id="invBankRO" class="muted" style="font-size:12px;margin-top:6px"></div>
+    <div class="sec-title">Notes</div>
+    <textarea id="invNotes" style="min-height:50px"></textarea>
+    <div style="margin-top:16px;display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+      <button class="btn btn-p" id="invSaveDownloadBtn" type="button">Save & download PDF</button>
+      <button class="btn" id="invSaveBtn" type="button">Save only</button>
+      <span class="muted" id="invStatus"></span>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
+<script>
+  const SUPABASE_URL = '__LGR_HQ_SUPABASE_URL__';
+  const SUPABASE_ANON_KEY = '__LGR_HQ_ANON_KEY__';
+  let sb;
+
+  const $ = (id) => document.getElementById(id);
+  const esc = (s) => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+  const fmtMoney = (v) => v != null ? '$' + Number(v).toLocaleString('en-AU', {minimumFractionDigits:0, maximumFractionDigits:2}) : '-';
+  const fmtDate = (d) => d ? new Date(d).toLocaleDateString('en-AU', {day:'numeric', month:'short', year:'numeric'}) : '-';
+  const planBadge = (p) => { const k = p === 'managed' ? 'managed' : (p === 'ppl' || p === 'ppl_managed') ? 'ppl' : 'other'; const label = p === 'managed' ? 'Managed' : p === 'ppl' ? 'PPL' : p === 'ppl_managed' ? 'PPL + Managed' : (p || '-'); return `<span class="badge ${k}">${esc(label)}</span>`; };
+
+  async function vaApi(body) {
+    const { data: { session } } = await sb.auth.getSession();
+    if (!session) { location.href = 'index.html'; throw new Error('no session'); }
+    const res = await fetch(SUPABASE_URL + '/functions/v1/va-api', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + session.access_token, 'apikey': SUPABASE_ANON_KEY },
+      body: JSON.stringify(body),
+    });
+    const data = await res.json().catch(() => ({}));
+    return { ok: res.ok, status: res.status, data };
+  }
+
+  // ─── Availability ─────────────────────────────────────────────────────────
+  const AV_DAYS = [['mon','Mon'],['tue','Tue'],['wed','Wed'],['thu','Thu'],['fri','Fri'],['sat','Sat'],['sun','Sun']];
+  const AV_HOURS = [8,9,10,11,12,13,14,15,16,17,18,19];
+  const hourLabel = (h) => { const ap = h < 12 ? 'AM' : 'PM'; const hh = h % 12 === 0 ? 12 : h % 12; return hh + ' ' + ap; };
+  let _availSet = new Set();
+  let _availLoaded = false;
+
+  function setNav(which) {
+    $('navClients').classList.toggle('active', which === 'clients');
+    $('navAvail').classList.toggle('active', which === 'avail');
+    $('navTpl').classList.toggle('active', which === 'tpl');
+  }
+
+  function hideAllViews() {
+    $('listView').classList.add('hidden');
+    $('detailView').classList.add('hidden');
+    $('availView').classList.add('hidden');
+    $('tplView').classList.add('hidden');
+  }
+
+  function avGridHtml(selected, readOnly) {
+    let h = '<table class="avail' + (readOnly ? ' ro' : '') + '"><thead><tr><th class="avail-h"></th>' +
+      AV_DAYS.map((d) => '<th>' + d[1] + '</th>').join('') + '</tr></thead><tbody>';
+    AV_HOURS.forEach((hr) => {
+      h += '<tr><td class="avail-h">' + hourLabel(hr) + '</td>' +
+        AV_DAYS.map((d) => { const id = d[0] + '-' + hr; return '<td class="avail-cell' + (selected.has(id) ? ' on' : '') + '" data-slot="' + id + '"></td>'; }).join('') +
+        '</tr>';
+    });
+    return h + '</tbody></table>';
+  }
+
+  function renderAvailGrid() {
+    const g = $('availGrid');
+    g.innerHTML = avGridHtml(_availSet, false);
+    g.querySelectorAll('.avail-cell').forEach((cell) => {
+      cell.addEventListener('click', () => {
+        const id = cell.dataset.slot;
+        if (_availSet.has(id)) { _availSet.delete(id); cell.classList.remove('on'); }
+        else { _availSet.add(id); cell.classList.add('on'); }
+        $('availStatus').textContent = 'Unsaved changes';
+      });
+    });
+  }
+
+  async function showAvail() {
+    hideAllViews();
+    $('availView').classList.remove('hidden');
+    setNav('avail');
+    window.scrollTo(0, 0);
+    if (!_availLoaded) {
+      $('availGrid').innerHTML = '<div class="muted">Loading…</div>';
+      const { ok, data } = await vaApi({ action: 'get_availability' });
+      _availSet = new Set(ok && Array.isArray(data.slots) ? data.slots : []);
+      _availLoaded = true;
+      renderAvailGrid();
+      $('availStatus').textContent = '';
+    }
+  }
+
+  async function saveAvailability() {
+    const btn = $('saveAvailBtn');
+    btn.disabled = true; btn.textContent = 'Saving…';
+    const { ok, data } = await vaApi({ action: 'set_availability', slots: [..._availSet] });
+    btn.disabled = false; btn.textContent = 'Save availability';
+    $('availStatus').textContent = ok ? 'Saved ✓' : ('Error: ' + (data.error || 'could not save'));
+  }
+
+  let _isAdmin = false;
+  let _selectedVaId = null;
+
+  async function init() {
+    sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    const { data: { session } } = await sb.auth.getSession();
+    if (!session) { location.href = 'index.html'; return; }
+    $('logoutBtn').addEventListener('click', async () => { await sb.auth.signOut(); location.href = 'index.html'; });
+    $('backBtn').addEventListener('click', showList);
+    $('navClients').addEventListener('click', showList);
+    $('navAvail').addEventListener('click', showAvail);
+    $('navTpl').addEventListener('click', showTemplates);
+    $('saveAvailBtn').addEventListener('click', saveAvailability);
+    $('vaNewTplBtn').addEventListener('click', function () { openVaTpl(null); });
+    $('vaCancelTplBtn').addEventListener('click', function () { $('vaTplEditor').classList.add('hidden'); });
+    $('vaSaveTplBtn').addEventListener('click', saveVaTemplate);
+    $('invCloseBtn').addEventListener('click', closeInvModal);
+    $('invAddLineBtn').addEventListener('click', function () { addLineItem(); });
+    $('invGstType').addEventListener('change', recalcInvTotals);
+    $('invSaveBtn').addEventListener('click', function () { submitInvoice(false); });
+    $('invSaveDownloadBtn').addEventListener('click', function () { submitInvoice(true); });
+    $('clearAvailBtn').addEventListener('click', () => { _availSet.clear(); renderAvailGrid(); $('availStatus').textContent = 'Unsaved changes'; });
+
+    const { data: me } = await sb.from('profiles').select('is_admin, is_va').eq('id', session.user.id).maybeSingle();
+    if (me && me.is_admin) {
+      _isAdmin = true;
+      $('modePill').textContent = 'Admin Preview';
+      $('modePill').style.background = 'rgba(239,68,68,.14)';
+      $('modePill').style.color = 'var(--red)';
+      $('modePill').style.borderColor = 'rgba(239,68,68,.3)';
+      await loadAdminMode();
+    } else {
+      loadClients();
+    }
+  }
+
+  async function loadAdminMode() {
+    const { ok, data } = await vaApi({ action: 'list_vas' });
+    if (!ok) { $('gate').textContent = 'Could not load VAs.'; return; }
+    const vas = data.vas || [];
+    if (!vas.length) {
+      $('gate').textContent = 'No VAs configured yet.';
+      return;
+    }
+    const sel = $('vaSelect');
+    sel.innerHTML = '<option value="">Select a VA</option>' +
+      vas.map(v => `<option value="${esc(v.id)}">${esc(v.full_name || v.email)} (${v.assigned} client${v.assigned !== 1 ? 's' : ''})</option>`).join('');
+    $('adminBar').classList.remove('hidden');
+    $('gate').classList.add('hidden');
+    $('vaNav').classList.remove('hidden');
+    $('navAvail').style.display = 'none';
+    sel.addEventListener('change', () => {
+      _selectedVaId = sel.value || null;
+      if (_selectedVaId) loadClientsForVa(_selectedVaId);
+      else { $('listView').classList.add('hidden'); $('detailView').classList.add('hidden'); }
+    });
+  }
+
+  async function loadClientsForVa(vaId) {
+    $('detailView').classList.add('hidden');
+    $('listView').classList.remove('hidden');
+    $('clientList').innerHTML = '<div class="card empty">Loading…</div>';
+    const { ok, data } = await vaApi({ action: 'admin_list_va_clients', va_user_id: vaId });
+    if (!ok) { $('clientList').innerHTML = `<div class="card empty">${esc(data.error || 'Error')}</div>`; return; }
+    _clients = data.clients || [];
+    showList();
+    enrichBilling();
+  }
+
+  let _clients = [];
+  async function loadClients() {
+    const { ok, status, data } = await vaApi({ action: 'list_clients' });
+    if (!ok) {
+      if (status === 403) { location.href = 'dashboard.html'; return; }
+      $('gate').textContent = 'Could not load your clients. ' + (data.error || '');
+      return;
+    }
+    _clients = data.clients || [];
+    $('gate').classList.add('hidden');
+    $('vaNav').classList.remove('hidden');
+    showList();
+    enrichBilling();
+  }
+
+  // Merge billing / onboarding state (payment method, dates, invoice status,
+  // intro-done, delivery, invoices) into the loaded client list, then re-render.
+  async function enrichBilling() {
+    const { ok, data } = await vaApi({ action: 'billing_list' });
+    if (!ok) return;
+    const map = {};
+    (data.clients || []).forEach(b => { map[b.id] = b; });
+    _clients.forEach(c => {
+      const b = map[c.id];
+      if (!b) return;
+      c.payment_method = b.payment_method;
+      c.ads_live_date = b.ads_live_date;
+      c.next_invoice_due = b.next_invoice_due;
+      c.invoice_status = b.invoice_status;
+      c.va_intro_done = b.va_intro_done;
+      c.va_intro_done_at = b.va_intro_done_at;
+      c.created_at = b.created_at;
+      c.delivery = b.delivery;
+      c.invoices = b.invoices;
+    });
+    _billingReady = true;
+    if (!$('listView').classList.contains('hidden')) showList();
+  }
+  let _billingReady = false;
+
+  const todayMidnight = () => { const d = new Date(); d.setHours(0, 0, 0, 0); return d; };
+  const isNew48 = (c) => c.created_at && (Date.now() - new Date(c.created_at).getTime()) < 48 * 3600 * 1000;
+
+  // Derive the outstanding tasks for one client from its billing/onboarding state.
+  function computeTasks(c) {
+    const tasks = [];
+    const managed = c.plan === 'managed' || c.plan === 'ppl_managed';
+    const d = c.delivery || { delivered: 0, total: 0 };
+    if (!c.va_intro_done) {
+      tasks.push({ key: 'intro', ic: '✉️', label: `Introduce yourself to ${c.name || 'this client'} as their account manager via email` });
+    }
+    if (managed && c.payment_method !== 'stripe') {
+      const due = c.next_invoice_due ? new Date(c.next_invoice_due + 'T00:00:00') : null;
+      if (c.invoice_status === 'due' || (due && due <= todayMidnight())) {
+        tasks.push({ key: 'invoice', ic: '🧾', label: `Time to send ${c.name || 'this client'}'s invoice${c.next_invoice_due ? ' (due ' + fmtDate(c.next_invoice_due) + ')' : ''}` });
+      }
+    }
+    if (c.plan === 'ppl' && c.payment_method === 'invoice') {
+      if ((d.total || 0) > 0 && (d.delivered || 0) >= (d.total || 0)) {
+        tasks.push({ key: 'reorder', ic: '📞', label: `${c.name || 'This client'}'s leads are delivered - follow up to reorder / send the next invoice` });
+      }
+    }
+    return tasks;
+  }
+
+  function showList() {
+    hideAllViews();
+    $('listView').classList.remove('hidden');
+    setNav('clients');
+    const el = $('clientList');
+    if (!_clients.length) { el.innerHTML = '<div class="card empty">No clients assigned to you yet.</div>'; return; }
+
+    // Task summary banner across all clients.
+    let allTasks = [];
+    _clients.forEach(c => computeTasks(c).forEach(t => allTasks.push({ c, t })));
+    const banner = (_billingReady && allTasks.length)
+      ? `<div class="card" style="border-color:rgba(245,158,11,.4)">
+           <div class="sec-title" style="margin-top:0">Your tasks (${allTasks.length})</div>
+           ${allTasks.map(({ c, t }) => `<div class="task" data-goto="${esc(c.id)}" style="cursor:pointer"><span class="ic">${t.ic}</span><div class="tbody">${esc(t.label)}</div><span class="muted">Open →</span></div>`).join('')}
+         </div>`
+      : '';
+
+    $('listSub').textContent = `${_clients.length} client${_clients.length !== 1 ? 's' : ''} assigned to you.`;
+    el.innerHTML = banner + _clients.map(c => {
+      const isPpl = c.plan === 'ppl' || c.plan === 'ppl_managed';
+      const d = c.delivery || {};
+      const leadStat = isPpl
+        ? `<b>${(d.delivered != null ? d.delivered : c.delivered) || 0}/${(d.total != null ? d.total : c.totalLeads) || 0}</b> leads delivered`
+        : `<b>${c.accountLeads || 0}</b> leads`;
+      const tCount = _billingReady ? computeTasks(c).length : 0;
+      const invSt = c.invoice_status && c.invoice_status !== 'none'
+        ? `<span class="badge ${c.invoice_status}">${esc(c.invoice_status)}</span>` : '';
+      return `
+      <div class="card client-row" data-id="${esc(c.id)}">
+        <div>
+          <div class="client-name">${esc(c.name || '(no name)')} ${planBadge(c.plan)} ${isNew48(c) ? '<span class="badge new">New</span>' : ''} ${invSt}</div>
+          <div class="stat-row">
+            <span>${leadStat}</span>
+            ${isPpl ? `<span><b>${c.activeOrders || 0}</b> active order${c.activeOrders === 1 ? '' : 's'}</span>` : ''}
+            <span><b>${c.notes || 0}</b> note${c.notes === 1 ? '' : 's'}</span>
+            ${tCount ? `<span class="chip warn">${tCount} task${tCount === 1 ? '' : 's'}</span>` : ''}
+            ${c.email ? `<span class="muted">${esc(c.email)}</span>` : ''}
+          </div>
+        </div>
+        <span class="muted">View →</span>
+      </div>`;
+    }).join('');
+    el.querySelectorAll('.client-row').forEach(r => r.addEventListener('click', () => openClient(r.dataset.id)));
+    el.querySelectorAll('[data-goto]').forEach(r => r.addEventListener('click', () => openClient(r.dataset.goto)));
+  }
+
+  let _bankRO = null;  // cached business/bank details (read-only for VAs)
+
+  async function openClient(companyId) {
+    $('detailBody').innerHTML = '<div class="card empty">Loading…</div>';
+    hideAllViews();
+    $('detailView').classList.remove('hidden');
+    setNav('clients');
+    window.scrollTo(0, 0);
+    const action = _isAdmin ? 'admin_get_client' : 'get_client';
+    const [base, dfy, links, invs, bank] = await Promise.all([
+      vaApi({ action, company_id: companyId }),
+      vaApi({ action: 'get_dfy', company_id: companyId }),
+      vaApi({ action: 'list_preview_links', company_id: companyId }),
+      vaApi({ action: 'list_invoices', company_id: companyId }),
+      vaApi({ action: 'get_bank_details' }),
+    ]);
+    if (!base.ok) { $('detailBody').innerHTML = `<div class="card empty">${esc(base.data.error || 'Could not load client.')}</div>`; return; }
+    const extra = {
+      profile: (dfy.ok && dfy.data.profile) || {},
+      links: (links.ok && links.data.links) || [],
+      invoices: (invs.ok && invs.data.invoices) || [],
+    };
+    _bankRO = (bank.ok && bank.data.settings) || {};
+    renderDetail(companyId, base.data, extra);
+  }
+
+  function billingSummary(cache) {
+    if (!cache) return '';
+    const pm = cache.payment_method ? (cache.payment_method === 'invoice' ? 'Invoice' : 'Stripe') : '-';
+    const st = cache.invoice_status && cache.invoice_status !== 'none' ? `<span class="badge ${cache.invoice_status}">${esc(cache.invoice_status)}</span>` : '-';
+    return `
+      <div class="sec-title">Billing</div>
+      <div class="kv"><span class="k">Payment method</span><span>${pm}</span></div>
+      <div class="kv"><span class="k">Ads live date</span><span>${fmtDate(cache.ads_live_date)}</span></div>
+      <div class="kv"><span class="k">Next invoice due</span><span>${fmtDate(cache.next_invoice_due)}</span></div>
+      <div class="kv"><span class="k">Invoice status</span><span>${st}</span></div>`;
+  }
+
+  function renderDetail(companyId, d, extra) {
+    extra = extra || { profile: {}, links: [], invoices: [] };
+    const c = d.company || {};
+    const cache = _clients.find(x => x.id === companyId) || {};
+    const p = extra.profile || {};
+    // Preview links / screenshots are a managed (DFY) thing only, not for PPL-only clients.
+    const isManaged = c.plan === 'managed' || c.plan === 'ppl_managed';
+
+    // ── Tasks ──
+    // The intro-email control is always shown (two-way toggle) so the VA can
+    // mark it sent or undo it; it writes companies.va_intro_done, which /admin
+    // reads back in the "Intro email done" column.
+    const introRow = `
+      <div class="task${cache.va_intro_done ? ' done' : ''}">
+        <span class="ic">${cache.va_intro_done ? '✅' : '✉️'}</span>
+        <div class="tbody">${cache.va_intro_done ? 'Intro email sent to ' : 'Introduce yourself to '}${esc(c.name || 'this client')} as their account manager via email${cache.va_intro_done && cache.va_intro_done_at ? ' · ' + fmtDate(cache.va_intro_done_at) : ''}</div>
+        <button class="btn ${cache.va_intro_done ? '' : 'btn-p'}" data-intro-toggle type="button">${cache.va_intro_done ? 'Undo' : 'Mark sent'}</button>
+      </div>`;
+    const otherTasks = (_billingReady ? computeTasks(cache) : []).filter(t => t.key !== 'intro');
+    const tasksHtml = otherTasks.map(t => `
+      <div class="task" data-task="${t.key}">
+        <span class="ic">${t.ic}</span>
+        <div class="tbody">${esc(t.label)}</div>
+        ${t.key === 'invoice' || t.key === 'reorder' ? '<button class="btn btn-p" data-new-inv type="button">New invoice</button>' : ''}
+      </div>`).join('');
+
+    // ── DFY profile (editable) ──
+    const dfyHtml = `
+      <label class="dfyf">Service area<textarea data-dfy="service_area" placeholder="Suburbs / postcodes / radius they want leads from">${esc(p.service_area || '')}</textarea></label>
+      <label class="dfyf">Onboarding details<textarea data-dfy="onboarding" style="min-height:110px" placeholder="Notes about this client…">${esc(p.onboarding || '')}</textarea></label>
+      <label class="dfyf">Campaign preferences<textarea data-dfy="campaign_prefs" placeholder="Budget, platforms, target audience, ad angle, do's & don'ts…">${esc(p.campaign_prefs || '')}</textarea></label>
+      <div style="margin-top:8px;display:flex;gap:10px;align-items:center"><button class="btn btn-p" id="saveDfyBtn" type="button">Save details</button><span class="muted" id="dfyStatus"></span></div>`;
+
+    // PPL orders (the real fulfilment orders).
+    const orders = (d.orders || []).length ? `
+      <table><thead><tr><th>Order</th><th>Leads</th><th>Status</th><th>Due</th><th>Purchased</th></tr></thead><tbody>
+      ${d.orders.map(o => `<tr><td>${esc(o.notes || '-')}</td><td>${o.delivered_leads || 0}/${o.total_leads || 0}</td><td>${esc(o.status || '-')}</td><td>${fmtDate(o.due_date)}</td><td>${fmtDate(o.created_at)}</td></tr>`).join('')}
+      </tbody></table>` : '<div class="muted">No PPL orders.</div>';
+
+    const contacts = (d.contacts || []).map(pp => `
+      <div class="kv"><span class="k">${esc(pp.full_name || '(no name)')}${pp.role ? ' · ' + esc(pp.role) : ''}</span>
+        <span>${pp.email ? `<a href="mailto:${esc(pp.email)}">${esc(pp.email)}</a>` : ''}${pp.phone ? ' · ' + esc(pp.phone) : ''}</span></div>`).join('') || '<div class="muted">No contacts on file.</div>';
+
+    const notes = (d.notes || []).map(n => `
+      <div class="note">${esc(n.body)}<div class="note-meta">${esc(n.author_name || 'Unknown')} · ${fmtDate(n.created_at)}</div></div>`).join('') || '<div class="muted" id="noNotes">No notes yet.</div>';
+
+    $('detailBody').innerHTML = `
+      <div class="card">
+        <div class="client-name" style="font-size:18px">${esc(c.name || '(no name)')} ${planBadge(c.plan)} ${isNew48(cache) ? '<span class="badge new">New</span>' : ''}</div>
+        <div class="sec-title">Contact</div>
+        <div class="kv"><span class="k">Company email</span><span>${c.email ? `<a href="mailto:${esc(c.email)}">${esc(c.email)}</a>` : '-'}</span></div>
+        <div class="kv"><span class="k">Company phone</span><span>${esc(c.phone || '-')}</span></div>
+        <div class="kv"><span class="k">Website</span><span>${c.domain ? `<a href="${esc(c.domain)}" target="_blank" rel="noopener">${esc(c.domain)}</a>` : '-'}</span></div>
+        ${billingSummary(cache)}
+        <div class="sec-title">People</div>
+        ${contacts}
+      </div>
+
+      <div class="card">
+        <div class="sec-title" style="margin-top:0">Tasks</div>
+        ${introRow}${tasksHtml}
+      </div>
+
+      <div class="card">
+        <div class="sec-title" style="margin-top:0">DFY details</div>
+        ${dfyHtml}
+      </div>
+
+      ${isManaged ? `
+      <div class="card">
+        <div class="sec-title" style="margin-top:0">Preview links to send</div>
+        <div id="plDrop" class="dropzone">
+          <div>📎 Drag &amp; drop screenshots here, or <label class="dz-browse">browse<input id="plFile" type="file" accept="image/*" multiple hidden></label></div>
+          <div class="muted" style="font-size:11px;margin-top:4px" id="plUpStatus">PNG / JPG / GIF / WEBP, up to 10 MB each</div>
+        </div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;margin:10px 0">
+          <select id="plKind"><option value="link">Link</option><option value="image">Image URL</option></select>
+          <input id="plUrl" type="text" placeholder="…or paste a link/image URL" style="flex:2;min-width:160px">
+          <input id="plLabel" type="text" placeholder="Label (optional)" style="flex:1;min-width:110px">
+          <button class="btn btn-p" id="plAddBtn" type="button">Add</button>
+        </div>
+        <div id="plList"></div>
+      </div>` : ''}
+
+      <div class="card">
+        <div class="sec-title" style="margin-top:0">Invoices</div>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+          <span class="muted">Bank details shown on the invoice are set by your admin (read-only).</span>
+          <button class="btn btn-p" id="newInvBtn" type="button">+ New invoice</button>
+        </div>
+        <div id="invList"></div>
+      </div>
+
+      <div class="card">
+        <div class="sec-title" style="margin-top:0">PPL orders</div>
+        ${orders}
+      </div>
+
+      <div class="card">
+        <div class="sec-title" style="margin-top:0">Notes</div>
+        <div id="notesList">${notes}</div>
+        <textarea id="noteInput" placeholder="Add an internal note about this client…"></textarea>
+        <div style="margin-top:8px"><button class="btn btn-p" id="addNoteBtn" type="button">Add note</button></div>
+      </div>`;
+
+    $('addNoteBtn').addEventListener('click', () => addNote(companyId));
+    $('saveDfyBtn').addEventListener('click', () => saveDfy(companyId));
+    if (isManaged) {
+      $('plAddBtn').addEventListener('click', () => addPreviewLink(companyId));
+      wirePreviewDropzone(companyId);
+    }
+    $('newInvBtn').addEventListener('click', () => openInvModal(companyId, c));
+    const introBtn = $('detailBody').querySelector('[data-intro-toggle]');
+    if (introBtn) introBtn.addEventListener('click', () => markIntroDone(companyId, !cache.va_intro_done, introBtn));
+    $('detailBody').querySelectorAll('[data-new-inv]').forEach(b => b.addEventListener('click', () => openInvModal(companyId, c)));
+
+    _detailLinks = extra.links;
+    _detailInvoices = extra.invoices;
+    renderPreviewLinksVa(companyId);
+    renderInvoiceListVa(companyId, c);
+  }
+
+  // ── DFY save ──
+  async function saveDfy(companyId) {
+    const profile = {};
+    $('detailBody').querySelectorAll('[data-dfy]').forEach(el => { profile[el.getAttribute('data-dfy')] = el.value; });
+    const btn = $('saveDfyBtn'); btn.disabled = true;
+    const { ok, data } = await vaApi({ action: 'save_dfy', company_id: companyId, profile });
+    btn.disabled = false;
+    $('dfyStatus').textContent = ok ? 'Saved ✓' : ('Error: ' + (data.error || 'failed'));
+  }
+
+  // ── Intro task (two-way; writes companies.va_intro_done, seen in /admin) ──
+  async function markIntroDone(companyId, done, btn) {
+    if (btn) { btn.disabled = true; btn.textContent = 'Saving…'; }
+    const { ok, data } = await vaApi({ action: 'mark_intro_done', company_id: companyId, done });
+    if (!ok) { if (btn) { btn.disabled = false; btn.textContent = done ? 'Mark sent' : 'Undo'; } alert(data.error || 'Failed'); return; }
+    const c = _clients.find(x => x.id === companyId);
+    if (c) { c.va_intro_done = done; c.va_intro_done_at = done ? new Date().toISOString() : null; }
+    openClient(companyId); // re-render tasks + badge
+  }
+
+  // ── Preview links ──
+  let _detailLinks = [];
+  function renderPreviewLinksVa(companyId) {
+    const host = $('plList');
+    if (!host) return;
+    if (!_detailLinks.length) { host.innerHTML = '<div class="muted">No preview links yet.</div>'; return; }
+    host.innerHTML = _detailLinks.map(l => {
+      const thumb = l.kind === 'image'
+        ? `<a href="${esc(l.url)}" target="_blank" rel="noopener"><img src="${esc(l.url)}" style="width:44px;height:44px;object-fit:cover;border-radius:6px;border:1px solid var(--bd)"></a>`
+        : '<span style="font-size:16px">🔗</span>';
+      return `<div class="task" style="align-items:center">${thumb}
+        <a class="tbody" href="${esc(l.url)}" target="_blank" rel="noopener" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(l.label || l.url)}</a>
+        <button class="btn" data-pl-del="${esc(l.id)}" type="button">Remove</button></div>`;
+    }).join('');
+    host.querySelectorAll('[data-pl-del]').forEach(b => b.addEventListener('click', () => deletePreviewLinkVa(companyId, b.getAttribute('data-pl-del'))));
+  }
+  async function addPreviewLink(companyId) {
+    const kind = $('plKind').value, url = $('plUrl').value.trim(), label = $('plLabel').value.trim();
+    if (!url) { alert('Enter a URL.'); return; }
+    const btn = $('plAddBtn'); btn.disabled = true;
+    const { ok, data } = await vaApi({ action: 'add_preview_link', company_id: companyId, kind, url, label });
+    btn.disabled = false;
+    if (!ok) { alert(data.error || 'Failed'); return; }
+    _detailLinks = [data.link].concat(_detailLinks);
+    $('plUrl').value = ''; $('plLabel').value = '';
+    renderPreviewLinksVa(companyId);
+  }
+  async function deletePreviewLinkVa(companyId, id) {
+    const { ok, data } = await vaApi({ action: 'delete_preview_link', id });
+    if (!ok) { alert(data.error || 'Failed'); return; }
+    _detailLinks = _detailLinks.filter(x => x.id !== id);
+    renderPreviewLinksVa(companyId);
+  }
+
+  // Drag-and-drop / file-picker screenshot upload → Supabase Storage via va-api.
+  function fileToBase64(file) {
+    return new Promise((resolve, reject) => {
+      const r = new FileReader();
+      r.onload = () => resolve(String(r.result));
+      r.onerror = () => reject(new Error('Could not read file'));
+      r.readAsDataURL(file);
+    });
+  }
+  async function uploadPreviewImages(companyId, files) {
+    const imgs = [...files].filter(f => /^image\//.test(f.type));
+    if (!imgs.length) return;
+    const st = $('plUpStatus');
+    let done = 0;
+    for (const f of imgs) {
+      if (f.size > 10 * 1024 * 1024) { if (st) st.textContent = `${f.name} is over 10 MB - skipped`; continue; }
+      if (st) st.textContent = `Uploading ${f.name}… (${done + 1}/${imgs.length})`;
+      try {
+        const data = await fileToBase64(f);
+        const res = await vaApi({ action: 'add_preview_image', company_id: companyId, data, filename: f.name, content_type: f.type });
+        if (res.ok && res.data.link) { _detailLinks = [res.data.link].concat(_detailLinks); renderPreviewLinksVa(companyId); done++; }
+        else if (st) st.textContent = 'Error: ' + (res.data.error || 'upload failed');
+      } catch (e) { if (st) st.textContent = 'Error: ' + e.message; }
+    }
+    if (st && done) st.textContent = `Uploaded ${done} screenshot${done === 1 ? '' : 's'} ✓`;
+  }
+  function wirePreviewDropzone(companyId) {
+    const dz = $('plDrop'), fileEl = $('plFile');
+    if (!dz) return;
+    fileEl.addEventListener('change', () => { if (fileEl.files.length) uploadPreviewImages(companyId, fileEl.files); fileEl.value = ''; });
+    ['dragenter', 'dragover'].forEach(ev => dz.addEventListener(ev, e => { e.preventDefault(); dz.classList.add('drag'); }));
+    ['dragleave', 'drop'].forEach(ev => dz.addEventListener(ev, e => { e.preventDefault(); if (ev !== 'dragleave' || e.target === dz) dz.classList.remove('drag'); }));
+    dz.addEventListener('drop', e => { if (e.dataTransfer?.files?.length) uploadPreviewImages(companyId, e.dataTransfer.files); });
+  }
+
+  // ── Invoice list ──
+  let _detailInvoices = [];
+  function renderInvoiceListVa(companyId, company) {
+    const host = $('invList');
+    if (!host) return;
+    if (!_detailInvoices.length) { host.innerHTML = '<div class="muted">No invoices raised yet.</div>'; return; }
+    host.innerHTML = _detailInvoices.map(inv => `
+      <div class="task" style="align-items:center">
+        <span class="tbody" style="font-family:monospace">${esc(inv.invoice_number || inv.id.slice(0, 8))}</span>
+        <span>${inv.total != null ? '$' + Number(inv.total).toLocaleString('en-AU', { minimumFractionDigits: 2 }) : '-'}</span>
+        <span class="badge ${inv.status || 'draft'}">${esc(inv.status || 'draft')}</span>
+        <span class="muted">${fmtDate(inv.invoice_date || inv.created_at)}</span>
+        <button class="btn" data-inv-pdf="${esc(inv.id)}" type="button">PDF</button>
+      </div>`).join('');
+    host.querySelectorAll('[data-inv-pdf]').forEach(b => b.addEventListener('click', () => {
+      const inv = _detailInvoices.find(x => x.id === b.getAttribute('data-inv-pdf'));
+      if (inv) downloadInvoicePDF(inv);
+    }));
+  }
+
+  async function addNote(companyId) {
+    const ta = $('noteInput');
+    const body = ta.value.trim();
+    if (!body) return;
+    const btn = $('addNoteBtn');
+    btn.disabled = true; btn.textContent = 'Saving…';
+    const { ok, data } = await vaApi({ action: 'add_note', company_id: companyId, body });
+    btn.disabled = false; btn.textContent = 'Add note';
+    if (!ok) { alert(data.error || 'Could not save note.'); return; }
+    const n = data.note;
+    const list = $('notesList');
+    const noNotes = $('noNotes'); if (noNotes) noNotes.remove();
+    const div = document.createElement('div');
+    div.className = 'note';
+    div.innerHTML = `${esc(n.body)}<div class="note-meta">${esc(n.author_name || 'You')} · ${fmtDate(n.created_at)}</div>`;
+    list.insertBefore(div, list.firstChild);
+    ta.value = '';
+    // keep the cached count roughly in sync
+    const c = _clients.find(x => x.id === companyId); if (c) c.notes = (c.notes || 0) + 1;
+  }
+
+  // ═══════════════════════════ EMAIL TEMPLATES ═══════════════════════════════
+  let _vaTemplates = [];
+  async function showTemplates() {
+    hideAllViews();
+    $('tplView').classList.remove('hidden');
+    setNav('tpl');
+    window.scrollTo(0, 0);
+    $('vaTplList').innerHTML = '<div class="card empty">Loading…</div>';
+    const { ok, data } = await vaApi({ action: 'list_email_templates' });
+    _vaTemplates = (ok && data.templates) || [];
+    renderVaTemplates();
+  }
+  function renderVaTemplates() {
+    const host = $('vaTplList');
+    if (!_vaTemplates.length) { host.innerHTML = '<div class="card empty">No templates yet.</div>'; return; }
+    host.innerHTML = _vaTemplates.map(t => `
+      <div class="card">
+        <div style="display:flex;justify-content:space-between;gap:10px;align-items:flex-start">
+          <div style="min-width:0">
+            <div class="client-name" style="font-size:15px">${esc(t.name)}</div>
+            ${t.subject ? `<div class="muted" style="margin-top:2px">${esc(t.subject)}</div>` : ''}
+            <div class="muted" style="margin-top:6px;white-space:pre-wrap;max-height:80px;overflow:hidden">${esc(t.body || '')}</div>
+          </div>
+          <div style="display:flex;gap:6px;flex-shrink:0">
+            <button class="btn" data-tpl-copy="${esc(t.id)}" type="button">Copy</button>
+            <button class="btn" data-tpl-edit="${esc(t.id)}" type="button">Edit</button>
+            <button class="btn" data-tpl-del="${esc(t.id)}" type="button">Delete</button>
+          </div>
+        </div>
+      </div>`).join('');
+    host.querySelectorAll('[data-tpl-copy]').forEach(b => b.addEventListener('click', () => {
+      const t = _vaTemplates.find(x => x.id === b.getAttribute('data-tpl-copy'));
+      const text = (t.subject ? 'Subject: ' + t.subject + '\n\n' : '') + (t.body || '');
+      navigator.clipboard.writeText(text);
+      b.textContent = 'Copied ✓'; setTimeout(() => { b.textContent = 'Copy'; }, 1500);
+    }));
+    host.querySelectorAll('[data-tpl-edit]').forEach(b => b.addEventListener('click', () => openVaTpl(_vaTemplates.find(x => x.id === b.getAttribute('data-tpl-edit')))));
+    host.querySelectorAll('[data-tpl-del]').forEach(b => b.addEventListener('click', () => deleteVaTemplate(b.getAttribute('data-tpl-del'))));
+  }
+  function openVaTpl(t) {
+    $('vaTplEditor').classList.remove('hidden');
+    $('vaTplId').value = t ? t.id : '';
+    $('vaTplName').value = t ? (t.name || '') : '';
+    $('vaTplSubject').value = t ? (t.subject || '') : '';
+    $('vaTplBody').value = t ? (t.body || '') : '';
+    $('vaTplName').focus();
+  }
+  async function saveVaTemplate() {
+    const tpl = { id: $('vaTplId').value || undefined, name: $('vaTplName').value.trim(), subject: $('vaTplSubject').value.trim(), body: $('vaTplBody').value };
+    if (!tpl.name) { alert('Template name is required.'); return; }
+    const btn = $('vaSaveTplBtn'); btn.disabled = true; btn.textContent = 'Saving…';
+    const { ok, data } = await vaApi({ action: 'save_email_template', template: tpl });
+    btn.disabled = false; btn.textContent = 'Save template';
+    if (!ok) { alert(data.error || 'Failed'); return; }
+    const saved = data.template;
+    const idx = _vaTemplates.findIndex(x => x.id === saved.id);
+    if (idx >= 0) _vaTemplates[idx] = saved; else _vaTemplates.push(saved);
+    _vaTemplates.sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+    $('vaTplEditor').classList.add('hidden');
+    renderVaTemplates();
+  }
+  async function deleteVaTemplate(id) {
+    if (!confirm('Delete this template?')) return;
+    const { ok, data } = await vaApi({ action: 'delete_email_template', id });
+    if (!ok) { alert(data.error || 'Failed'); return; }
+    _vaTemplates = _vaTemplates.filter(x => x.id !== id);
+    renderVaTemplates();
+  }
+
+  // ═══════════════════════════ INVOICE MODAL ═════════════════════════════════
+  let _invCompanyId = null;
+  function openInvModal(companyId, company) {
+    _invCompanyId = companyId;
+    $('invModalTitle').textContent = 'New invoice for ' + (company.name || 'client');
+    $('invClientName').value = company.name || '';
+    $('invClientEmail').value = company.email || '';
+    const cache = _clients.find(x => x.id === companyId) || {};
+    $('invOfferType').value = (company.plan === 'ppl') ? 'ppl' : 'managed';
+    $('invVertical').value = '';
+    const today = new Date().toISOString().slice(0, 10);
+    $('invDate').value = today;
+    const due = new Date(); due.setDate(due.getDate() + 7);
+    $('invDue').value = due.toISOString().slice(0, 10);
+    $('invPeriodStart').value = ''; $('invPeriodEnd').value = '';
+    $('invGstType').value = 'exclusive';
+    $('invPaymentDetails').value = '';
+    $('invNotes').value = '';
+    $('invStatus').textContent = '';
+    $('invLineItems').innerHTML = '';
+    addLineItem();
+    // Show which bank details will be used (read-only for VAs).
+    const b = _bankRO || {};
+    const bankLine = (b.bsb || b.account_number)
+      ? `Invoice will use: ${esc(b.account_name || b.business_name || 'Lead Gen Rentals')} · BSB ${esc(b.bsb || '-')} · Acct ${esc(b.account_number || '-')}`
+      : (b.payment_details ? esc(b.payment_details) : 'No bank details on file - ask your admin to set them.');
+    $('invBankRO').innerHTML = bankLine;
+    $('invModal').classList.remove('hidden');
+  }
+  function closeInvModal() { $('invModal').classList.add('hidden'); }
+  function addLineItem(li) {
+    li = li || { description: '', qty: 1, unit_price: 0 };
+    const row = document.createElement('div');
+    row.className = 'li-row';
+    row.innerHTML =
+      `<input type="text" data-li="description" placeholder="Description" value="${esc(li.description)}">` +
+      `<input type="text" data-li="qty" inputmode="decimal" value="${esc(li.qty)}">` +
+      `<input type="text" data-li="unit_price" inputmode="decimal" value="${esc(li.unit_price)}">` +
+      `<input type="text" data-li="line_total" readonly tabindex="-1" style="opacity:.7">` +
+      `<button class="btn" data-li-del type="button">✕</button>`;
+    $('invLineItems').appendChild(row);
+    row.querySelectorAll('[data-li="qty"],[data-li="unit_price"]').forEach(el => el.addEventListener('input', recalcInvTotals));
+    row.querySelector('[data-li-del]').addEventListener('click', () => { row.remove(); recalcInvTotals(); });
+    recalcInvTotals();
+  }
+  function readLineItems() {
+    return [...$('invLineItems').querySelectorAll('.li-row')].map(row => {
+      const g = (k) => row.querySelector(`[data-li="${k}"]`).value;
+      const qty = parseFloat(g('qty')) || 0;
+      const unit = parseFloat(g('unit_price')) || 0;
+      return { description: g('description'), qty, unit_price: unit, line_total: qty * unit };
+    });
+  }
+  function recalcInvTotals() {
+    let subtotal = 0;
+    $('invLineItems').querySelectorAll('.li-row').forEach(row => {
+      const qty = parseFloat(row.querySelector('[data-li="qty"]').value) || 0;
+      const unit = parseFloat(row.querySelector('[data-li="unit_price"]').value) || 0;
+      const lt = qty * unit;
+      row.querySelector('[data-li="line_total"]').value = '$' + lt.toFixed(2);
+      subtotal += lt;
+    });
+    const gstType = $('invGstType').value;
+    let gst = 0, total = subtotal;
+    if (gstType === 'exclusive') { gst = subtotal * 0.1; total = subtotal + gst; }
+    else if (gstType === 'inclusive') { gst = subtotal / 11; total = subtotal; }
+    $('invTotals').innerHTML = `Subtotal <b>$${subtotal.toFixed(2)}</b> &nbsp; GST <b>$${gst.toFixed(2)}</b> &nbsp; Total <b>$${total.toFixed(2)}</b>`;
+    return { subtotal, gst, total, gstType };
+  }
+  async function submitInvoice(andDownload) {
+    const items = readLineItems().filter(li => li.description || li.line_total);
+    if (!items.length) { $('invStatus').textContent = 'Add at least one line item.'; return; }
+    const t = recalcInvTotals();
+    const invoice = {
+      company_id: _invCompanyId,
+      client_name: $('invClientName').value.trim(),
+      client_email: $('invClientEmail').value.trim(),
+      offer_type: $('invOfferType').value,
+      vertical: $('invVertical').value.trim(),
+      invoice_date: $('invDate').value || null,
+      due_date: $('invDue').value || null,
+      delivery_period_start: $('invPeriodStart').value || null,
+      delivery_period_end: $('invPeriodEnd').value || null,
+      line_items: items,
+      subtotal: t.subtotal,
+      gst_type: t.gstType,
+      gst_amount: t.gst,
+      total: t.total,
+      payment_details: $('invPaymentDetails').value.trim(),
+      notes: $('invNotes').value.trim(),
+      status: 'sent',
+    };
+    const btn = andDownload ? $('invSaveDownloadBtn') : $('invSaveBtn');
+    btn.disabled = true; $('invStatus').textContent = 'Saving…';
+    const { ok, data } = await vaApi({ action: 'create_invoice', invoice });
+    btn.disabled = false;
+    if (!ok) { $('invStatus').textContent = 'Error: ' + (data.error || 'failed'); return; }
+    _detailInvoices = [data.invoice].concat(_detailInvoices || []);
+    renderInvoiceListVa(_invCompanyId, { name: invoice.client_name });
+    $('invStatus').textContent = 'Saved ✓';
+    if (andDownload) downloadInvoicePDF(data.invoice);
+    setTimeout(closeInvModal, andDownload ? 400 : 200);
+  }
+
+  // ── PDF (self-contained, mirrors ql-mc's invoice PDF) ──
+  function loadScript(src) {
+    return new Promise((resolve, reject) => {
+      const s = document.createElement('script'); s.src = src;
+      s.onload = resolve; s.onerror = () => reject(new Error('Failed to load ' + src));
+      document.head.appendChild(s);
+    });
+  }
+  async function ensureJsPDF() {
+    if (window.jspdf?.jsPDF) return;
+    await loadScript('https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js');
+    await loadScript('https://cdn.jsdelivr.net/npm/jspdf-autotable@3.8.2/dist/jspdf.plugin.autotable.min.js');
+    if (!window.jspdf?.jsPDF) throw new Error('Could not load PDF library');
+  }
+  async function downloadInvoicePDF(inv) {
+    try {
+      const biz = _bankRO || {};
+      await ensureJsPDF();
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF({ unit: 'mm', format: 'a4' });
+      const pw = 210, mx = 15;
+      let y = 0;
+      doc.setFillColor(15, 23, 42); doc.rect(0, 0, pw, 36, 'F');
+      doc.setFont('helvetica', 'bold'); doc.setFontSize(18); doc.setTextColor(255, 255, 255);
+      doc.text(biz.business_name || 'Lead Gen Rentals', mx, 23);
+      doc.setFont('helvetica', 'normal'); doc.setFontSize(10); doc.setTextColor(160, 174, 192);
+      doc.text('TAX INVOICE', pw - mx, 16, { align: 'right' });
+      doc.setFontSize(14); doc.setTextColor(255, 255, 255);
+      doc.text(inv.invoice_number || '', pw - mx, 26, { align: 'right' });
+      y = 44;
+      doc.setFontSize(8); doc.setTextColor(120, 130, 140); doc.setFont('helvetica', 'normal');
+      doc.text('FROM', mx, y); doc.text('TO', pw / 2 + 5, y); y += 5;
+      doc.setFontSize(10); doc.setTextColor(30, 30, 30); doc.setFont('helvetica', 'bold');
+      doc.text(biz.business_name || 'Lead Gen Rentals', mx, y); doc.text(inv.client_name || '-', pw / 2 + 5, y); y += 5;
+      doc.setFont('helvetica', 'normal'); doc.setFontSize(9); doc.setTextColor(80, 80, 80);
+      if (biz.abn) { doc.text('ABN: ' + biz.abn, mx, y); }
+      let ry = y; if (inv.client_email) { doc.text(inv.client_email, pw / 2 + 5, ry); }
+      y += 8;
+      doc.setFillColor(245, 247, 250); doc.rect(mx, y, pw - mx * 2, 16, 'F');
+      doc.setFontSize(8); doc.setTextColor(100, 110, 120);
+      const detY = y + 5;
+      doc.text('Invoice Date', mx + 3, detY); doc.text('Due Date', mx + 48, detY); doc.text('Offer Type', mx + 93, detY);
+      if (inv.delivery_period_start) doc.text('Delivery Period', mx + 133, detY);
+      doc.setFontSize(9); doc.setTextColor(30, 30, 30); doc.setFont('helvetica', 'bold');
+      doc.text(String(inv.invoice_date || '-'), mx + 3, detY + 6);
+      doc.text(String(inv.due_date || '-'), mx + 48, detY + 6);
+      doc.text(inv.offer_type === 'managed' ? 'Managed Advertising' : 'Pay-Per-Lead', mx + 93, detY + 6);
+      if (inv.delivery_period_start) doc.text((inv.delivery_period_start || '') + ' to ' + (inv.delivery_period_end || ''), mx + 133, detY + 6);
+      doc.setFont('helvetica', 'normal'); y += 22;
+      const tableBody = (inv.line_items || []).map(li => [
+        String(li.description || '').replace(/[^\x20-\x7E]/g, ' '),
+        String(li.qty || 0), '$' + Number(li.unit_price || 0).toFixed(2), '$' + Number(li.line_total || 0).toFixed(2),
+      ]);
+      doc.autoTable({
+        startY: y, margin: { left: mx, right: mx },
+        head: [['Description', 'Qty', 'Unit Price', 'Line Total']], body: tableBody, theme: 'grid',
+        styles: { fontSize: 9, cellPadding: 3 }, headStyles: { fillColor: [15, 23, 42], textColor: 255, fontStyle: 'bold' },
+        columnStyles: { 0: { cellWidth: 'auto' }, 1: { cellWidth: 20, halign: 'center' }, 2: { cellWidth: 28, halign: 'right' }, 3: { cellWidth: 30, halign: 'right' } },
+      });
+      y = doc.lastAutoTable.finalY + 6;
+      const totX = pw - mx - 65;
+      doc.setFontSize(9); doc.setTextColor(80, 80, 80);
+      doc.text('Subtotal', totX, y); doc.text('$' + Number(inv.subtotal || 0).toFixed(2), pw - mx, y, { align: 'right' }); y += 5;
+      doc.text('GST (10%) ' + (inv.gst_type === 'inclusive' ? '(incl.)' : ''), totX, y);
+      doc.text('$' + Number(inv.gst_amount || 0).toFixed(2), pw - mx, y, { align: 'right' }); y += 6;
+      doc.setFillColor(15, 23, 42); doc.rect(totX - 3, y - 4, pw - mx - totX + 3, 9, 'F');
+      doc.setFont('helvetica', 'bold'); doc.setFontSize(11); doc.setTextColor(255, 255, 255);
+      doc.text('TOTAL', totX, y + 2); doc.text('$' + Number(inv.total || 0).toFixed(2), pw - mx, y + 2, { align: 'right' });
+      doc.setFont('helvetica', 'normal'); doc.setTextColor(30, 30, 30); y += 16;
+      doc.setFontSize(9); doc.setTextColor(100, 110, 120); doc.text('PAYMENT DETAILS', mx, y); y += 6;
+      doc.setTextColor(30, 30, 30);
+      if (inv.payment_details) {
+        const safe = inv.payment_details.replace(/[^\x20-\x7E\n]/g, ' ');
+        const lines = doc.splitTextToSize(safe, pw - mx * 2); doc.text(lines, mx, y); y += lines.length * 4.5 + 4;
+      } else if (biz.bsb || biz.account_number) {
+        doc.setFont('helvetica', 'bold'); doc.text('Bank Transfer', mx, y); doc.setFont('helvetica', 'normal'); y += 5;
+        if (biz.account_name) { doc.text('Account Name: ' + biz.account_name, mx, y); y += 4; }
+        if (biz.bsb) { doc.text('BSB: ' + biz.bsb, mx, y); y += 4; }
+        if (biz.account_number) { doc.text('Account: ' + biz.account_number, mx, y); y += 4; }
+        if (biz.bank_name) { doc.text('Bank: ' + biz.bank_name, mx, y); y += 4; }
+      } else if (biz.payment_details) {
+        const lines = doc.splitTextToSize(String(biz.payment_details).replace(/[^\x20-\x7E\n]/g, ' '), pw - mx * 2);
+        doc.text(lines, mx, y); y += lines.length * 4.5 + 4;
+      }
+      if (inv.notes) {
+        y += 4; doc.setFontSize(8); doc.setTextColor(120, 130, 140); doc.text('NOTES', mx, y); y += 5;
+        doc.setFontSize(9); doc.setTextColor(80, 80, 80);
+        const noteLines = doc.splitTextToSize(String(inv.notes).replace(/[^\x20-\x7E\n]/g, ' '), pw - mx * 2);
+        doc.text(noteLines, mx, y);
+      }
+      doc.save((inv.invoice_number || 'invoice') + '.pdf');
+    } catch (e) {
+      alert('PDF generation failed: ' + (e instanceof Error ? e.message : String(e)));
+    }
+  }
+
+  window.addEventListener('DOMContentLoaded', () => {
+    if (window.supabase) init();
+    else { const s = document.querySelector('script[src*="supabase-js"]'); s.addEventListener('load', init); }
+  });
+</script>
+</body>
+</html>

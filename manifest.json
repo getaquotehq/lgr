@@ -1,0 +1,18 @@
+{
+  "name": "LeadGenRentalsHQ",
+  "short_name": "QL HQ",
+  "description": "Your lead management and pay-per-lead dashboard.",
+  "start_url": "/dashboard.html",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#f3f5f9",
+  "theme_color": "#1f6fff",
+  "icons": [
+    {
+      "src": "/product-logo.png",
+      "sizes": "any",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
