@@ -48,26 +48,6 @@ serve(async (req) => {
 
 // ── Shared helpers ─────────────────────────────────────────────────────────────
 
-async function provisionTwilio(companyId: string) {
-  await fetch(`${Deno.env.get('SUPABASE_URL')}/functions/v1/provision-twilio`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')}`,
-    },
-    body: JSON.stringify({ company_id: companyId }),
-  }).catch(err => console.error('provision-twilio error:', err))
-}
-
-async function hasTwilioNumber(companyId: string): Promise<boolean> {
-  const { data } = await supabase
-    .from('twilio_numbers')
-    .select('id')
-    .eq('company_id', companyId)
-    .maybeSingle()
-  return !!data
-}
-
 async function createMagicLink(email: string): Promise<string> {
   const { data, error } = await supabase.auth.admin.generateLink({
     type: 'magiclink',
@@ -175,10 +155,6 @@ async function handlePplPayment(session: Stripe.Checkout.Session, m: Record<stri
       await supabase.from('companies').update({ ppl_agreed_postcodes: merged }).eq('id', m.company_id)
     }
 
-    if (!await hasTwilioNumber(m.company_id)) {
-      await provisionTwilio(m.company_id)
-      await supabase.from('ppl_lead_orders').update({ twilio_provisioned: true }).eq('id', m.order_id)
-    }
 
     const dueDate = new Date()
     dueDate.setDate(dueDate.getDate() + 14)
@@ -325,10 +301,6 @@ async function handlePplSignupPayment(session: Stripe.Checkout.Session, m: Recor
     })
     if (pplOrderError) throw new Error(`ppl_orders insert: ${pplOrderError.message}`)
 
-    await provisionTwilio(companyId)
-    if (order) {
-      await supabase.from('ppl_lead_orders').update({ twilio_provisioned: true }).eq('id', order.id)
-    }
 
     const magicLink = await createMagicLink(m.email)
 
