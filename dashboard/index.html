@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en-AU">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Sign in - Lead Gen Rentals</title>
+<meta name="robots" content="noindex, nofollow">
+<link rel="icon" href="favicon.ico">
+<!-- The sign-in form is part of dashboard.html: it renders the auth card when
+     there is no session and swaps to the app once you are signed in. This file
+     exists so /dashboard/ lands on it rather than on a directory listing. -->
+<script>location.replace('dashboard.html' + location.search + location.hash);</script>
+<meta http-equiv="refresh" content="0; url=dashboard.html">
+<style>
+  html{background:#0b0d10;color:#9aa3af;font:14px/1.6 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+  body{display:flex;align-items:center;justify-content:center;min-height:100vh;margin:0}
+  a{color:#4797ff}
+  @media (prefers-color-scheme:light){html{background:#fff;color:#4b5563}}
+</style>
+</head>
+<body><p>Taking you to sign in&hellip; <a href="dashboard.html">continue</a></p></body>
+</html>
