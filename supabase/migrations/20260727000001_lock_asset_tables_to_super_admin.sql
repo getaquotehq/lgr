@@ -1,5 +1,5 @@
 -- Re-scope the LGR rental tables from "any authenticated user" to super-admins.
--- The ql-hq port shares this Supabase project, so client dashboard users are now
+-- The client dashboard shares this Supabase project, so its users are now
 -- `authenticated` here too; the original `using (true)` policies would have given
 -- them full read/write over the fleet, rentals, installers and pending leads.
 -- Public SELECT on assets/regions/niches is unchanged (brand sites read anon).

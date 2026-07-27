@@ -2,7 +2,7 @@
 // submit-lead — public intake for LGR asset funnels (the solar landing pages).
 //
 // Area-exclusive rental model. A funnel form POSTs here; we validate + normalise
-// then resolve WHICH asset the lead belongs to using ql-mc-style consent-bound
+// then resolve WHICH asset the lead belongs to using consent-bound
 // routing, adapted for LGR:
 //
 //   1. Candidate assets = live (rented) assets, optionally narrowed by the
@@ -10,12 +10,12 @@
 //   2. POSTCODE gate — the lead's postcode must fall inside a candidate's
 //      effective service area (assets.service_postcodes, else its region's
 //      postcodes). An empty patch means "no coverage" (never match-all), exactly
-//      like ql-mc treats an empty clients.postcodes list.
+//      the same way an empty postcode list means "everywhere".
 //   3. COMPANY-NAME-IN-CONSENT gate — the lead's consent sentence must name the
 //      business it will be delivered to (the asset's current renter, or the
 //      funnel brand). This is what proves exclusivity at the point of capture:
 //      the homeowner consented to THAT business by name. Same longest-match
-//      logic as ql-mc's consent-bound routing.
+//      logic the consent text implies.
 //
 // The winning asset's CURRENT renter (assets.rented_by) owns the lead. We call
 // insert_lead() (attribution + strict 30-day dedup), then fire deliver-lead so
@@ -54,7 +54,7 @@ function normalisePhone(raw: string): string | null {
   return null;
 }
 
-// ── Consent-bound routing helpers (ported from ql-mc submit-lead) ────────────
+// ── Consent-bound routing helpers ───────────────────────────────────────────
 // Normalise free text for name matching: lowercase, drop punctuation, collapse
 // whitespace. Keeps '&' since it's common in trading names.
 function normaliseText(s: string): string {

@@ -1,5 +1,5 @@
 -- ============================================================================
--- lead_delivery_log — mirrors ql-mc's delivery-log so the admin's Lead
+-- lead_delivery_log - the delivery log behind the admin's Lead
 -- Distribution panel can show what happened to each captured lead.
 --
 -- Today, real delivery (SMS / email / CRM push) is still the pg_notify stub in

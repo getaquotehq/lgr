@@ -374,42 +374,6 @@ Deno.serve(async (req) => {
         return json({ error: "Failed to resolve dispute" }, 500);
       }
 
-      // ── Manual approval → scrub the exact lead in ql-mc ─────────────────────
-      // Same round trip as an auto-approval in dispute-lead: ql-mc (the single
-      // source of truth for credits) scrubs the lead matched by phone + name +
-      // company, moves its counters, then syncs the order decrement + scrubbed
-      // flag back here via sync-from-mc. We never decrement locally, so nothing
-      // double-counts. Failure is logged, never breaks the resolution.
-      if (resolution === "manual_approved") {
-        try {
-          const { data: dLead } = await adminClient
-            .from("leads")
-            .select("name, phone")
-            .eq("id", dispute.lead_id)
-            .maybeSingle();
-          const QL_MC_API_URL    = Deno.env.get("QL_MC_API_URL");
-          const QL_MC_API_SECRET = Deno.env.get("QL_MC_API_SECRET");
-          if (!QL_MC_API_URL || !QL_MC_API_SECRET) {
-            console.warn("QL_MC_API_URL / QL_MC_API_SECRET not configured - manual dispute scrub not synced to ql-mc");
-          } else if (!dLead?.name || !dLead?.phone) {
-            console.warn("manual dispute approved but lead has no name/phone - cannot match in ql-mc");
-          } else {
-            const res = await fetch(`${QL_MC_API_URL}/sync-from-hq`, {
-              method: "POST",
-              headers: { "Content-Type": "application/json", "x-api-secret": QL_MC_API_SECRET },
-              body: JSON.stringify({
-                action: "scrub_lead",
-                ql_hq_company_id: dispute.company_id,
-                phone: dLead.phone,
-                name: dLead.name,
-              }),
-            });
-            if (!res.ok) console.error("manual dispute scrub sync: ql-mc returned", res.status, await res.text());
-          }
-        } catch (e) {
-          console.error("manual dispute scrub sync error:", e instanceof Error ? e.message : e);
-        }
-      }
 
       return json({ dispute_id, status: resolution });
     }

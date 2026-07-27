@@ -1,7 +1,7 @@
 -- ============================================================================
--- ppl_scrubbed: marks a PPL lead as scrubbed/credited in ql-mc.
+-- ppl_scrubbed: marks a PPL lead as scrubbed/credited upstream.
 --
--- Set by sync-from-mc {action:'scrub'} when ql-mc scrubs the lead (matched by
+-- Set when the lead is scrubbed upstream (matched by
 -- phone + name + company, all exact). A scrubbed lead has already been
 -- credited back to the client, so dispute-lead hard-blocks any new dispute on
 -- it - no double-dipping a lead that's already been replaced.

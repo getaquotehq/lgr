@@ -19,47 +19,6 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type",
 };
 
-// ─── Notify ql-mc that a dispute was APPROVED ────────────────────────────────
-// ql-mc is the single source of truth for lead credits: it scrubs the exact
-// lead (matched by phone + name + company, all exact), moves its own counters,
-// then syncs the order decrement + scrubbed flag back here. We deliberately do
-// NOT decrement anything in ql-hq at approval time - that arrives via the
-// sync-from-mc round trip, so nothing can ever double-count.
-// Fire-safe: failures are logged, never break the dispute flow.
-export async function notifyMcDisputeApproved(
-  companyId: string,
-  leadName: string | null,
-  leadPhone: string | null,
-): Promise<boolean> {
-  const QL_MC_API_URL    = Deno.env.get("QL_MC_API_URL");
-  const QL_MC_API_SECRET = Deno.env.get("QL_MC_API_SECRET");
-  if (!QL_MC_API_URL || !QL_MC_API_SECRET) {
-    console.warn("QL_MC_API_URL / QL_MC_API_SECRET not configured - dispute scrub not synced to ql-mc");
-    return false;
-  }
-  if (!leadName || !leadPhone) {
-    console.warn("dispute approved but lead has no name/phone - cannot match in ql-mc");
-    return false;
-  }
-  try {
-    const res = await fetch(`${QL_MC_API_URL}/sync-from-hq`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json", "x-api-secret": QL_MC_API_SECRET },
-      body: JSON.stringify({
-        action: "scrub_lead",
-        ql_hq_company_id: companyId,
-        phone: leadPhone,
-        name: leadName,
-      }),
-    });
-    if (!res.ok) console.error("notifyMcDisputeApproved: ql-mc returned", res.status, await res.text());
-    return res.ok;
-  } catch (e) {
-    console.error("notifyMcDisputeApproved error:", e instanceof Error ? e.message : e);
-    return false;
-  }
-}
-
 function json(body: unknown, status = 200) {
   return new Response(JSON.stringify(body), {
     status,
@@ -339,14 +298,6 @@ Deno.serve(async (req) => {
     if (insertErr) {
       console.error("Insert dispute error:", insertErr);
       return json({ error: "Failed to record dispute" }, 500);
-    }
-
-    // ── Auto-approved → scrub the exact lead in ql-mc (single source of truth).
-    // ql-mc credits its counters and syncs the decrement + scrubbed flag back
-    // here. Failure never breaks the dispute - it stays approved and can be
-    // reconciled by an admin scrub in ql-mc.
-    if (disputeStatus === "auto_approved") {
-      await notifyMcDisputeApproved(companyId, lead.name ?? null, lead.phone ?? null);
     }
 
     // ── Scrub cap info (always return so UI can show it) ──────────────────────

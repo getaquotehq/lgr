@@ -1,5 +1,5 @@
 -- ============================================================================
--- Lead delivery pipeline (port of ql-mc's deliver-lead)
+-- Lead delivery pipeline
 --
 -- LGR difference: a lead is already attributed to an installer at capture time
 -- (assets.rented_by), so "delivery" means pushing that lead to *its* installer
@@ -19,7 +19,7 @@ alter table installers add column if not exists webhook_url text;
 alter table leads add column if not exists delivered_at timestamptz;   -- when pushed to installer
 alter table leads add column if not exists delivery_error text;
 
--- 3. Richer delivery-log columns (mirrors ql-mc's lead_delivery_log) ----------
+-- 3. Richer delivery-log columns -------------------------------------------
 alter table lead_delivery_log add column if not exists destination text;
 alter table lead_delivery_log add column if not exists message_preview text;
 alter table lead_delivery_log add column if not exists response_code int;

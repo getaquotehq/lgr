@@ -9,10 +9,6 @@ const supabase = createClient(
 )
 const RESEND_API_KEY        = Deno.env.get('RESEND_API_KEY')!
 const STRIPE_WEBHOOK_SECRET = Deno.env.get('STRIPE_WEBHOOK_SECRET')!
-// ql-mc cross-service sync - must be set in Supabase Dashboard → Edge Functions → Secrets
-const QL_MC_API_URL    = Deno.env.get('QL_MC_API_URL')    // https://<mc-project>.supabase.co/functions/v1
-const QL_MC_API_SECRET = Deno.env.get('QL_MC_API_SECRET') // shared secret for ql-hq → ql-mc HTTP calls
-
 serve(async (req) => {
   const sig  = req.headers.get('stripe-signature')!
   const body = await req.text()
@@ -154,69 +150,6 @@ async function insertSmsAgentConfig(companyId: string, m: Record<string, string>
   })
 }
 
-// ── ql-mc sync: create/update PPL client + log order ──────────────────────────
-//
-// Calls ql-mc’s sync-from-hq edge function via HTTP.
-// Fire-and-forget on failure - ql-hq provisioning must not be blocked by ql-mc.
-async function syncPplOrderToMc(params: {
-  companyId:       string
-  companyName:     string
-  contactName:     string
-  email:           string
-  phone:           string
-  quantity:        number
-  pricePerLead:    number
-  niche:           string
-  subNiche:        string | null
-  areaCity:        string
-  locationTypeVal: string
-  radiusKm:        number
-  postcodeList:    string
-  qlHqOrderId:     string
-}) {
-  if (!QL_MC_API_URL || !QL_MC_API_SECRET) {
-    console.warn('QL_MC_API_URL or QL_MC_API_SECRET not configured - skipping ql-mc sync')
-    return
-  }
-
-  try {
-    const res = await fetch(`${QL_MC_API_URL}/sync-from-hq`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-api-secret': QL_MC_API_SECRET,
-      },
-      body: JSON.stringify({
-        action:           'upsert_ppl_client',
-        ql_hq_company_id: params.companyId,
-        company_name:     params.companyName,
-        contact_name:     params.contactName,
-        email:            params.email,
-        phone:            params.phone,
-        niche:            params.niche,
-        sub_niche:        params.subNiche,
-        area_city:        params.areaCity,
-        quantity:         params.quantity,
-        price_per_lead:   params.pricePerLead,
-        location_type:    params.locationTypeVal,
-        radius_km:        params.radiusKm,
-        postcode_list:    params.postcodeList,
-        ql_hq_order_id:   params.qlHqOrderId,
-      }),
-    })
-
-    if (!res.ok) {
-      const text = await res.text()
-      console.error(`ql-mc sync-from-hq returned ${res.status}: ${text}`)
-    } else {
-      const result = await res.json()
-      console.log(`ql-mc client ${result.action || 'synced'} for company:`, params.companyId)
-    }
-  } catch (err) {
-    console.error('syncPplOrderToMc HTTP error:', err)
-  }
-}
-
 // ── PPL payment (existing company buying more leads) ─────────────────────────
 async function handlePplPayment(session: Stripe.Checkout.Session, m: Record<string, string>) {
   console.log('PPL payment for order:', m.order_id)
@@ -260,24 +193,6 @@ async function handlePplPayment(session: Stripe.Checkout.Session, m: Record<stri
 
     const { data: company } = await supabase
       .from('companies').select('name, email, phone').eq('id', m.company_id).maybeSingle()
-
-    // Sync reorder to ql-mc
-    await syncPplOrderToMc({
-      companyId:       m.company_id,
-      companyName:     company?.name || '',
-      contactName:     '',
-      email:           company?.email || '',
-      phone:           company?.phone || '',
-      quantity:        parseInt(m.quantity),
-      pricePerLead:    parseFloat(m.price_per_lead),
-      niche:           m.niche,
-      subNiche:        m.sub_niche || null,
-      areaCity:        m.area_city,
-      locationTypeVal: m.location_type || 'radius',
-      radiusKm:        parseFloat(m.radius_km || '50'),
-      postcodeList:    m.postcode_list || '',
-      qlHqOrderId:     m.order_id,
-    })
 
     const totalExGst = (parseFloat(m.price_per_lead) * parseInt(m.quantity)).toFixed(2)
     const locationDetail = m.location_type === 'statewide'
@@ -415,26 +330,6 @@ async function handlePplSignupPayment(session: Stripe.Checkout.Session, m: Recor
       await supabase.from('ppl_lead_orders').update({ twilio_provisioned: true }).eq('id', order.id)
     }
 
-    // Sync to ql-mc - creates the client as active_client immediately
-    if (order) {
-      await syncPplOrderToMc({
-        companyId:       companyId,
-        companyName:     m.company,
-        contactName:     `${m.first_name} ${m.last_name}`,
-        email:           m.email,
-        phone:           m.phone,
-        quantity:        parseInt(m.quantity),
-        pricePerLead:    parseFloat(m.price_per_lead),
-        niche:           m.niche,
-        subNiche:        m.sub_niche || null,
-        areaCity:        m.area_city,
-        locationTypeVal: m.location_type || 'radius',
-        radiusKm:        parseFloat(m.radius_km || '50'),
-        postcodeList:    m.postcode_list || '',
-        qlHqOrderId:     order.id,
-      })
-    }
-
     const magicLink = await createMagicLink(m.email)
 
     const { error: linkError } = await supabase.from('pending_magic_links').insert({
@@ -470,7 +365,7 @@ async function handlePplSignupPayment(session: Stripe.Checkout.Session, m: Recor
          ${discountPct > 0 ? `<tr><td style="padding:4px 12px 4px 0;color:#666">Volume discount</td><td>${discountPct}% off</td></tr>` : ''}
          <tr><td style="padding:4px 12px 4px 0;color:#666">Total (ex GST)</td><td><strong>$${totalExGst} AUD</strong></td></tr>
          <tr><td style="padding:4px 12px 4px 0;color:#666">Total (inc GST)</td><td>$${totalIncGst} AUD</td></tr>
-         <tr><td style="padding:4px 12px 4px 0;color:#666">ql-hq company ID</td><td><code>${companyId}</code></td></tr>
+         <tr><td style="padding:4px 12px 4px 0;color:#666">Company ID</td><td><code>${companyId}</code></td></tr>
          <tr><td style="padding:4px 12px 4px 0;color:#666">Stripe session</td><td><a href="https://dashboard.stripe.com/payments/${session.payment_intent}">${session.id}</a></td></tr>
        </table>`
     )

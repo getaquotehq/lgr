@@ -1,8 +1,8 @@
 -- ============================================================================
--- Seed every QuoteLeads area as rentable solar inventory.
+-- Seed every serviced area as rentable solar inventory.
 --
 -- Extends coverage from the original 4 regions to all 36 areas in the
--- quoteleads.com.au /buy-leads selector (metros + regional cities + state-wide).
+-- the full area list (metros + regional cities + state-wide).
 -- Each NEW region gets one asset per brand, mirroring the existing
 -- starter/growth/scale line-up:
 --     AU Solar Quotes      starter  $1200  floor 10  (10-14)

@@ -3373,7 +3373,7 @@ async function loadSettings() {
         const saveBtn = leadDeliveryForm.querySelector('button[type="submit"]');
         if (saveBtn) { saveBtn.disabled = true; saveBtn.textContent = "Saving…"; }
         try {
-          // 1. Save to ql-hq (the source of truth for the client's preference)
+          // Save the client's delivery preference - this row is the source of truth
           const { data: cur } = await sb.from("companies").select("settings").eq("id", currentCompanyId).maybeSingle();
           const merged = { ...(cur?.settings || {}), lead_delivery: { email, sms_number, webhook_url } };
           const { error } = await sb.from("companies").update({ settings: merged }).eq("id", currentCompanyId);

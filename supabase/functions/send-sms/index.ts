@@ -255,24 +255,6 @@ Deno.serve(async (req) => {
       details: { conversation_id: conversationId },
     });
 
-    // Mirror this manual outbound into ql-mc Sales Conversations - super-admin
-    // (agency) company only. Fire-and-forget so it can never affect the send.
-    if (await companyIsSuperAdmin(db, companyId)) {
-      const leadName = [lead.first_name, lead.last_name].filter(Boolean).join(" ") || null;
-      const mirror = mirrorToQlMc({
-        lead_name: leadName,
-        company: (lead.company as string) || null,
-        phone: toE164AU(lead.phone),        // the lead's number
-        twilio_number: smsConfig.twilio_number, // agency Twilio number
-        inbound_message: null,
-        inbound_sid: null,
-        outbound_message: body.trim(),
-        outbound_sent_by: "Agent (manual)",
-      });
-      const rt = (globalThis as Record<string, unknown>).EdgeRuntime as
-        | { waitUntil?: (p: Promise<unknown>) => void } | undefined;
-      if (rt?.waitUntil) rt.waitUntil(mirror); else await mirror;
-    }
 
     return json({ success: true, message, conversation_id: conversationId });
   } catch (err) {
@@ -305,37 +287,5 @@ async function companyIsSuperAdmin(
     return !!data;
   } catch {
     return false;
-  }
-}
-
-// Mirror an SMS into ql-mc Sales Conversations via sync-sales-conversation.
-// Fire-and-forget: every failure is caught here so it can never affect the send.
-async function mirrorToQlMc(payload: {
-  lead_name: string | null;
-  company: string | null;
-  phone: string | null;
-  twilio_number: string | null;
-  inbound_message: string | null;
-  inbound_sid: string | null;
-  outbound_message: string | null;
-  outbound_sent_by?: string | null;
-}): Promise<void> {
-  const url = Deno.env.get("QL_MC_API_URL");
-  const secret = Deno.env.get("QL_MC_API_SECRET");
-  if (!url || !secret) {
-    console.warn("QL_MC_API_URL or QL_MC_API_SECRET not set - skipping sales conversation mirror");
-    return;
-  }
-  try {
-    const res = await fetch(`${url}/sync-sales-conversation`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json", "x-api-secret": secret },
-      body: JSON.stringify({ action: "mirror_conversation", source: "Agency SMS", ...payload }),
-    });
-    if (!res.ok) {
-      console.error(`sync-sales-conversation returned ${res.status}: ${(await res.text()).slice(0, 300)}`);
-    }
-  } catch (err) {
-    console.error("mirrorToQlMc failed:", err instanceof Error ? err.message : err);
   }
 }

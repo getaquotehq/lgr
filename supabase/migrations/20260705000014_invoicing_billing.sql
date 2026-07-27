@@ -2,7 +2,7 @@
 -- VA + Admin invoicing / billing  (Phase 1: DB)
 -- ============================================================================
 -- Adds billing / onboarding tracking to companies, an invoices table (modelled
--- on ql-mc's invoicing feature), and a single-row business_settings holding the
+-- an invoices table, and a single-row business_settings holding the
 -- bank details + PDF defaults.
 --
 -- Every read/write goes through the `va-api` edge function (service role), so

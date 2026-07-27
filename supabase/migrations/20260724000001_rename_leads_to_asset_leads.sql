@@ -1,7 +1,7 @@
 -- ============================================================================
 -- Rename leads -> asset_leads.
 --
--- lgr-hq (the client platform, ported from ql-hq) shares this Supabase project
+-- The client dashboard platform shares this Supabase project
 -- and brings its own `leads` table: a company CRM lead, a completely different
 -- shape to this one. This table holds RENTAL leads - a lead captured by an
 -- asset's funnel and delivered to whoever currently rents that asset - so
@@ -14,7 +14,7 @@
 alter table if exists public.leads rename to asset_leads;
 
 -- keep index names consistent with the new table name (cosmetic, but avoids
--- confusion against lgr-hq's own leads_* indexes in the same schema)
+-- confusion against the dashboard's own leads_* indexes in the same schema)
 alter index if exists leads_pkey          rename to asset_leads_pkey;
 alter index if exists leads_asset_idx     rename to asset_leads_asset_idx;
 alter index if exists leads_installer_idx rename to asset_leads_installer_idx;

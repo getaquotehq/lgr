@@ -1,6 +1,6 @@
 // ============================================================================
 // postcode-lookup — "is there a live installer for this postcode?" for the LGR
-// landing-page survey. Mirrors ql-mc's postcode-lookup, but resolves against
+// landing-page survey. Resolves against
 // LGR assets instead of clients.
 //
 // GET/POST { postcode, niche? | lead_type?, brand_domain? }

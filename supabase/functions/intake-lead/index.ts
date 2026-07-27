@@ -27,39 +27,8 @@ function toE164AU(p: string): string {
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 
-// Mirror an agency (super-admin company) SMS into ql-mc Sales Conversations.
-// Fire-and-forget - only ever called for the super-admin company.
-async function mirrorToQlMc(payload: {
-  lead_name: string | null;
-  company: string | null;
-  phone: string | null;
-  twilio_number: string | null;
-  inbound_message: string | null;
-  inbound_sid: string | null;
-  outbound_message: string | null;
-}): Promise<void> {
-  const url = Deno.env.get("QL_MC_API_URL");
-  const secret = Deno.env.get("QL_MC_API_SECRET");
-  if (!url || !secret) {
-    console.warn("QL_MC_API_URL or QL_MC_API_SECRET not set - skipping sales conversation mirror");
-    return;
-  }
-  try {
-    const res = await fetch(`${url}/sync-sales-conversation`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json", "x-api-secret": secret },
-      body: JSON.stringify({ action: "mirror_conversation", source: "Agency SMS", ...payload }),
-    });
-    if (!res.ok) {
-      console.error(`sync-sales-conversation returned ${res.status}: ${(await res.text()).slice(0, 300)}`);
-    }
-  } catch (err) {
-    console.error("mirrorToQlMc failed:", err instanceof Error ? err.message : err);
-  }
-}
-
 // Deliver an event to a company's active webhook_endpoints (Settings > Webhooks
-// in ql-hq), signed with HMAC-SHA256 - same contract the public API uses. Fully
+// signed with HMAC-SHA256 - same contract the public API uses. Fully
 // self-contained: every failure is caught here, so it can never break the
 // caller. Awaits all deliveries so waitUntil keeps them alive past the response.
 async function fireWebhooks(
@@ -311,7 +280,7 @@ Deno.serve(async (req) => {
     const leadId = lead.id as string;
 
     // Deliver to the customer's signed webhook endpoints (Settings > Webhooks in
-    // ql-hq) for anyone subscribed to lead.created. Fire-and-forget: fully
+    // for anyone subscribed to lead.created. Fire-and-forget: fully
     // isolated in its own try/catch inside the helper, so a webhook failure can
     // never affect the lead insert or the response. No-op when the company has
     // no active endpoint subscribed to this event.
@@ -432,31 +401,6 @@ async function maybeSendWelcomeSms(
         errText,
       );
       return;
-    }
-
-    // Mirror the first outbound (welcome) message into ql-mc Sales
-    // Conversations - super-admin company only. Fire-and-forget.
-    try {
-      const { data: superAdmin } = await db
-        .from("profiles")
-        .select("id")
-        .eq("company_id", companyId)
-        .eq("is_admin", true)
-        .limit(1)
-        .maybeSingle();
-      if (superAdmin) {
-        await mirrorToQlMc({
-          lead_name: fullName || firstName || null,
-          company: companyName,
-          phone: toE164AU(phone),
-          twilio_number: (smsConfig.twilio_number as string) || null,
-          inbound_message: null,
-          inbound_sid: null,
-          outbound_message: messageBody,
-        });
-      }
-    } catch (e) {
-      console.error("welcome-SMS mirror failed:", e instanceof Error ? e.message : e);
     }
 
     // Reuse the lead's open SMS conversation if one exists (e.g. they texted

@@ -14,7 +14,7 @@
 --
 -- 3 brands × 4 regions = 12 assets, all 'available'. The same domain across
 -- four regions is intentional: submit-lead disambiguates by postcode + the
--- brand named in the lead's consent text (ql-mc-style consent-bound routing).
+-- brand named in the lead's consent text (consent-bound routing).
 -- ============================================================================
 
 -- 1. Purge all existing assets and their dependent rows (FKs are ON DELETE
