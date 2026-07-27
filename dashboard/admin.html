@@ -776,6 +776,157 @@ h1{font-size:18px;font-weight:500}
       </div>
     </div>
 
+    <!-- ══ Lead Gen Rentals ══════════════════════════════════════════════════ -->
+    <div class="form-section" style="margin:28px 0 14px;font-size:13px;letter-spacing:.04em;text-transform:uppercase;color:var(--muted)">Lead Gen Rentals</div>
+
+    <!-- Rental Fleet panel -->
+    <div class="card" style="margin-bottom:20px">
+      <div class="panel-h">
+        <div>
+          <h2>Rental Fleet</h2>
+          <p id="lgrFleetCount">Loading…</p>
+        </div>
+        <div class="filter-bar">
+          <select id="lgrNicheFilter" class="filter-select"><option value="">All niches</option></select>
+          <select id="lgrRegionFilter" class="filter-select"><option value="">All areas</option></select>
+          <select id="lgrTierFilter" class="filter-select">
+            <option value="">All tiers</option>
+            <option value="starter">Starter</option>
+            <option value="growth">Growth</option>
+            <option value="scale">Scale</option>
+          </select>
+          <select id="lgrStatusFilter" class="filter-select">
+            <option value="">All statuses</option>
+            <option value="available">Available</option>
+            <option value="rented">Rented</option>
+            <option value="paused">Paused</option>
+            <option value="retired">Retired</option>
+          </select>
+          <button class="btn2 btn-sm" id="lgrTierPricingBtn" type="button">Tier pricing</button>
+          <button class="btn btn-sm" id="lgrRefreshFleetBtn" type="button">Refresh</button>
+        </div>
+      </div>
+      <div class="panel-b">
+        <!-- Bulk tier pricing editor -->
+        <div id="lgrTierEditor" class="hidden" style="margin-bottom:14px;padding:14px;background:var(--surface);border:1px solid var(--border);border-radius:10px">
+          <div style="font-weight:600;margin-bottom:4px">Tier pricing</div>
+          <p style="font-size:12px;color:var(--muted);margin-bottom:12px">
+            Sets the monthly rent and the guaranteed lead floor for every asset on a tier. The cost-per-lead range clients see is derived:
+            monthly &divide; typical max = the floor price, monthly &divide; guaranteed floor = the cap. Leave the niche filter on "all niches" to reprice the whole fleet.
+          </p>
+          <div style="margin-bottom:10px">
+            <label class="bank-lbl" style="max-width:260px">Apply to niche
+              <select id="lgrTierNiche" class="bank-in"><option value="">All niches</option></select>
+            </label>
+          </div>
+          <div id="lgrTierRows"></div>
+          <div style="margin-top:12px;display:flex;gap:8px">
+            <button class="btn btn-sm" id="lgrCloseTierBtn" type="button">Close</button>
+          </div>
+        </div>
+        <div id="lgrFleetLoading" class="notice">Loading fleet…</div>
+        <div id="lgrFleetList" class="hidden"></div>
+        <div id="lgrFleetEmpty" class="notice hidden">No assets match.</div>
+      </div>
+    </div>
+
+    <!-- Rentals panel -->
+    <div class="card" style="margin-bottom:20px">
+      <div class="panel-h">
+        <div>
+          <h2>Rentals</h2>
+          <p id="lgrRentalCount">Loading…</p>
+        </div>
+        <div class="filter-bar">
+          <select id="lgrRentalStatusFilter" class="filter-select">
+            <option value="active">Active</option>
+            <option value="ended">Ended</option>
+            <option value="">All</option>
+          </select>
+          <button class="btn btn-sm" id="lgrRefreshRentalsBtn" type="button">Refresh</button>
+        </div>
+      </div>
+      <div class="panel-b">
+        <div id="lgrRentalLoading" class="notice">Loading rentals…</div>
+        <div id="lgrRentalList" class="hidden"></div>
+        <div id="lgrRentalEmpty" class="notice hidden">No rentals found.</div>
+      </div>
+    </div>
+
+    <!-- Niches panel -->
+    <div class="card" style="margin-bottom:20px">
+      <div class="panel-h">
+        <div>
+          <h2>Niches</h2>
+          <p id="lgrNicheCount">Loading…</p>
+        </div>
+        <div class="filter-bar">
+          <button class="btn2 btn-sm" id="lgrNewNicheBtn" type="button">+ New niche</button>
+          <button class="btn btn-sm" id="lgrRefreshNichesBtn" type="button">Refresh</button>
+        </div>
+      </div>
+      <div class="panel-b">
+        <p style="font-size:12px;color:var(--muted);margin-bottom:12px">
+          A niche set to <strong>coming soon</strong> keeps its trade page live but shows the ribbon and hides its assets from the fleet selector. Set it to <strong>live</strong> when the funnels are ready to rent.
+        </p>
+        <div id="lgrNicheEditor" class="hidden" style="margin-bottom:14px;padding:14px;background:var(--surface);border:1px solid var(--border);border-radius:10px">
+          <input type="hidden" id="lgrNicheId">
+          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px">
+            <label class="bank-lbl">Name<input id="lgrNicheName" class="bank-in" type="text" placeholder="Residential Solar"></label>
+            <label class="bank-lbl">Slug<input id="lgrNicheSlug" class="bank-in" type="text" placeholder="solar"></label>
+            <label class="bank-lbl">Status
+              <select id="lgrNicheStatus" class="bank-in">
+                <option value="live">Live</option>
+                <option value="coming_soon">Coming soon</option>
+                <option value="retired">Retired</option>
+              </select>
+            </label>
+            <label class="bank-lbl">Sort order<input id="lgrNicheSort" class="bank-in" type="number" min="0" step="1"></label>
+            <label class="bank-lbl" style="grid-column:1/-1">Short description<input id="lgrNicheDesc" class="bank-in" type="text"></label>
+          </div>
+          <div style="margin-top:12px;display:flex;gap:8px">
+            <button class="btn2 btn-sm" id="lgrSaveNicheBtn" type="button">Save niche</button>
+            <button class="btn btn-sm" id="lgrCancelNicheBtn" type="button">Cancel</button>
+          </div>
+        </div>
+        <div id="lgrNicheLoading" class="notice">Loading niches…</div>
+        <div id="lgrNicheList" class="hidden"></div>
+      </div>
+    </div>
+
+    <!-- Pending Leads panel -->
+    <div class="card" style="margin-bottom:20px">
+      <div class="panel-h">
+        <div>
+          <h2>Pending Leads</h2>
+          <p id="lgrPendingCount">Loading…</p>
+        </div>
+        <div class="filter-bar">
+          <select id="lgrPendingReasonFilter" class="filter-select">
+            <option value="">All reasons</option>
+            <option value="no_inventory">No inventory</option>
+            <option value="out_of_area">Out of area</option>
+            <option value="unmatched_consent">Unmatched consent</option>
+          </select>
+          <select id="lgrPendingStatusFilter" class="filter-select">
+            <option value="pending">Pending</option>
+            <option value="discarded">Discarded</option>
+            <option value="">All</option>
+          </select>
+          <button class="btn2 btn-sm" id="lgrExportPendingBtn" type="button">Export CSV</button>
+          <button class="btn btn-sm" id="lgrRefreshPendingBtn" type="button">Refresh</button>
+        </div>
+      </div>
+      <div class="panel-b">
+        <p style="font-size:12px;color:var(--muted);margin-bottom:12px">
+          Enquiries captured on a brand site where no rented asset covered the postcode. Nothing here has been delivered or charged. These are the areas worth selling next.
+        </p>
+        <div id="lgrPendingLoading" class="notice">Loading pending leads…</div>
+        <div id="lgrPendingList" class="hidden"></div>
+        <div id="lgrPendingEmpty" class="notice hidden">Nothing pending.</div>
+      </div>
+    </div>
+
   </div>
 </div>
 
@@ -2663,6 +2814,13 @@ h1{font-size:18px;font-weight:500}
     // 14. Load VA Availability panel
     await loadVaAvailability();
 
+    // 15. Lead Gen Rentals panels
+    await loadLgrNiches();
+    await loadLgrFleet();
+    loadLgrRentals();
+    loadLgrPending();
+    wireLgrPanels();
+
   } // end boot()
 
   // ── Virtual Assistants ────────────────────────────────────────────────────
@@ -4107,6 +4265,631 @@ h1{font-size:18px;font-weight:500}
       </tr>`).join('')}</tbody>
     </table></div>`;
     list.classList.remove('hidden');
+  }
+
+
+  // ══ Lead Gen Rentals ════════════════════════════════════════════════════════
+  // Rental assets are priced per tier, not per lead: the client pays a flat
+  // monthly rent and is guaranteed a lead floor. The cost-per-lead figure shown
+  // on the site is derived from those two numbers, so editing either here moves
+  // what the public pages quote.
+  var lgrAssets = [], lgrNiches = [], lgrRentals = [], lgrPending = [], lgrEditAsset = null;
+  var LGR_TIERS = ['starter', 'growth', 'scale'];
+
+  function lgrMoney(n) { return (n == null || n === '') ? '-' : '$' + Number(n).toLocaleString('en-AU'); }
+  function lgrTierLabel(t) { return t ? t.charAt(0).toUpperCase() + t.slice(1) : '-'; }
+
+  // monthly / typical_max = cheapest a lead can land; monthly / floor = the cap.
+  function lgrLeadRange(a) {
+    var m = Number(a.monthly_price_aud || 0);
+    if (!m || !a.floor_leads || !a.typical_max) return '-';
+    return '$' + (m / a.typical_max).toFixed(2) + ' - $' + (m / a.floor_leads).toFixed(2);
+  }
+
+  function lgrStatusPill(status) {
+    var map = {
+      available: ['#0f8a4d', 'rgba(15,138,77,.12)'],
+      rented:    ['#1f6fff', 'rgba(31,111,255,.12)'],
+      paused:    ['#b45309', 'rgba(180,83,9,.12)'],
+      retired:   ['#6b7280', 'rgba(107,114,128,.12)'],
+    };
+    var c = map[status] || map.retired;
+    return '<span style="display:inline-block;padding:2px 8px;border-radius:999px;font-size:11px;font-weight:600;color:' +
+      c[0] + ';background:' + c[1] + '">' + escapeHtml(status || 'unknown') + '</span>';
+  }
+
+  function lgrAssetDomain(a) {
+    return String(a.brand_domain || '').replace(/^https?:\/\//, '').replace(/\/.*$/, '');
+  }
+
+  // Fleet previews point at the same domain/area URL the client sees.
+  function lgrPreviewUrl(a) {
+    var d = lgrAssetDomain(a);
+    if (!d) return null;
+    var slug = a.regions && a.regions.slug ? String(a.regions.slug).toLowerCase() : '';
+    return 'https://' + d + (slug ? '/' + slug + '/' : '/');
+  }
+
+  // ── Niches ────────────────────────────────────────────────────────────────
+  async function loadLgrNiches() {
+    var loading = document.getElementById('lgrNicheLoading');
+    var list    = document.getElementById('lgrNicheList');
+    try {
+      var res = await sb.from('niches').select('*').order('sort_order', { ascending: true });
+      if (res.error) throw res.error;
+      lgrNiches = res.data || [];
+    } catch (err) {
+      loading.textContent = 'Failed to load niches: ' + err.message;
+      return;
+    }
+
+    // Feed every niche dropdown on the page from the one source.
+    ['lgrNicheFilter', 'lgrTierNiche'].forEach(function (id) {
+      var sel = document.getElementById(id);
+      if (!sel) return;
+      var keep = sel.value;
+      sel.innerHTML = '<option value="">All niches</option>' + lgrNiches.map(function (n) {
+        return '<option value="' + escapeHtml(n.id) + '">' + escapeHtml(n.name) + '</option>';
+      }).join('');
+      sel.value = keep;
+    });
+
+    document.getElementById('lgrNicheCount').textContent =
+      lgrNiches.length + ' niche' + (lgrNiches.length === 1 ? '' : 's');
+
+    loading.classList.add('hidden');
+    list.classList.remove('hidden');
+    list.innerHTML = '<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:13px">' +
+      '<thead><tr style="text-align:left;color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.04em">' +
+      '<th style="padding:8px 10px">Name</th><th style="padding:8px 10px">Slug</th>' +
+      '<th style="padding:8px 10px">Status</th><th style="padding:8px 10px">Assets</th>' +
+      '<th style="padding:8px 10px">Sort</th><th style="padding:8px 10px"></th></tr></thead><tbody>' +
+      lgrNiches.map(function (n) {
+        var count = lgrAssets.filter(function (a) { return a.niche_id === n.id; }).length;
+        return '<tr style="border-top:1px solid var(--border)">' +
+          '<td style="padding:8px 10px;font-weight:500">' + escapeHtml(n.name || '-') + '</td>' +
+          '<td style="padding:8px 10px;color:var(--muted)">' + escapeHtml(n.slug || '-') + '</td>' +
+          '<td style="padding:8px 10px">' + escapeHtml(n.status || '-') + '</td>' +
+          '<td style="padding:8px 10px">' + count + '</td>' +
+          '<td style="padding:8px 10px">' + (n.sort_order == null ? '-' : n.sort_order) + '</td>' +
+          '<td style="padding:8px 10px;text-align:right">' +
+            '<button class="btn btn-sm" type="button" data-lgr-niche-edit="' + escapeHtml(n.id) + '">Edit</button></td>' +
+          '</tr>';
+      }).join('') + '</tbody></table></div>';
+
+    list.querySelectorAll('[data-lgr-niche-edit]').forEach(function (b) {
+      b.addEventListener('click', function () { openLgrNicheEditor(b.getAttribute('data-lgr-niche-edit')); });
+    });
+  }
+
+  function openLgrNicheEditor(id) {
+    var n = lgrNiches.filter(function (x) { return x.id === id; })[0] || {};
+    document.getElementById('lgrNicheId').value     = n.id || '';
+    document.getElementById('lgrNicheName').value   = n.name || '';
+    document.getElementById('lgrNicheSlug').value   = n.slug || '';
+    document.getElementById('lgrNicheStatus').value = n.status || 'live';
+    document.getElementById('lgrNicheSort').value   = n.sort_order == null ? '' : n.sort_order;
+    document.getElementById('lgrNicheDesc').value   = n.short_desc || '';
+    document.getElementById('lgrNicheEditor').classList.remove('hidden');
+  }
+
+  async function saveLgrNiche() {
+    var id  = document.getElementById('lgrNicheId').value;
+    var row = {
+      name:       document.getElementById('lgrNicheName').value.trim(),
+      slug:       document.getElementById('lgrNicheSlug').value.trim().toLowerCase(),
+      status:     document.getElementById('lgrNicheStatus').value,
+      short_desc: document.getElementById('lgrNicheDesc').value.trim() || null,
+    };
+    var sort = document.getElementById('lgrNicheSort').value;
+    row.sort_order = sort === '' ? null : Number(sort);
+
+    if (!row.name || !row.slug) { toast('Name and slug are required', true); return; }
+
+    var res = id
+      ? await sb.from('niches').update(row).eq('id', id)
+      : await sb.from('niches').insert(row);
+    if (res.error) { toast('Save failed: ' + res.error.message, true); return; }
+
+    toast('Niche saved');
+    document.getElementById('lgrNicheEditor').classList.add('hidden');
+    await loadLgrNiches();
+  }
+
+  // ── Rental fleet ──────────────────────────────────────────────────────────
+  async function loadLgrFleet() {
+    var loading = document.getElementById('lgrFleetLoading');
+    try {
+      var res = await sb.from('assets')
+        .select('*, niches(id,slug,name), regions(id,slug,name,state), installers:rented_by(business_name,email)')
+        .is('deleted_at', null);
+      if (res.error) throw res.error;
+      lgrAssets = (res.data || []).sort(function (a, b) {
+        var an = (a.regions && a.regions.name) || '', bn = (b.regions && b.regions.name) || '';
+        return an.localeCompare(bn) || String(a.brand_name || '').localeCompare(String(b.brand_name || '')) ||
+               LGR_TIERS.indexOf(a.tier) - LGR_TIERS.indexOf(b.tier);
+      });
+    } catch (err) {
+      loading.textContent = 'Failed to load fleet: ' + err.message;
+      return;
+    }
+
+    // Area filter is derived from the fleet, so it can never list a dead region.
+    var sel = document.getElementById('lgrRegionFilter');
+    var keep = sel.value;
+    var regions = {};
+    lgrAssets.forEach(function (a) { if (a.regions) regions[a.regions.id] = a.regions; });
+    var regionList = Object.keys(regions).map(function (k) { return regions[k]; })
+      .sort(function (a, b) { return a.name.localeCompare(b.name); });
+    sel.innerHTML = '<option value="">All areas</option>' + regionList.map(function (r) {
+      return '<option value="' + escapeHtml(r.id) + '">' + escapeHtml(r.name) + ' · ' + escapeHtml(r.state || '') + '</option>';
+    }).join('');
+    sel.value = keep;
+
+    renderLgrTierEditor();
+    renderLgrFleet();
+  }
+
+  function lgrFilteredAssets() {
+    var niche  = document.getElementById('lgrNicheFilter').value;
+    var region = document.getElementById('lgrRegionFilter').value;
+    var tier   = document.getElementById('lgrTierFilter').value;
+    var status = document.getElementById('lgrStatusFilter').value;
+    return lgrAssets.filter(function (a) {
+      if (niche  && a.niche_id  !== niche)  return false;
+      if (region && a.region_id !== region) return false;
+      if (tier   && a.tier      !== tier)   return false;
+      if (status && a.status    !== status) return false;
+      return true;
+    });
+  }
+
+  function renderLgrFleet() {
+    var loading = document.getElementById('lgrFleetLoading');
+    var list    = document.getElementById('lgrFleetList');
+    var empty   = document.getElementById('lgrFleetEmpty');
+    var rows    = lgrFilteredAssets();
+
+    var rented = lgrAssets.filter(function (a) { return a.status === 'rented'; }).length;
+    var mrr    = lgrAssets.filter(function (a) { return a.status === 'rented'; })
+                          .reduce(function (t, a) { return t + Number(a.monthly_price_aud || 0); }, 0);
+    document.getElementById('lgrFleetCount').textContent =
+      rows.length + ' of ' + lgrAssets.length + ' assets · ' + rented + ' rented · ' + lgrMoney(mrr) + ' MRR';
+
+    loading.classList.add('hidden');
+    if (!rows.length) {
+      list.classList.add('hidden');
+      empty.classList.remove('hidden');
+      return;
+    }
+    empty.classList.add('hidden');
+    list.classList.remove('hidden');
+
+    list.innerHTML = '<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:13px">' +
+      '<thead><tr style="text-align:left;color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.04em">' +
+      '<th style="padding:8px 10px">Asset</th><th style="padding:8px 10px">Area</th>' +
+      '<th style="padding:8px 10px">Niche</th><th style="padding:8px 10px">Tier</th>' +
+      '<th style="padding:8px 10px">Monthly</th><th style="padding:8px 10px">Floor</th>' +
+      '<th style="padding:8px 10px">Typical</th><th style="padding:8px 10px">$/lead</th>' +
+      '<th style="padding:8px 10px">Status</th><th style="padding:8px 10px">Rented by</th>' +
+      '<th style="padding:8px 10px"></th></tr></thead><tbody>' +
+      rows.map(lgrAssetRow).join('') + '</tbody></table></div>';
+
+    list.querySelectorAll('[data-lgr-edit]').forEach(function (b) {
+      b.addEventListener('click', function () {
+        lgrEditAsset = b.getAttribute('data-lgr-edit');
+        renderLgrFleet();
+      });
+    });
+    list.querySelectorAll('[data-lgr-cancel]').forEach(function (b) {
+      b.addEventListener('click', function () { lgrEditAsset = null; renderLgrFleet(); });
+    });
+    list.querySelectorAll('[data-lgr-save]').forEach(function (b) {
+      b.addEventListener('click', function () { saveLgrAsset(b.getAttribute('data-lgr-save')); });
+    });
+  }
+
+  function lgrAssetRow(a) {
+    var preview = lgrPreviewUrl(a);
+    var name = '<div style="font-weight:500">' + escapeHtml(a.brand_name || '-') + '</div>' +
+      (preview
+        ? '<a href="' + escapeHtml(preview) + '" target="_blank" rel="noopener" style="font-size:11px;color:var(--accent)">' +
+          escapeHtml(preview.replace(/^https:\/\//, '').replace(/\/$/, '')) + '</a>'
+        : '<span style="font-size:11px;color:var(--muted)">no domain</span>');
+
+    var area  = a.regions ? escapeHtml(a.regions.name) + ' <span style="color:var(--muted)">' + escapeHtml(a.regions.state || '') + '</span>' : '-';
+    var niche = a.niches ? escapeHtml(a.niches.name) : '-';
+    var by    = a.installers ? escapeHtml(a.installers.business_name || a.installers.email || '-') : '-';
+
+    if (lgrEditAsset !== a.id) {
+      return '<tr style="border-top:1px solid var(--border)">' +
+        '<td style="padding:8px 10px">' + name + '</td>' +
+        '<td style="padding:8px 10px">' + area + '</td>' +
+        '<td style="padding:8px 10px">' + niche + '</td>' +
+        '<td style="padding:8px 10px">' + escapeHtml(lgrTierLabel(a.tier)) + '</td>' +
+        '<td style="padding:8px 10px;font-weight:500">' + lgrMoney(a.monthly_price_aud) + '</td>' +
+        '<td style="padding:8px 10px">' + (a.floor_leads == null ? '-' : a.floor_leads) + '</td>' +
+        '<td style="padding:8px 10px;color:var(--muted)">' + (a.typical_min || '-') + '–' + (a.typical_max || '-') + '</td>' +
+        '<td style="padding:8px 10px;white-space:nowrap">' + lgrLeadRange(a) + '</td>' +
+        '<td style="padding:8px 10px">' + lgrStatusPill(a.status) + '</td>' +
+        '<td style="padding:8px 10px;color:var(--muted)">' + by + '</td>' +
+        '<td style="padding:8px 10px;text-align:right">' +
+          '<button class="btn btn-sm" type="button" data-lgr-edit="' + escapeHtml(a.id) + '">Edit</button></td>' +
+        '</tr>';
+    }
+
+    var inp = 'height:30px;width:80px;padding:0 8px;border-radius:6px;border:1px solid var(--border);background:var(--bg);font:inherit;font-size:13px';
+    return '<tr style="border-top:1px solid var(--border);background:var(--surface)">' +
+      '<td style="padding:8px 10px">' + name + '</td>' +
+      '<td style="padding:8px 10px">' + area + '</td>' +
+      '<td style="padding:8px 10px">' + niche + '</td>' +
+      '<td style="padding:8px 10px"><select id="lgrEdTier" style="' + inp + '">' +
+        LGR_TIERS.map(function (t) {
+          return '<option value="' + t + '"' + (a.tier === t ? ' selected' : '') + '>' + lgrTierLabel(t) + '</option>';
+        }).join('') + '</select></td>' +
+      '<td style="padding:8px 10px"><input id="lgrEdMonthly" type="number" min="0" step="50" value="' + (a.monthly_price_aud || '') + '" style="' + inp + '"></td>' +
+      '<td style="padding:8px 10px"><input id="lgrEdFloor" type="number" min="1" step="1" value="' + (a.floor_leads || '') + '" style="' + inp + '"></td>' +
+      '<td style="padding:8px 10px;white-space:nowrap">' +
+        '<input id="lgrEdMin" type="number" min="1" step="1" value="' + (a.typical_min || '') + '" style="' + inp + ';width:60px">' +
+        ' <input id="lgrEdMax" type="number" min="1" step="1" value="' + (a.typical_max || '') + '" style="' + inp + ';width:60px"></td>' +
+      '<td style="padding:8px 10px;color:var(--muted)">recalculated</td>' +
+      '<td style="padding:8px 10px"><select id="lgrEdStatus" style="' + inp + ';width:110px">' +
+        ['available', 'rented', 'paused', 'retired'].map(function (st) {
+          return '<option value="' + st + '"' + (a.status === st ? ' selected' : '') + '>' + st + '</option>';
+        }).join('') + '</select></td>' +
+      '<td style="padding:8px 10px;color:var(--muted)">' + by + '</td>' +
+      '<td style="padding:8px 10px;text-align:right;white-space:nowrap">' +
+        '<button class="btn2 btn-sm" type="button" data-lgr-save="' + escapeHtml(a.id) + '">Save</button> ' +
+        '<button class="btn btn-sm" type="button" data-lgr-cancel="1">Cancel</button></td>' +
+      '</tr>';
+  }
+
+  async function saveLgrAsset(id) {
+    var num = function (elId) {
+      var v = document.getElementById(elId).value;
+      return v === '' ? null : Number(v);
+    };
+    var patch = {
+      tier:              document.getElementById('lgrEdTier').value,
+      status:            document.getElementById('lgrEdStatus').value,
+      monthly_price_aud: num('lgrEdMonthly'),
+      floor_leads:       num('lgrEdFloor'),
+      typical_min:       num('lgrEdMin'),
+      typical_max:       num('lgrEdMax'),
+    };
+
+    if (patch.typical_min && patch.typical_max && patch.typical_min > patch.typical_max) {
+      toast('Typical minimum cannot exceed the maximum', true);
+      return;
+    }
+    if (patch.floor_leads && patch.typical_min && patch.floor_leads > patch.typical_min) {
+      toast('The guaranteed floor cannot be above the typical minimum', true);
+      return;
+    }
+    // Freeing an asset must also clear the tenant, or the fleet still reads as taken.
+    if (patch.status !== 'rented') { patch.rented_by = null; patch.rented_until = null; }
+
+    var res = await sb.from('assets').update(patch).eq('id', id);
+    if (res.error) { toast('Save failed: ' + res.error.message, true); return; }
+
+    toast('Asset updated');
+    lgrEditAsset = null;
+    await loadLgrFleet();
+  }
+
+  // ── Bulk tier pricing ─────────────────────────────────────────────────────
+  function renderLgrTierEditor() {
+    var wrap = document.getElementById('lgrTierRows');
+    if (!wrap) return;
+    var inp = 'height:32px;width:100%;padding:0 8px;border-radius:6px;border:1px solid var(--border);background:var(--bg);font:inherit;font-size:13px';
+
+    wrap.innerHTML = LGR_TIERS.map(function (t) {
+      // Seed each row from an existing asset on that tier so the form opens on today's numbers.
+      var sample = lgrAssets.filter(function (a) { return a.tier === t; })[0] || {};
+      return '<div style="display:grid;grid-template-columns:110px repeat(4,1fr) auto;gap:8px;align-items:end;margin-bottom:8px">' +
+        '<div style="font-weight:600;padding-bottom:8px">' + lgrTierLabel(t) + '</div>' +
+        '<label class="bank-lbl">Monthly<input id="lgrBulk_' + t + '_monthly" class="bank-in" style="' + inp + '" type="number" min="0" step="50" value="' + (sample.monthly_price_aud || '') + '"></label>' +
+        '<label class="bank-lbl">Floor<input id="lgrBulk_' + t + '_floor" class="bank-in" style="' + inp + '" type="number" min="1" step="1" value="' + (sample.floor_leads || '') + '"></label>' +
+        '<label class="bank-lbl">Typical min<input id="lgrBulk_' + t + '_min" class="bank-in" style="' + inp + '" type="number" min="1" step="1" value="' + (sample.typical_min || '') + '"></label>' +
+        '<label class="bank-lbl">Typical max<input id="lgrBulk_' + t + '_max" class="bank-in" style="' + inp + '" type="number" min="1" step="1" value="' + (sample.typical_max || '') + '"></label>' +
+        '<button class="btn2 btn-sm" type="button" data-lgr-bulk="' + t + '" style="margin-bottom:2px">Apply</button>' +
+        '</div>' +
+        '<div id="lgrBulkNote_' + t + '" style="font-size:11px;color:var(--muted);margin:-4px 0 12px 118px"></div>';
+    }).join('');
+
+    LGR_TIERS.forEach(updateLgrBulkNote);
+    wrap.querySelectorAll('input').forEach(function (i) {
+      i.addEventListener('input', function () {
+        var m = i.id.match(/^lgrBulk_([a-z]+)_/);
+        if (m) updateLgrBulkNote(m[1]);
+      });
+    });
+    wrap.querySelectorAll('[data-lgr-bulk]').forEach(function (b) {
+      b.addEventListener('click', function () { applyLgrTierPricing(b.getAttribute('data-lgr-bulk')); });
+    });
+  }
+
+  function updateLgrBulkNote(tier) {
+    var note = document.getElementById('lgrBulkNote_' + tier);
+    if (!note) return;
+    var m   = Number(document.getElementById('lgrBulk_' + tier + '_monthly').value || 0);
+    var fl  = Number(document.getElementById('lgrBulk_' + tier + '_floor').value || 0);
+    var max = Number(document.getElementById('lgrBulk_' + tier + '_max').value || 0);
+    note.textContent = (m && fl && max)
+      ? 'Clients see $' + (m / max).toFixed(2) + ' - $' + (m / fl).toFixed(2) + ' per lead on this tier.'
+      : '';
+  }
+
+  async function applyLgrTierPricing(tier) {
+    var num = function (suffix) {
+      var v = document.getElementById('lgrBulk_' + tier + '_' + suffix).value;
+      return v === '' ? null : Number(v);
+    };
+    var patch = {
+      monthly_price_aud: num('monthly'),
+      floor_leads:       num('floor'),
+      typical_min:       num('min'),
+      typical_max:       num('max'),
+    };
+    if (patch.monthly_price_aud == null || patch.floor_leads == null) {
+      toast('Monthly price and floor are required', true);
+      return;
+    }
+    if (patch.typical_min && patch.typical_max && patch.typical_min > patch.typical_max) {
+      toast('Typical minimum cannot exceed the maximum', true);
+      return;
+    }
+
+    var nicheId = document.getElementById('lgrTierNiche').value;
+    var scope   = lgrAssets.filter(function (a) {
+      return a.tier === tier && (!nicheId || a.niche_id === nicheId);
+    });
+    if (!scope.length) { toast('No assets on that tier', true); return; }
+
+    var nicheName = nicheId
+      ? (lgrNiches.filter(function (n) { return n.id === nicheId; })[0] || {}).name
+      : 'every niche';
+    if (!confirm('Reprice ' + scope.length + ' ' + tier + ' asset(s) across ' + nicheName + '?\n\n' +
+                 'Rented assets keep billing at their agreed rate until the subscription renews.')) return;
+
+    // Update in one statement rather than per-row so a partial failure can't
+    // leave the tier priced two different ways.
+    var q = sb.from('assets').update(patch).eq('tier', tier).is('deleted_at', null);
+    if (nicheId) q = q.eq('niche_id', nicheId);
+    var res = await q;
+    if (res.error) { toast('Repricing failed: ' + res.error.message, true); return; }
+
+    toast('Repriced ' + scope.length + ' asset(s)');
+    await loadLgrFleet();
+  }
+
+  // ── Rentals ───────────────────────────────────────────────────────────────
+  async function loadLgrRentals() {
+    var loading = document.getElementById('lgrRentalLoading');
+    var list    = document.getElementById('lgrRentalList');
+    var empty   = document.getElementById('lgrRentalEmpty');
+    try {
+      var res = await sb.from('rentals')
+        .select('*, assets(brand_name,brand_domain,tier,niches(name),regions(name,state)), installers(business_name,contact_name,email,phone)')
+        .order('created_at', { ascending: false })
+        .limit(300);
+      if (res.error) throw res.error;
+      lgrRentals = res.data || [];
+    } catch (err) {
+      loading.textContent = 'Failed to load rentals: ' + err.message;
+      return;
+    }
+
+    var filter = document.getElementById('lgrRentalStatusFilter').value;
+    var rows = lgrRentals.filter(function (r) {
+      if (filter === 'active') return !r.ended_at;
+      if (filter === 'ended')  return !!r.ended_at;
+      return true;
+    });
+
+    var active = lgrRentals.filter(function (r) { return !r.ended_at; });
+    var mrr = active.reduce(function (t, r) { return t + Number(r.monthly_price_aud || 0); }, 0);
+    document.getElementById('lgrRentalCount').textContent =
+      active.length + ' active · ' + lgrMoney(mrr) + ' MRR · ' + lgrRentals.length + ' total';
+
+    loading.classList.add('hidden');
+    if (!rows.length) {
+      list.classList.add('hidden');
+      empty.classList.remove('hidden');
+      return;
+    }
+    empty.classList.add('hidden');
+    list.classList.remove('hidden');
+
+    list.innerHTML = '<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:13px">' +
+      '<thead><tr style="text-align:left;color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.04em">' +
+      '<th style="padding:8px 10px">Installer</th><th style="padding:8px 10px">Asset</th>' +
+      '<th style="padding:8px 10px">Tier</th><th style="padding:8px 10px">Monthly</th>' +
+      '<th style="padding:8px 10px">Floor</th><th style="padding:8px 10px">Started</th>' +
+      '<th style="padding:8px 10px">Ended</th><th style="padding:8px 10px"></th></tr></thead><tbody>' +
+      rows.map(function (r) {
+        var a = r.assets || {}, i = r.installers || {};
+        var asset = escapeHtml(a.brand_name || '-') +
+          '<div style="font-size:11px;color:var(--muted)">' +
+          escapeHtml((a.regions && a.regions.name) || '') +
+          ((a.niches && a.niches.name) ? ' · ' + escapeHtml(a.niches.name) : '') + '</div>';
+        return '<tr style="border-top:1px solid var(--border)">' +
+          '<td style="padding:8px 10px"><div style="font-weight:500">' + escapeHtml(i.business_name || '-') + '</div>' +
+            '<div style="font-size:11px;color:var(--muted)">' + escapeHtml(i.email || '') + '</div></td>' +
+          '<td style="padding:8px 10px">' + asset + '</td>' +
+          '<td style="padding:8px 10px">' + escapeHtml(lgrTierLabel(a.tier)) + '</td>' +
+          '<td style="padding:8px 10px;font-weight:500">' + lgrMoney(r.monthly_price_aud) + '</td>' +
+          '<td style="padding:8px 10px">' + (r.floor_leads == null ? '-' : r.floor_leads) + '</td>' +
+          '<td style="padding:8px 10px;color:var(--muted)">' + (r.started_at ? new Date(r.started_at).toLocaleDateString('en-AU') : '-') + '</td>' +
+          '<td style="padding:8px 10px;color:var(--muted)">' + (r.ended_at ? new Date(r.ended_at).toLocaleDateString('en-AU') : '-') + '</td>' +
+          '<td style="padding:8px 10px;text-align:right">' +
+            (r.ended_at ? '' : '<button class="btn btn-sm btn-danger" type="button" data-lgr-end="' + escapeHtml(r.id) + '">End rental</button>') +
+          '</td></tr>';
+      }).join('') + '</tbody></table></div>';
+
+    list.querySelectorAll('[data-lgr-end]').forEach(function (b) {
+      b.addEventListener('click', function () { endLgrRental(b.getAttribute('data-lgr-end')); });
+    });
+  }
+
+  async function endLgrRental(id) {
+    var r = lgrRentals.filter(function (x) { return x.id === id; })[0];
+    if (!r) return;
+    if (!confirm('End this rental and put the asset back on the market?\n\n' +
+                 'This does NOT cancel their Stripe subscription — do that in Stripe as well.')) return;
+
+    var res = await sb.from('rentals').update({ ended_at: new Date().toISOString() }).eq('id', id);
+    if (res.error) { toast('Failed to end rental: ' + res.error.message, true); return; }
+
+    // Release the asset too, otherwise it stays flagged as rented in the fleet.
+    if (r.asset_id) {
+      await sb.from('assets')
+        .update({ status: 'available', rented_by: null, rented_until: null, stripe_subscription_id: null })
+        .eq('id', r.asset_id);
+    }
+
+    toast('Rental ended, asset released');
+    await Promise.all([loadLgrRentals(), loadLgrFleet()]);
+  }
+
+  // ── Pending leads ─────────────────────────────────────────────────────────
+  async function loadLgrPending() {
+    var loading = document.getElementById('lgrPendingLoading');
+    var list    = document.getElementById('lgrPendingList');
+    var empty   = document.getElementById('lgrPendingEmpty');
+    try {
+      var res = await sb.from('pending_leads').select('*')
+        .order('created_at', { ascending: false }).limit(500);
+      if (res.error) throw res.error;
+      lgrPending = res.data || [];
+    } catch (err) {
+      loading.textContent = 'Failed to load pending leads: ' + err.message;
+      return;
+    }
+
+    var reason = document.getElementById('lgrPendingReasonFilter').value;
+    var status = document.getElementById('lgrPendingStatusFilter').value;
+    var rows = lgrPending.filter(function (p) {
+      if (reason && p.reason !== reason) return false;
+      if (status && (p.status || 'pending') !== status) return false;
+      return true;
+    });
+
+    var pendingCount = lgrPending.filter(function (p) { return (p.status || 'pending') === 'pending'; }).length;
+    // Postcode frequency tells us which area to sell next.
+    var byPostcode = {};
+    lgrPending.forEach(function (p) { if (p.postcode) byPostcode[p.postcode] = (byPostcode[p.postcode] || 0) + 1; });
+    var top = Object.keys(byPostcode).sort(function (a, b) { return byPostcode[b] - byPostcode[a]; })[0];
+
+    document.getElementById('lgrPendingCount').textContent =
+      pendingCount + ' pending · ' + rows.length + ' shown' +
+      (top ? ' · most requested postcode: ' + top + ' (' + byPostcode[top] + ')' : '');
+
+    loading.classList.add('hidden');
+    if (!rows.length) {
+      list.classList.add('hidden');
+      empty.classList.remove('hidden');
+      return;
+    }
+    empty.classList.add('hidden');
+    list.classList.remove('hidden');
+
+    list.innerHTML = '<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:13px">' +
+      '<thead><tr style="text-align:left;color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.04em">' +
+      '<th style="padding:8px 10px">Captured</th><th style="padding:8px 10px">Name</th>' +
+      '<th style="padding:8px 10px">Contact</th><th style="padding:8px 10px">Postcode</th>' +
+      '<th style="padding:8px 10px">Brand</th><th style="padding:8px 10px">Niche</th>' +
+      '<th style="padding:8px 10px">Reason</th><th style="padding:8px 10px">Status</th>' +
+      '<th style="padding:8px 10px"></th></tr></thead><tbody>' +
+      rows.map(function (p) {
+        var st = p.status || 'pending';
+        return '<tr style="border-top:1px solid var(--border)">' +
+          '<td style="padding:8px 10px;color:var(--muted);white-space:nowrap">' +
+            (p.created_at ? new Date(p.created_at).toLocaleString('en-AU', { dateStyle: 'short', timeStyle: 'short' }) : '-') + '</td>' +
+          '<td style="padding:8px 10px;font-weight:500">' + escapeHtml(p.full_name || '-') + '</td>' +
+          '<td style="padding:8px 10px"><div>' + escapeHtml(p.phone || '-') + '</div>' +
+            '<div style="font-size:11px;color:var(--muted)">' + escapeHtml(p.email || '') + '</div></td>' +
+          '<td style="padding:8px 10px">' + escapeHtml(p.postcode || '-') + '</td>' +
+          '<td style="padding:8px 10px;color:var(--muted)">' + escapeHtml(p.brand_domain || '-') + '</td>' +
+          '<td style="padding:8px 10px">' + escapeHtml(p.niche || '-') + '</td>' +
+          '<td style="padding:8px 10px">' + escapeHtml(p.reason || '-') + '</td>' +
+          '<td style="padding:8px 10px">' + escapeHtml(st) + '</td>' +
+          '<td style="padding:8px 10px;text-align:right">' +
+            (st === 'discarded'
+              ? '<button class="btn btn-sm" type="button" data-lgr-restore="' + escapeHtml(p.id) + '">Restore</button>'
+              : '<button class="btn btn-sm" type="button" data-lgr-discard="' + escapeHtml(p.id) + '">Discard</button>') +
+          '</td></tr>';
+      }).join('') + '</tbody></table></div>';
+
+    list.querySelectorAll('[data-lgr-discard]').forEach(function (b) {
+      b.addEventListener('click', function () { setLgrPendingStatus(b.getAttribute('data-lgr-discard'), 'discarded'); });
+    });
+    list.querySelectorAll('[data-lgr-restore]').forEach(function (b) {
+      b.addEventListener('click', function () { setLgrPendingStatus(b.getAttribute('data-lgr-restore'), 'pending'); });
+    });
+  }
+
+  async function setLgrPendingStatus(id, status) {
+    var patch = { status: status, resolved_at: status === 'pending' ? null : new Date().toISOString() };
+    var res = await sb.from('pending_leads').update(patch).eq('id', id);
+    if (res.error) { toast('Update failed: ' + res.error.message, true); return; }
+    toast(status === 'pending' ? 'Restored' : 'Discarded');
+    await loadLgrPending();
+  }
+
+  function exportLgrPendingCsv() {
+    var reason = document.getElementById('lgrPendingReasonFilter').value;
+    var status = document.getElementById('lgrPendingStatusFilter').value;
+    var rows = lgrPending.filter(function (p) {
+      if (reason && p.reason !== reason) return false;
+      if (status && (p.status || 'pending') !== status) return false;
+      return true;
+    });
+    if (!rows.length) { toast('Nothing to export', true); return; }
+
+    var cols = ['created_at', 'full_name', 'phone', 'email', 'postcode', 'brand_domain', 'niche', 'source', 'reason', 'status'];
+    var esc = function (v) { return '"' + String(v == null ? '' : v).replace(/"/g, '""') + '"'; };
+    var csv = cols.join(',') + '\n' +
+      rows.map(function (r) { return cols.map(function (c) { return esc(r[c]); }).join(','); }).join('\n');
+
+    var url = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' }));
+    var a = document.createElement('a');
+    a.href = url;
+    a.download = 'pending-leads-' + new Date().toISOString().slice(0, 10) + '.csv';
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
+  // ── Wiring ────────────────────────────────────────────────────────────────
+  function wireLgrPanels() {
+    ['lgrNicheFilter', 'lgrRegionFilter', 'lgrTierFilter', 'lgrStatusFilter'].forEach(function (id) {
+      document.getElementById(id).addEventListener('change', function () {
+        lgrEditAsset = null;
+        renderLgrFleet();
+      });
+    });
+    document.getElementById('lgrRefreshFleetBtn').addEventListener('click', loadLgrFleet);
+    document.getElementById('lgrTierPricingBtn').addEventListener('click', function () {
+      document.getElementById('lgrTierEditor').classList.toggle('hidden');
+    });
+    document.getElementById('lgrCloseTierBtn').addEventListener('click', function () {
+      document.getElementById('lgrTierEditor').classList.add('hidden');
+    });
+
+    document.getElementById('lgrRefreshRentalsBtn').addEventListener('click', loadLgrRentals);
+    document.getElementById('lgrRentalStatusFilter').addEventListener('change', loadLgrRentals);
+
+    document.getElementById('lgrRefreshNichesBtn').addEventListener('click', loadLgrNiches);
+    document.getElementById('lgrNewNicheBtn').addEventListener('click', function () { openLgrNicheEditor(null); });
+    document.getElementById('lgrSaveNicheBtn').addEventListener('click', saveLgrNiche);
+    document.getElementById('lgrCancelNicheBtn').addEventListener('click', function () {
+      document.getElementById('lgrNicheEditor').classList.add('hidden');
+    });
+
+    document.getElementById('lgrRefreshPendingBtn').addEventListener('click', loadLgrPending);
+    document.getElementById('lgrPendingReasonFilter').addEventListener('change', loadLgrPending);
+    document.getElementById('lgrPendingStatusFilter').addEventListener('change', loadLgrPending);
+    document.getElementById('lgrExportPendingBtn').addEventListener('click', exportLgrPendingCsv);
   }
 
   // Run after scripts are ready
