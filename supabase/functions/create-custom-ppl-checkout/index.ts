@@ -148,8 +148,8 @@ serve(async (req) => {
         price_per_lead:   String(price),
         discount_percent: String(discountPct),
       },
-      success_url: 'https://leadgenrentals.com.au/dashboard.html?ppl_success=true',
-      cancel_url:  'https://leadgenrentals.com.au/dashboard.html?ppl_cancelled=true',
+      success_url: 'https://leadgenrentals.com.au/dashboard/dashboard.html?ppl_success=true',
+      cancel_url:  'https://leadgenrentals.com.au/dashboard/dashboard.html?ppl_cancelled=true',
     })
 
     await supabase
