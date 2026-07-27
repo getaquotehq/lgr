@@ -351,7 +351,7 @@ Return ONLY a valid JSON array, no other text.`;
                 Authorization: `Bearer ${resendApiKey}`,
               },
               body: JSON.stringify({
-                from: Deno.env.get("RESEND_FROM_EMAIL") || "LeadGenRentalsHQ <noreply@leadgenrentals.com.au/dashboard>",
+                from: Deno.env.get("RESEND_FROM_EMAIL") || "Lead Gen Rentals <noreply@leadgenrentals.com.au>",
                 to: emails,
                 subject: emailContent.subject,
                 html: emailContent.html,

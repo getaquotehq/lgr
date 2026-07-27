@@ -59,7 +59,7 @@ async function sendSetupEmail(
 
   const fromAddress =
     Deno.env.get("RESEND_FROM_EMAIL") ||
-    "LeadGenRentalsHQ <noreply@leadgenrentals.com.au/dashboard>";
+    "Lead Gen Rentals <noreply@leadgenrentals.com.au>";
 
   const res = await fetch("https://api.resend.com/emails", {
     method: "POST",

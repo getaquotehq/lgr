@@ -121,7 +121,7 @@ Deno.serve(async (req) => {
     console.log("send-password-rest: generated recovery link for", email);
 
     const emailContent = passwordResetEmail(actionLink);
-    const from = Deno.env.get("RESEND_FROM_EMAIL") ?? "LeadGenRentalsHQ <noreply@leadgenrentals.com.au/dashboard>";
+    const from = Deno.env.get("RESEND_FROM_EMAIL") ?? "Lead Gen Rentals <noreply@leadgenrentals.com.au>";
 
     const resendRes = await fetch("https://api.resend.com/emails", {
       method: "POST",

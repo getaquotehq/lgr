@@ -1158,13 +1158,13 @@ Deno.serve(async (req) => {
     </a>
   </div>
   <p style="font-size:12px;color:#999;line-height:1.6;margin:0">
-    If you did not expect this email or believe this is a mistake, please contact us at support@leadgenrentals.com.au/dashboard.
+    If you did not expect this email or believe this is a mistake, please contact us at support@leadgenrentals.com.au.
   </p>
 </div>
 </body>
 </html>`.trim();
 
-      const emailText = `Hi ${userName},\n\nYour LeadGenRentalsHQ account has been inactive for 30 days. Your account and all associated data will be permanently deleted in 7 days.\n\nIf you'd like to keep your account, simply log in before the 7-day period ends. We also recommend exporting any leads you may need.\n\nTo delete your account immediately: ${deleteNowUrl}\n\nIf you believe this is a mistake, contact support@leadgenrentals.com.au/dashboard.`;
+      const emailText = `Hi ${userName},\n\nYour LeadGenRentalsHQ account has been inactive for 30 days. Your account and all associated data will be permanently deleted in 7 days.\n\nIf you'd like to keep your account, simply log in before the 7-day period ends. We also recommend exporting any leads you may need.\n\nTo delete your account immediately: ${deleteNowUrl}\n\nIf you believe this is a mistake, contact support@leadgenrentals.com.au.`;
 
       // Send via resend-email edge function
       const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;

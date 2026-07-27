@@ -295,7 +295,7 @@ Deno.serve(async (req) => {
             Authorization: `Bearer ${resendApiKey}`,
           },
           body: JSON.stringify({
-            from: Deno.env.get("RESEND_FROM_EMAIL") || "LeadGenRentalsHQ <noreply@leadgenrentals.com.au/dashboard>",
+            from: Deno.env.get("RESEND_FROM_EMAIL") || "Lead Gen Rentals <noreply@leadgenrentals.com.au>",
             to: [email],
             subject: emailContent.subject,
             html: emailContent.html,
