@@ -72,7 +72,7 @@ async function createMagicLink(email: string): Promise<string> {
   const { data, error } = await supabase.auth.admin.generateLink({
     type: 'magiclink',
     email,
-    options: { redirectTo: 'https://leadgenrentals.com.au/dashboard', expiresIn: 86400 },
+    options: { redirectTo: `${Deno.env.get('SITE_URL') ?? 'https://leadgenrentals.com.au/dashboard'}/dashboard.html`, expiresIn: 86400 },
   })
   if (error) throw new Error(`Magic link: ${error.message}`)
   return data.properties.action_link

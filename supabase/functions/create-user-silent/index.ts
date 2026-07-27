@@ -483,7 +483,7 @@ Deno.serve(async (req) => {
         await adminClient.auth.admin.generateLink({
           type: "recovery",
           email: sanitizedEmail,
-          options: { redirectTo: "https://leadgenrentals.com.au/dashboard" },
+          options: { redirectTo: `${Deno.env.get("SITE_URL") ?? "https://leadgenrentals.com.au/dashboard"}/dashboard.html` },
         });
       if (!linkErr && linkData?.properties?.action_link) {
         setupLink = linkData.properties.action_link;

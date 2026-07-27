@@ -1462,12 +1462,12 @@ async function loadActiveOrdersDash() {
 }
 
 async function quickSendQuote(leadId) {
-  await populateLeadSelector('quoteLeadSelect');
+  await populateLeadSelector('quoteFormLead');
   document.getElementById('quoteForm')?.reset();
   document.getElementById('quoteLineItems').innerHTML = '';
   recalcQuoteTotals();
   await prefillQuoteDefaults();
-  const sel = document.getElementById('quoteLeadSelect');
+  const sel = document.getElementById('quoteFormLead');
   if (sel) sel.value = leadId;
   openModal('quoteModal');
 }
@@ -2508,7 +2508,7 @@ async function populateLeadSelector(selectId) {
 
 // ─── Quote Modal Handlers ────────────────────────────────────────────────────
 async function openQuoteModalHandler() {
-  await populateLeadSelector("quoteLeadSelect");
+  await populateLeadSelector("quoteFormLead");
   document.getElementById("quoteForm")?.reset();
   document.getElementById("quoteLineItems").innerHTML = "";
   recalcQuoteTotals();
@@ -2620,7 +2620,7 @@ function collectQuoteLineItems() {
 
 async function handleQuoteSave(e) {
   e.preventDefault();
-  const leadId = document.getElementById("quoteLeadSelect")?.value;
+  const leadId = document.getElementById("quoteFormLead")?.value;
   if (!leadId) { toast("Please select a lead.", true); return; }
 
   const lineItems = collectQuoteLineItems();

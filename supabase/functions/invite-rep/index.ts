@@ -240,7 +240,7 @@ Deno.serve(async (req) => {
         type: linkType,
         email,
         options: {
-          redirectTo: `${siteUrl}/dashboard`,
+          redirectTo: `${siteUrl}/dashboard.html`,
         },
       });
 
@@ -254,7 +254,7 @@ Deno.serve(async (req) => {
           type: "recovery",
           email,
           options: {
-            redirectTo: `${siteUrl}/dashboard`,
+            redirectTo: `${siteUrl}/dashboard.html`,
           },
         });
       if (fallbackData?.properties?.action_link) {
