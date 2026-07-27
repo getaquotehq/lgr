@@ -10,8 +10,6 @@
 <link rel="apple-touch-icon" href="/product-logo.png">
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://challenges.cloudflare.com https://cdn.jsdelivr.net https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self' https://*.supabase.co https://api.twilio.com https://api.resend.com wss://*.supabase.co; frame-src https://challenges.cloudflare.com; object-src 'none'; base-uri 'self';">
 <title>LeadGenRentalsHQ</title>
-<script>window.onTurnstileLoad=function(){window._turnstileReady=true;if(window._initTurnstile)window._initTurnstile();};</script>
-<script src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit&onload=onTurnstileLoad" async defer></script>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap');
 *{box-sizing:border-box;margin:0;padding:0}
@@ -475,14 +473,12 @@ tbody tr:hover{background:var(--side-hover);transition:background .1s}
       <form id="loginForm" class="auth-form">
         <div class="field"><label for="loginEmail">Email</label><input id="loginEmail" name="email" type="email" required autocomplete="email"></div>
         <div class="field"><label for="loginPassword">Password</label><input id="loginPassword" name="password" type="password" required autocomplete="current-password"></div>
-        <div class="cf-turnstile" data-sitekey="0x4AAAAAAC0NesB-x2tZ3YhC" data-theme="auto"></div>
         <button class="btn2" type="submit">Sign In</button>
         <button type="button" id="forgotPasswordLink" style="background:none;border:none;color:var(--accent);font-size:13px;cursor:pointer;padding:4px 0;text-align:center;margin-top:4px">Forgot your password?</button>
       </form>
       <form id="forgotPasswordForm" class="auth-form hidden">
         <div class="ah" style="padding:0 0 16px"><h1>Reset password</h1><p style="font-size:13px;color:var(--muted);margin-top:8px">Enter your email and we'll send you a link to reset your password.</p></div>
         <div class="field"><label for="forgotEmail">Email</label><input id="forgotEmail" name="email" type="email" required autocomplete="email"></div>
-        <div class="cf-turnstile" data-sitekey="0x4AAAAAAC0NesB-x2tZ3YhC" data-theme="auto"></div>
         <button class="btn2" type="submit">Send Reset Link</button>
         <button type="button" id="backToLogin" style="background:none;border:none;color:var(--accent);font-size:13px;cursor:pointer;padding:4px 0;text-align:center;margin-top:4px">Back to sign in</button>
       </form>

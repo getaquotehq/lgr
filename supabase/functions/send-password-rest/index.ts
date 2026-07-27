@@ -8,25 +8,10 @@
 //   3. User clicks → Supabase redirects to dashboard.html → onAuthStateChange
 //      fires PASSWORD_RECOVERY → reset modal shown
 //
-// Payload: { email: string, cf_turnstile_response?: string }
+// Payload: { email: string }
 // =============================================================================
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-
-async function verifyTurnstile(token: string): Promise<boolean> {
-  const secret = Deno.env.get("CF_TURNSTILE_SECRET");
-  if (!secret) return true;
-  const res = await fetch(
-    "https://challenges.cloudflare.com/turnstile/v0/siteverify",
-    {
-      method: "POST",
-      headers: { "Content-Type": "application/x-www-form-urlencoded" },
-      body: new URLSearchParams({ secret, response: token }),
-    },
-  );
-  const data = await res.json();
-  return data.success === true;
-}
 
 const BRAND_COLOR = "#1f6fff";
 const BRAND_NAME = "LeadGenRentalsHQ";
@@ -86,23 +71,13 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const { email, cf_turnstile_response } = await req.json();
+    const { email } = await req.json();
 
     if (!email || typeof email !== "string") {
       return new Response(
         JSON.stringify({ error: "Email is required" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } },
       );
-    }
-
-    if (Deno.env.get("CF_TURNSTILE_SECRET")) {
-      const ok = await verifyTurnstile(cf_turnstile_response ?? "");
-      if (!ok) {
-        return new Response(
-          JSON.stringify({ error: "CAPTCHA verification failed. Please try again." }),
-          { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } },
-        );
-      }
     }
 
     const resendApiKey = Deno.env.get("RESEND_API_KEY");

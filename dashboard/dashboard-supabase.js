@@ -329,30 +329,6 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   // ── Auth ──────────────────────────────────────────────────────────────────
 
-  // ── Turnstile (explicit rendering) ─────────────────────────────────────
-  // We use ?render=explicit so Turnstile does NOT auto-render into every
-  // .cf-turnstile div on load. Instead we render one widget at a time for
-  // whichever auth form is visible, avoiding duplicate iframes and ensuring
-  // the token is ready when the user submits.
-  const _tsWidgets = {}; // formId → widgetId
-  function renderTurnstileFor(formId) {
-    const form = document.getElementById(formId);
-    if (!form || !window.turnstile) return;
-    const container = form.querySelector('.cf-turnstile');
-    if (!container) return;
-    if (_tsWidgets[formId] != null) {
-      try { turnstile.reset(_tsWidgets[formId]); } catch (e) { console.warn('Turnstile reset failed, re-rendering:', e); delete _tsWidgets[formId]; renderTurnstileFor(formId); return; }
-    } else {
-      _tsWidgets[formId] = turnstile.render(container, {
-        sitekey: container.dataset.sitekey,
-        theme: container.dataset.theme || 'auto',
-      });
-    }
-  }
-  // Render login widget as soon as Turnstile SDK is ready
-  window._initTurnstile = () => renderTurnstileFor('loginForm');
-  if (window._turnstileReady) window._initTurnstile();
-
   const loginForm = document.getElementById("loginForm");
   loginForm?.addEventListener("submit", async (e) => {
     e.preventDefault();
@@ -361,14 +337,6 @@ document.addEventListener("DOMContentLoaded", async () => {
     const emailInput = document.getElementById("loginEmail");
     const passwordInput = document.getElementById("loginPassword");
     
-    // Get Turnstile token
-    const turnstileInput = loginForm.querySelector('[name="cf-turnstile-response"]');
-    const cfToken = turnstileInput ? turnstileInput.value : "";
-    if (!cfToken) {
-      toast("Please complete the CAPTCHA verification.", true);
-      return;
-    }
-
     if (submitBtn) {
       submitBtn.disabled = true;
       submitBtn.dataset.originalText = submitBtn.textContent;
@@ -378,25 +346,6 @@ document.addEventListener("DOMContentLoaded", async () => {
     passwordInput && (passwordInput.disabled = true);
     
     try {
-      // Verify Turnstile token server-side before authenticating
-      const verifyRes = await fetch(`${SUPABASE_URL}/functions/v1/verify-turnstile`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json", "apikey": SUPABASE_ANON_KEY, "Authorization": `Bearer ${SUPABASE_ANON_KEY}` },
-        body: JSON.stringify({ cf_turnstile_response: cfToken }),
-      });
-      if (!verifyRes.ok) {
-        const verifyData = await verifyRes.json().catch(() => ({}));
-        toast(verifyData.error || "CAPTCHA verification failed.", true);
-        if (submitBtn) {
-          submitBtn.disabled = false;
-          submitBtn.textContent = submitBtn.dataset.originalText || "Sign In";
-        }
-        emailInput && (emailInput.disabled = false);
-        passwordInput && (passwordInput.disabled = false);
-        if (window.turnstile) turnstile.reset(loginForm.querySelector('.cf-turnstile'));
-        return;
-      }
-
       const { data, error } = await sb.auth.signInWithPassword({
         email:    emailInput?.value || "",
         password: passwordInput?.value || "",
@@ -415,7 +364,6 @@ document.addEventListener("DOMContentLoaded", async () => {
         }
         emailInput && (emailInput.disabled = false);
         passwordInput && (passwordInput.disabled = false);
-        if (window.turnstile) turnstile.reset(loginForm.querySelector('.cf-turnstile'));
       } else if (data?.session?.user) {
         // Navigate immediately - don't wait for onAuthStateChange
         currentUser = data.session.user;
@@ -430,7 +378,6 @@ document.addEventListener("DOMContentLoaded", async () => {
       }
       emailInput && (emailInput.disabled = false);
       passwordInput && (passwordInput.disabled = false);
-      if (window.turnstile) turnstile.reset(loginForm.querySelector('.cf-turnstile'));
     }
   });
 
@@ -446,13 +393,11 @@ document.addEventListener("DOMContentLoaded", async () => {
     const loginEmail = document.getElementById("loginEmail");
     const forgotEmail = document.getElementById("forgotEmail");
     if (loginEmail?.value && forgotEmail) forgotEmail.value = loginEmail.value;
-    renderTurnstileFor('forgotPasswordForm');
   });
 
   backToLogin?.addEventListener("click", () => {
     forgotPasswordForm?.classList.add("hidden");
     loginForm?.classList.remove("hidden");
-    renderTurnstileFor('loginForm');
   });
 
   forgotPasswordForm?.addEventListener("submit", async (e) => {
@@ -467,19 +412,10 @@ document.addEventListener("DOMContentLoaded", async () => {
       return;
     }
 
-    // Get Turnstile token (optional - server skips CAPTCHA verification
-    // when CF_TURNSTILE_SECRET is not configured).
-    const turnstileInput = forgotPasswordForm.querySelector('[name="cf-turnstile-response"]');
-    const cfToken = turnstileInput ? turnstileInput.value : "";
-
     if (submitBtn) {
       submitBtn.disabled = true;
       submitBtn.textContent = "Sending...";
     }
-
-    const resetTurnstile = () => {
-      if (window.turnstile) turnstile.reset(forgotPasswordForm.querySelector('.cf-turnstile'));
-    };
 
     const onSuccess = () => {
       toast("Password reset link sent! Check your email.");
@@ -497,7 +433,6 @@ document.addEventListener("DOMContentLoaded", async () => {
       if (error) {
         console.error("Password reset error:", error);
         toast(error.message || "Failed to send reset link. Please try again.", true);
-        resetTurnstile();
         return;
       }
 
@@ -505,7 +440,6 @@ document.addEventListener("DOMContentLoaded", async () => {
     } catch (err) {
       console.error("Password reset error:", err);
       toast("Failed to send reset link. Please try again.", true);
-      resetTurnstile();
     } finally {
       if (submitBtn) {
         submitBtn.disabled = false;
