@@ -3379,22 +3379,9 @@ async function loadSettings() {
           const { error } = await sb.from("companies").update({ settings: merged }).eq("id", currentCompanyId);
           if (error) { toast("Failed to save delivery settings.", true); return; }
 
-          // 2. Sync to ql-mc, which is what actually delivers leads. Awaited so
-          //    the toast reflects whether the change really propagated.
-          let synced = false;
-          const { data: _sdRes } = await sb.auth.getSession();
-          if (_sdRes?.session) {
-            try {
-              const res = await fetch(`${SUPABASE_URL}/functions/v1/sync-delivery-config`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json", "Authorization": `Bearer ${_sdRes.session.access_token}`, "apikey": SUPABASE_ANON_KEY },
-              });
-              synced = res.ok;
-            } catch (err) { console.warn("sync-delivery-config:", err); }
-          }
-
-          if (synced) toast("Delivery settings saved.");
-          else toast("Saved, but syncing to the delivery system failed - please save again.", true);
+          // Lead Gen Rentals delivers through its own deliver-lead function, so
+          // the row we just wrote is the source of truth. Nothing to sync.
+          toast("Delivery settings saved.");
         } finally {
           if (saveBtn) { saveBtn.disabled = false; saveBtn.textContent = "Save Delivery Settings"; }
         }

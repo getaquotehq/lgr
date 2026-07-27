@@ -1982,16 +1982,6 @@ h1{font-size:18px;font-weight:500}
     if (res.error) { toast('Failed: ' + res.error.message, true); }
     else {
       toast('Service areas saved.');
-      // Fire-and-forget sync to ql-mc so their postcodes list stays current
-      sb.auth.getSession().then(function(s) {
-        if (s.data && s.data.session) {
-          fetch(SUPABASE_URL + '/functions/v1/sync-delivery-config', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + s.data.session.access_token, 'apikey': SUPABASE_ANON_KEY },
-            body: JSON.stringify({ company_id: editingCompanyId }),
-          }).catch(function(err){ console.warn('sync-delivery-config:', err); });
-        }
-      }).catch(function(){});
     }
     this.disabled = false; this.textContent = 'Save Postcodes';
   });
