@@ -1,4 +1,4 @@
-# LeadGenRentalsHQ - API Proxy (Cloudflare Worker)
+# Lead Gen Rentals - API Proxy (Cloudflare Worker)
 
 Reverse-proxy that gives the REST API a clean, branded URL:
 

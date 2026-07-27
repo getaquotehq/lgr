@@ -1,5 +1,5 @@
 /**
- * Supabase client configuration for LeadGenRentalsHQ.
+ * Supabase client configuration for Lead Gen Rentals.
  *
  * Usage (browser):
  *   import { supabase } from './lib/supabase.js';

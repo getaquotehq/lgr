@@ -1,5 +1,5 @@
 // =============================================================================
-// LeadGenRentalsHQ - Cloudflare Worker API Proxy
+// Lead Gen Rentals - Cloudflare Worker API Proxy
 // =============================================================================
 // Reverse-proxy that maps clean URLs to the Supabase Edge Function backend.
 //

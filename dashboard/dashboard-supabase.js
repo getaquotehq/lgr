@@ -1,5 +1,5 @@
 // =============================================================================
-// LeadGenRentalsHQ - Dashboard Client (UPDATED WITH AI SETTINGS FIXES)
+// Lead Gen Rentals - Dashboard Client (UPDATED WITH AI SETTINGS FIXES)
 // =============================================================================
 // This file contains fixes for:
 // 1. AI Settings form with all required fields

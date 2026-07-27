@@ -1,15 +1,15 @@
 {
-  "name": "LeadGenRentalsHQ",
-  "short_name": "QL HQ",
-  "description": "Your lead management and pay-per-lead dashboard.",
-  "start_url": "/dashboard.html",
+  "name": "Lead Gen Rentals",
+  "short_name": "LGR",
+  "description": "Your lead management dashboard.",
+  "start_url": "/dashboard/dashboard.html",
   "display": "standalone",
   "orientation": "portrait-primary",
   "background_color": "#f3f5f9",
   "theme_color": "#1f6fff",
   "icons": [
     {
-      "src": "/product-logo.png",
+      "src": "/dashboard/leadgenrentals-logo-black-hq.png",
       "sizes": "any",
       "type": "image/png",
       "purpose": "any maskable"
