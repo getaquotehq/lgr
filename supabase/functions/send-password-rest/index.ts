@@ -2,10 +2,10 @@
 // LeadGenRentalsHQ - Send Password Reset via Resend
 // =============================================================================
 // Same pattern as invite-rep:
-//   1. admin.generateLink({ type: "recovery", redirectTo: dashboard.html })
+//   1. admin.generateLink({ type: "recovery", redirectTo: index.html })
 //      → returns action_link (Supabase handles the token exchange server-side)
 //   2. Send action_link in a branded email via Resend
-//   3. User clicks → Supabase redirects to dashboard.html → onAuthStateChange
+//   3. User clicks → Supabase redirects to index.html → onAuthStateChange
 //      fires PASSWORD_RECOVERY → reset modal shown
 //
 // Payload: { email: string }
@@ -97,14 +97,14 @@ Deno.serve(async (req) => {
     );
 
     // Generate recovery link - same approach as invite-rep.
-    // action_link is a full Supabase URL that redirects to SITE_URL/dashboard.html
+    // action_link is a full Supabase URL that redirects to SITE_URL/index.html
     // after verifying the token server-side, firing PASSWORD_RECOVERY in onAuthStateChange.
     const { data: linkData, error: linkError } =
       await adminClient.auth.admin.generateLink({
         type: "recovery",
         email,
         options: {
-          redirectTo: `${siteUrl}/dashboard.html`,
+          redirectTo: `${siteUrl}/`,
         },
       });
 

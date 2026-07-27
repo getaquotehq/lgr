@@ -23,7 +23,7 @@ No runtime dependency on any other system.
 | Path | What it is |
 | --- | --- |
 | `index.html` | login / signup |
-| `dashboard.html` + `dashboard-supabase.js` | the main client app |
+| `index.html` + `dashboard-supabase.js` | the main client app |
 | `admin.html` | internal admin panel |
 | `va.html` | VA console |
 | `quote-public.html` | public quote view |

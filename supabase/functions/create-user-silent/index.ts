@@ -475,7 +475,7 @@ Deno.serve(async (req) => {
     }
 
     // ── Generate a one-time setup (recovery) link for the new user ────────────
-    // Lands on dashboard.html, which fires PASSWORD_RECOVERY and shows the
+    // Lands on index.html, which fires PASSWORD_RECOVERY and shows the
     // "choose a password" modal. Single-use; expires automatically (default 1h).
     let setupLink: string | null = null;
     try {
@@ -483,7 +483,7 @@ Deno.serve(async (req) => {
         await adminClient.auth.admin.generateLink({
           type: "recovery",
           email: sanitizedEmail,
-          options: { redirectTo: `${Deno.env.get("SITE_URL") ?? "https://leadgenrentals.com.au/dashboard"}/dashboard.html` },
+          options: { redirectTo: `${Deno.env.get("SITE_URL") ?? "https://leadgenrentals.com.au/dashboard"}/index.html` },
         });
       if (!linkErr && linkData?.properties?.action_link) {
         setupLink = linkData.properties.action_link;

@@ -91,7 +91,7 @@
   <div class="topbar">
     <h1>VA Panel <span class="pill" id="modePill">Virtual Assistant</span></h1>
     <div style="display:flex;gap:8px">
-      <a class="btn" href="dashboard.html">Dashboard</a>
+      <a class="btn" href="index.html">Dashboard</a>
       <button class="btn" id="logoutBtn" type="button">Log out</button>
     </div>
   </div>
@@ -359,7 +359,7 @@
   async function loadClients() {
     const { ok, status, data } = await vaApi({ action: 'list_clients' });
     if (!ok) {
-      if (status === 403) { location.href = 'dashboard.html'; return; }
+      if (status === 403) { location.href = 'index.html'; return; }
       $('gate').textContent = 'Could not load your clients. ' + (data.error || '');
       return;
     }

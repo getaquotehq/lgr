@@ -427,7 +427,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     try {
       const { error } = await sb.auth.resetPasswordForEmail(email, {
-        redirectTo: window.location.origin + "/dashboard.html",
+        redirectTo: window.location.origin + "/index.html",
       });
 
       if (error) {
