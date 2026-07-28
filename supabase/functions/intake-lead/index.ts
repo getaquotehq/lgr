@@ -27,7 +27,7 @@ function toE164AU(p: string): string {
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 
-// Deliver an event to a company's active webhook_endpoints (Settings > Webhooks
+// Deliver an event to a company's active webhook_endpoints (Settings > Webhooks),
 // signed with HMAC-SHA256 - same contract the public API uses. Fully
 // self-contained: every failure is caught here, so it can never break the
 // caller. Awaits all deliveries so waitUntil keeps them alive past the response.
@@ -279,7 +279,7 @@ Deno.serve(async (req) => {
 
     const leadId = lead.id as string;
 
-    // Deliver to the customer's signed webhook endpoints (Settings > Webhooks in
+    // Deliver to the customer's signed webhook endpoints (Settings > Webhooks)
     // for anyone subscribed to lead.created. Fire-and-forget: fully
     // isolated in its own try/catch inside the helper, so a webhook failure can
     // never affect the lead insert or the response. No-op when the company has
