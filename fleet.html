@@ -491,19 +491,35 @@ function previewLabel(item){
      premium = Fraunces/Jost, cream, hairlines, centred column, no cards
      clear   = Manrope, dark hero, gradient card head, 18px radii, blue/cyan
    Keep these in step with the live sites when a brand is restyled. */
+/* Each brand carries two sets of hero copy: `home` for an asset with no region,
+   and `area(a)` which reproduces that brand's real location-page hero for area
+   `a`. An asset is region-specific, so the preview shows the page the installer
+   is actually renting - brisbane shows the Brisbane hero, not the homepage. */
 const PREVIEW_CFG = {
   'ausolarquotes.com.au': {
     kind:'au', a1:'#0d6e4f',
-    eyebrow:'Matched to installers Australia-wide',
-    h1:'Solar quotes for <span class="hl">every Aussie postcode</span>.'},
+    home:{eyebrow:'Matched to installers Australia-wide',
+      h1:'Solar quotes for <span class="hl">every Aussie postcode</span>.',
+      sub:'Australia-wide solar, matched to your local accredited installer.'},
+    area:a=>({eyebrow:'Matched to accredited '+a+' installers',
+      h1:'<span class="hl">'+a+'</span> solar quotes, done properly.',
+      sub:a+' solar, matched to a local accredited installer who actually covers your postcode.'})},
   'premiumsolarquotes.com.au': {
     kind:'premium', a1:'#8a6a2f',
-    eyebrow:'By vetted, accredited installers',
-    h1:'Premium solar, <span class="hl">quoted properly</span>.'},
+    home:{eyebrow:'By vetted, accredited installers',
+      h1:'Premium solar, <span class="hl">quoted properly</span>.',
+      sub:'Premium panels, premium installers, premium service.'},
+    area:a=>({eyebrow:'Vetted installers serving '+a,
+      h1:'Premium solar quotes for <span class="hl">'+a+'</span>.',
+      sub:'Premium panels and vetted installers for '+a+' homes, quoted properly.'})},
   'clearsolarquotes.com.au': {
     kind:'clear', a1:'#2563eb',
-    eyebrow:'Now matching homeowners with local installers',
-    h1:'Clear solar quotes from <span class="hl">a trusted local installer</span>.'},
+    home:{eyebrow:'Now matching homeowners with local installers',
+      h1:'Clear solar quotes from <span class="hl">a trusted local installer</span>.',
+      sub:'Clear, honest solar pricing from a trusted local installer.'},
+    area:a=>({eyebrow:'Now matching '+a+' homeowners',
+      h1:'Solar quotes in <span class="hl">'+a+'</span>, matched to a local installer.',
+      sub:'Clear, honest solar pricing for '+a+' homes, from one trusted local installer.'})},
 };
 
 const PREVIEW_FONTS = {
@@ -622,6 +638,12 @@ function buildPreviewDoc(item){
   const c = PREVIEW_CFG[domain] || PREVIEW_CFG['ausolarquotes.com.au'];
   const e = s => (s==null?'':String(s)).replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
 
+  /* Show the area page this asset actually covers. Fall back to the homepage
+     hero only when the asset has no region attached. Area names come from the
+     joined regions row, so they are escaped before going into the copy. */
+  const area = (item.area || item.region || '').trim();
+  const copy = area ? c.area(e(area)) : c.home;
+
   const head = `<div class="top">
   <div class="brand"><span class="spark">${c.kind==='premium'?'':'<svg width="14" height="14" viewBox="0 0 24 24" fill="#fff"><path d="M13 2 4 14h6l-1 8 9-12h-6z"/></svg>'}</span> ${e(brand)}</div>
   <div class="navcta">${c.kind==='premium'?'Request a quote':'Get my quote'}</div>
@@ -642,9 +664,9 @@ function buildPreviewDoc(item){
     </div>
   </div>`;
 
-  const hero = `<span class="eyebrow"><span class="d"></span> ${c.eyebrow}</span>
-  <h1>${c.h1}</h1>
-  <p class="sub">Answer four quick questions and ${e(brand)} matches you with a single accredited installer covering your postcode.</p>`;
+  const hero = `<span class="eyebrow"><span class="d"></span> ${copy.eyebrow}</span>
+  <h1>${copy.h1}</h1>
+  <p class="sub">${copy.sub} Answer four quick questions and we'll match you with a single accredited installer covering your postcode.</p>`;
 
   /* Each brand arranges the same pieces differently, matching its live page:
      au keeps a stat rail under the hero, premium centres everything behind a
