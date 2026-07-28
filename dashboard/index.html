@@ -13,7 +13,7 @@
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap');
 *{box-sizing:border-box;margin:0;padding:0}
-:root{--sidebar-w:260px;--accent:#1f6fff;--bg:#f3f5f9;--surface:#fff;--surface-2:#f7f9fc;--border:#d8e0ec;--text:#121826;--muted:#667284;--side:#f8fafc;--side-hover:#eef3fb;--side-active:#121826;--side-active-text:#fff;--radius:18px;--shadow:0 12px 30px rgba(17,24,39,.08)}
+:root{--sidebar-w:260px;--accent:#F59E0B;--bg:#f3f5f9;--surface:#fff;--surface-2:#f7f9fc;--border:#d8e0ec;--text:#121826;--muted:#667284;--side:#f8fafc;--side-hover:#eef3fb;--side-active:#121826;--side-active-text:#fff;--radius:18px;--shadow:0 12px 30px rgba(17,24,39,.08)}
 [data-theme=dark]{--bg:#050505;--surface:#101010;--surface-2:#161616;--border:#252525;--text:#f5f5f5;--muted:#9a9a9a;--side:#000;--side-hover:#131313;--side-active:#f5f5f5;--side-active-text:#050505;--shadow:0 16px 38px rgba(0,0,0,.45)}
 body{font-family:"Poppins",sans-serif;font-weight:400;font-size:14px;background:radial-gradient(circle at top,rgba(31,111,255,.08),transparent 24%),var(--bg);color:var(--text)}button,input,select,textarea{font:inherit;color:inherit}button{background:none;border:none;cursor:pointer}.hidden{display:none!important}
 
@@ -254,7 +254,7 @@ textarea{min-height:100px;resize:vertical}
 .chip-warm{background:rgba(251,191,36,.12);border-color:rgba(251,191,36,.3);color:#92400e}
 [data-theme=dark] .chip-warm{color:#fbbf24}
 .chip-cold{background:rgba(59,130,246,.12);border-color:rgba(59,130,246,.3);color:#1e40af}
-[data-theme=dark] .chip-cold{color:#60a5fa}
+[data-theme=dark] .chip-cold{color:#FBBF24}
 .chip-new{background:rgba(107,114,128,.12);border-color:rgba(107,114,128,.3);color:#374151}
 [data-theme=dark] .chip-new{color:#9ca3af}
 
@@ -332,7 +332,7 @@ textarea[readonly]{background:var(--surface);cursor:not-allowed}
 .sms-pending-title{color:#78350f}
 .sms-pending-body{color:#92400e}
 [data-theme=dark] .sms-pending-notice{background:#1a1500;border-color:#3d2e00}
-[data-theme=dark] .sms-pending-title{color:#4797ff}
+[data-theme=dark] .sms-pending-title{color:#F59E0B}
 [data-theme=dark] .sms-pending-body{color:#a8b8cc}
 
 /* ── Responsive ─────────────────────────────────── */
@@ -392,7 +392,7 @@ textarea[readonly]{background:var(--surface);cursor:not-allowed}
 
 /* ── Change 2: Lead row urgency ──────────────────────────────── */
 tr.lead-hot td:first-child{border-left:3px solid #ef4444}
-tr.lead-warm td:first-child{border-left:3px solid #3b82f6}
+tr.lead-warm td:first-child{border-left:3px solid #F59E0B}
 tr.lead-cold td:first-child{border-left:3px solid transparent}
 tr.lead-hot{background:rgba(239,68,68,.03)}
 tr.lead-warm{background:rgba(59,130,246,.03)}
@@ -425,7 +425,7 @@ tr.lead-warm{background:rgba(59,130,246,.03)}
 .page{animation:fadeIn .15s ease}
 @keyframes fadeIn{from{opacity:.7;transform:translateY(4px)}to{opacity:1;transform:none}}
 @media(prefers-reduced-motion:reduce){.page{animation:none}}
-input:focus,select:focus,textarea:focus,button:focus-visible{outline:none;box-shadow:0 0 0 2px var(--accent,#1f6fff)}
+input:focus,select:focus,textarea:focus,button:focus-visible{outline:none;box-shadow:0 0 0 2px var(--accent,#F59E0B)}
 .modal.open .modal-card{animation:scaleIn .15s ease}
 @keyframes scaleIn{from{opacity:0;transform:scale(.97)}to{opacity:1;transform:none}}
 @media(prefers-reduced-motion:reduce){.modal.open .modal-card{animation:none}}
@@ -434,7 +434,7 @@ input:focus,select:focus,textarea:focus,button:focus-visible{outline:none;box-sh
 @media(max-width:860px){
   .mobile-nav{display:flex;position:fixed!important;bottom:0;left:0;right:0;height:calc(54px + env(safe-area-inset-bottom,0px));background:var(--surface);border-top:1px solid var(--border);z-index:200;padding-bottom:env(safe-area-inset-bottom,0px);overflow:hidden}
   .mobile-nav-item{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;padding:0 2px;border:none;background:none;color:var(--muted);font-size:10px;font-weight:500;cursor:pointer;position:relative;transition:color .15s;-webkit-tap-highlight-color:transparent;min-width:0;overflow:hidden}
-  .mobile-nav-item.active,.mobile-nav-item:active{color:var(--accent,#1f6fff)}
+  .mobile-nav-item.active,.mobile-nav-item:active{color:var(--accent,#F59E0B)}
   .mobile-nav-item .icon{width:20px;height:20px;flex-shrink:0}
   .mobile-badge{position:absolute;top:2px;right:calc(50% - 18px);min-width:14px;height:14px;border-radius:999px;background:#ef4444;color:#fff;font-size:9px;font-weight:700;display:grid;place-items:center;padding:0 3px;pointer-events:none}
   .main{padding-bottom:calc(58px + env(safe-area-inset-bottom,0px))!important}
@@ -552,7 +552,7 @@ tbody tr:hover{background:var(--side-hover);transition:background .1s}
       <div class="nav">
         <button id="navBuyLeads" class="nav-item" data-page="buy-leads" type="button">
           <span class="icon" data-icon="spark"></span>
-          <span class="nav-text">Buy Leads</span>
+          <span class="nav-text">Rent Assets</span>
         </button>
         <button class="nav-item" data-page="ai-insights" type="button">
           <span class="icon" data-icon="chart"></span>
@@ -610,7 +610,7 @@ tbody tr:hover{background:var(--side-hover);transition:background .1s}
       <div id="page-dashboard" class="page">
 
         <!-- Onboarding checklist (Change 7) -->
-        <section class="panel" id="onboardingChecklist" style="border:1px solid var(--accent,#1f6fff);display:none">
+        <section class="panel" id="onboardingChecklist" style="border:1px solid var(--accent,#F59E0B);display:none">
           <div class="panel-h">
             <div>
               <h2>Get started - 3 steps to your first booked job</h2>
@@ -627,7 +627,7 @@ tbody tr:hover{background:var(--side-hover);transition:background .1s}
                   <strong style="font-size:13px">Configure your AI agent</strong>
                   <span class="muted" style="display:block;font-size:12px">Set your agent name and enable the SMS bot</span>
                 </div>
-                <span style="margin-left:auto;font-size:12px;color:var(--accent,#1f6fff)">Go →</span>
+                <span style="margin-left:auto;font-size:12px;color:var(--accent,#F59E0B)">Go →</span>
               </div>
               <div id="oc_step2" class="check-row">
                 <span id="oc_step2_icon" style="font-size:18px;flex-shrink:0">○</span>
@@ -642,7 +642,7 @@ tbody tr:hover{background:var(--side-hover);transition:background .1s}
                   <strong style="font-size:13px">Buy your first lead pack</strong>
                   <span class="muted" style="display:block;font-size:12px">Purchase a lead pack to start receiving exclusive leads in your area</span>
                 </div>
-                <span style="margin-left:auto;font-size:12px;color:var(--accent,#1f6fff)">Buy leads →</span>
+                <span style="margin-left:auto;font-size:12px;color:var(--accent,#F59E0B)">Rent assets →</span>
               </div>
             </div>
           </div>
@@ -656,7 +656,7 @@ tbody tr:hover{background:var(--side-hover);transition:background .1s}
               <span class="icon" data-icon="file"></span><span>New Quote</span>
             </button>
             <button class="quick-tile" type="button" onclick="navigateTo('buy-leads')">
-              <span class="icon" data-icon="spark"></span><span>Buy Leads</span>
+              <span class="icon" data-icon="spark"></span><span>Rent Assets</span>
             </button>
             <button class="quick-tile" type="button" onclick="navigateTo('bulk-sms')">
               <span class="icon" data-icon="mail"></span><span>Send Campaign</span>
@@ -781,7 +781,7 @@ tbody tr:hover{background:var(--side-hover);transition:background .1s}
               <h3>No leads yet</h3>
               <p>Leads flow in automatically in real-time.</p>
               <div style="display:flex;gap:8px;margin-top:4px">
-                <button class="btn" type="button" onclick="navigateTo('buy-leads')">Buy leads →</button>
+                <button class="btn" type="button" onclick="navigateTo('buy-leads')">Rent assets →</button>
               </div>
             </div>
             <div id="leadsPagination" style="display:flex;justify-content:center;gap:10px;margin-top:14px"></div>
@@ -1177,8 +1177,8 @@ tbody tr:hover{background:var(--side-hover);transition:background .1s}
                   <div style="font-size:13px;font-weight:600;margin-bottom:10px">$10 AUD</div>
                   <button class="btn2" style="width:100%;font-size:12px;padding:8px" onclick="buySmsCredits('100')">Buy</button>
                 </div>
-                <div style="flex:1;min-width:140px;border:2px solid var(--accent,#4797FF);border-radius:10px;padding:16px;text-align:center;position:relative">
-                  <div style="position:absolute;top:-10px;left:50%;transform:translateX(-50%);background:var(--accent,#4797FF);color:#fff;font-size:10px;font-weight:700;padding:2px 10px;border-radius:10px">POPULAR</div>
+                <div style="flex:1;min-width:140px;border:2px solid var(--accent,#F59E0B);border-radius:10px;padding:16px;text-align:center;position:relative">
+                  <div style="position:absolute;top:-10px;left:50%;transform:translateX(-50%);background:var(--accent,#F59E0B);color:#fff;font-size:10px;font-weight:700;padding:2px 10px;border-radius:10px">POPULAR</div>
                   <div style="font-size:18px;font-weight:700;margin-bottom:2px">500</div>
                   <div style="font-size:11px;color:var(--muted);margin-bottom:12px">credits</div>
                   <div style="font-size:13px;font-weight:600;margin-bottom:10px">$45 AUD</div>
@@ -1671,7 +1671,7 @@ tbody tr:hover{background:var(--side-hover);transition:background .1s}
         </div>
       </div>
 
-      <!-- Buy Leads (PPL plan only) -->
+      <!-- Rent Assets -->
       <div id="page-buy-leads" class="page hidden">
         <div class="stack">
           <section class="panel">
@@ -1761,7 +1761,7 @@ tbody tr:hover{background:var(--side-hover);transition:background .1s}
                     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
                       <label style="font-size:13px;font-weight:500">Paste postcode list</label>
                       <a href="https://www.embr.com.au/find-australian-postcodes-inside-radius/index.html" target="_blank" rel="noopener"
-                        style="font-size:12px;color:var(--accent,#4797FF);text-decoration:none">
+                        style="font-size:12px;color:var(--accent,#F59E0B);text-decoration:none">
                         Find postcodes by radius →
                       </a>
                     </div>
@@ -1772,8 +1772,8 @@ tbody tr:hover{background:var(--side-hover);transition:background .1s}
                   </div>
 
                   <div id="locStatewidePanel" style="display:none">
-                    <div style="display:flex;gap:12px;align-items:flex-start;background:var(--surface-2,var(--bg-lift));border:1px solid var(--accent,#4797FF);border-radius:8px;padding:14px 16px">
-                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--accent,#4797FF)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;margin-top:1px"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                    <div style="display:flex;gap:12px;align-items:flex-start;background:var(--surface-2,var(--bg-lift));border:1px solid var(--accent,#F59E0B);border-radius:8px;padding:14px 16px">
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--accent,#F59E0B)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;margin-top:1px"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
                       <div>
                         <div style="font-size:13px;font-weight:600;color:var(--text,var(--ink));margin-bottom:3px">State-wide coverage - <span id="buyLeadsStatewideName">this state</span></div>
                         <div style="font-size:12px;color:var(--muted);line-height:1.6">Leads will be sourced from anywhere across the state - no radius or postcode list needed. Pick a city instead to target a specific area.</div>
@@ -2335,7 +2335,7 @@ tbody tr:hover{background:var(--side-hover);transition:background .1s}
       <div id="a2hsInstructions" style="font-size:12px;color:var(--muted,#667284);margin-top:3px;line-height:1.5"></div>
     </div>
     <div style="display:flex;gap:8px;flex-shrink:0;align-items:center">
-      <button id="a2hsInstallBtn" style="display:none;padding:8px 16px;border-radius:8px;background:var(--accent,#1f6fff);color:#fff;border:none;font-size:13px;font-weight:500;cursor:pointer;font-family:inherit">Install</button>
+      <button id="a2hsInstallBtn" style="display:none;padding:8px 16px;border-radius:8px;background:var(--accent,#F59E0B);color:#fff;border:none;font-size:13px;font-weight:500;cursor:pointer;font-family:inherit">Install</button>
       <button id="a2hsDismissBtn" style="padding:8px 12px;border-radius:8px;background:transparent;color:var(--muted,#667284);border:1px solid var(--border,#d8e0ec);font-size:13px;cursor:pointer;font-family:inherit">✕</button>
     </div>
   </div>

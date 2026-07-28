@@ -997,7 +997,7 @@ const PAGE_META = {
   "team-members":     ["Team",              "Invite and manage your team."],
   "integrations":     ["Integrations",      "API keys, webhooks, and external connections."],
   "reviews":          ["Reviews",           "Manage Google review requests for closed deals."],
-  "buy-leads":        ["Buy Leads",          "Purchase exclusive lead packs for your industry and area."],
+  "buy-leads":        ["Rent Assets",        "Rent an exclusive lead generation asset for your trade and area."],
 };
 
 function isAdmin() {
@@ -1327,7 +1327,7 @@ async function loadHotLeads() {
       const ageHrs  = Math.floor(ageMs / 3600000);
       const ageLabel = ageHrs < 1 ? 'Just now' : ageHrs < 24 ? `${ageHrs}h ago` : `${Math.floor(ageHrs/24)}d ago`;
       const urgency  = ageHrs > 48 ? 'color:#c53535' : ageHrs > 24 ? 'color:#b45309' : '';
-      const borderColor = status === 'hot' ? '#ef4444' : '#3b82f6';
+      const borderColor = status === 'hot' ? '#ef4444' : '#F59E0B';
       return `<div class="row" style="border-left:3px solid ${borderColor};border-radius:0 12px 12px 0;cursor:pointer;grid-template-columns:1.3fr 1fr auto auto"
                    onclick="openOpportunityModal('${l.id}')">
         <div>
@@ -1373,11 +1373,11 @@ async function loadActiveOrdersDash() {
 
   panel.style.display = "";
   const fmt = v => new Intl.NumberFormat("en-AU", { style: "currency", currency: "AUD" }).format(v);
-  const statusColor = s => s === "active" ? "#22c55e" : "#4797FF";
+  const statusColor = s => s === "active" ? "#22c55e" : "#F59E0B";
 
   body.innerHTML = orders.map(o => {
     const pct    = o.quantity > 0 ? Math.min(100, Math.round((o.delivered_count / o.quantity) * 100)) : 0;
-    const bar    = pct >= 100 ? "#22c55e" : pct >= 60 ? "#4797FF" : "#f59e0b";
+    const bar    = pct >= 100 ? "#22c55e" : pct >= 60 ? "#F59E0B" : "#f59e0b";
     const city   = o.area_city || o.area || "-";
     const badge  = `<span style="display:inline-block;font-size:10px;font-weight:600;padding:2px 8px;border-radius:10px;background:${statusColor(o.status)}22;color:${statusColor(o.status)};text-transform:uppercase;letter-spacing:.5px">${o.status}</span>`;
     return `<div style="display:flex;align-items:center;gap:14px;padding:12px 0;border-bottom:1px solid var(--border)">
@@ -3651,7 +3651,7 @@ async function loadPplOrdersUI() {
   if (!orders?.length) { container.innerHTML = `<div class="notice">No PPL orders yet. Create one to start tracking lead delivery.</div>`; return; }
 
   const fmt = v => new Intl.NumberFormat("en-AU", { style: "currency", currency: "AUD" }).format(v);
-  const statusColor = s => ({ pending:"#9a9a9a", paid:"#4797FF", active:"#22c55e", fulfilled:"#22c55e", cancelled:"#ef4444" }[s] || "#9a9a9a");
+  const statusColor = s => ({ pending:"#9a9a9a", paid:"#F59E0B", active:"#22c55e", fulfilled:"#22c55e", cancelled:"#ef4444" }[s] || "#9a9a9a");
 
   // Populate cache so retryPplOrder works from this panel too
   orders.forEach(o => _pplOrdersCache.set(o.id, o));
@@ -3661,7 +3661,7 @@ async function loadPplOrdersUI() {
     + orders.map((o) => {
     const isPending = o.status === "pending";
     const pct    = o.quantity > 0 ? Math.min(100, Math.round((o.delivered_count / o.quantity) * 100)) : 0;
-    const colour = o.status === "cancelled" ? "#9e9e9e" : pct >= 100 ? "#22c55e" : pct >= 60 ? "#4797FF" : "#f59e0b";
+    const colour = o.status === "cancelled" ? "#9e9e9e" : pct >= 100 ? "#22c55e" : pct >= 60 ? "#F59E0B" : "#f59e0b";
     const city   = o.area_city || o.area || "-";
     const statusBadge = `<span style="display:inline-block;font-size:10px;font-weight:600;padding:2px 8px;border-radius:10px;background:${statusColor(o.status)}22;color:${statusColor(o.status)};text-transform:uppercase;letter-spacing:.5px">${o.status}</span>`;
 
@@ -5386,7 +5386,7 @@ async function loadAiInsights() {
 
       convEl.innerHTML = `
         <div style="flex:1;text-align:center">
-          <div style="background:var(--accent,#1f6fff);border-radius:6px 6px 0 0;height:${Math.max(8, (aiRate / maxRate) * 120)}px;margin:0 auto;width:60px"></div>
+          <div style="background:var(--accent,#F59E0B);border-radius:6px 6px 0 0;height:${Math.max(8, (aiRate / maxRate) * 120)}px;margin:0 auto;width:60px"></div>
           <div style="margin-top:8px;font-weight:600;font-size:20px">${aiRate.toFixed(1)}%</div>
           <div style="font-size:12px;color:var(--muted)">AI Conversion</div>
           <div style="font-size:11px;color:var(--muted)">${stats.ai_conversions} / ${stats.ai_handled_leads} leads</div>
@@ -5483,7 +5483,7 @@ async function loadAiInsights() {
           <div style="flex:1;min-width:0">
             <div style="font-size:13px;font-weight:600;color:var(--text);margin-bottom:4px">${esc(c.title)}</div>
             <div style="font-size:12px;color:var(--muted);line-height:1.65">${esc(c.body)}</div>
-            ${c.action ? `<div style="margin-top:6px;font-size:12px;color:#4797FF;font-weight:500">→ ${esc(c.action)}</div>` : ""}
+            ${c.action ? `<div style="margin-top:6px;font-size:12px;color:#F59E0B;font-weight:500">→ ${esc(c.action)}</div>` : ""}
           </div>
           ${c.metric ? `<div style="text-align:right;flex-shrink:0;padding-left:8px"><div style="font-size:22px;font-weight:700;color:var(--text)">${esc(c.metric)}</div><div style="font-size:10px;color:var(--muted);white-space:nowrap">${esc(c.metricLabel || "")}</div></div>` : ""}
         </div>`;
@@ -6264,7 +6264,7 @@ async function skipReviewRequest(requestId) {
 }
 
 // =============================================================================
-// Buy Leads helpers
+// Rent Assets helpers
 // =============================================================================
 function nicheLabel(niche) {
   if (niche === 'solar_battery' || niche === 'solar-battery') return 'Solar + Battery';
@@ -6273,7 +6273,7 @@ function nicheLabel(niche) {
 }
 
 // =============================================================================
-// Buy Leads state
+// Rent Assets state
 // =============================================================================
 let _pplPricing      = [];  // kept for sub-niche compat; primary prices are _blCityPrices
 let _blDiscountTiers = [];  // [{min_quantity, discount_percent, label, is_popular}]
@@ -6380,7 +6380,7 @@ function renderBuyLeadsNiches() {
     const isSelected = niche === _blNiche;
     return `<button type="button" onclick="buyLeadsSelectNiche('${niche}')"
       id="nicheCard-${niche}"
-      style="padding:10px 20px;border-radius:10px;border:1px solid ${isSelected ? 'var(--accent,#4797FF)' : 'var(--border)'};background:${isSelected ? 'var(--accent,#4797FF)' : 'var(--surface-2,var(--bg-lift))'};color:${isSelected ? '#fff' : 'var(--text,var(--ink))'};font-size:13px;font-weight:500;cursor:pointer;transition:all 0.15s;font-family:inherit;text-align:left;line-height:1.4">
+      style="padding:10px 20px;border-radius:10px;border:1px solid ${isSelected ? 'var(--accent,#F59E0B)' : 'var(--border)'};background:${isSelected ? 'var(--accent,#F59E0B)' : 'var(--surface-2,var(--bg-lift))'};color:${isSelected ? '#fff' : 'var(--text,var(--ink))'};font-size:13px;font-weight:500;cursor:pointer;transition:all 0.15s;font-family:inherit;text-align:left;line-height:1.4">
       ${label}${priceNote}
     </button>`;
   }).join('');
@@ -6398,7 +6398,7 @@ function renderBuyLeadsSubNiches(niche) {
 
   let html = `<button type="button" onclick="buyLeadsSelectSubNiche(null)"
     id="subNicheCard-any"
-    style="padding:10px 20px;border-radius:10px;border:1px solid ${isAny ? 'var(--accent,#4797FF)' : 'var(--border)'};background:${isAny ? 'var(--accent,#4797FF)' : 'var(--surface-2,var(--bg-lift))'};color:${isAny ? '#fff' : 'var(--text,var(--ink))'};font-size:13px;font-weight:500;cursor:pointer;transition:all 0.15s;font-family:inherit;text-align:left;line-height:1.4">
+    style="padding:10px 20px;border-radius:10px;border:1px solid ${isAny ? 'var(--accent,#F59E0B)' : 'var(--border)'};background:${isAny ? 'var(--accent,#F59E0B)' : 'var(--surface-2,var(--bg-lift))'};color:${isAny ? '#fff' : 'var(--text,var(--ink))'};font-size:13px;font-weight:500;cursor:pointer;transition:all 0.15s;font-family:inherit;text-align:left;line-height:1.4">
     Any ${nicheLabel(niche)}${anyNote}
   </button>`;
 
@@ -6416,7 +6416,7 @@ function renderBuyLeadsSubNiches(niche) {
     const isSel     = _blSubNiche === s.id;
     return `<button type="button" onclick="buyLeadsSelectSubNiche('${s.id}')"
       id="subNicheCard-${s.id}"
-      style="padding:10px 20px;border-radius:10px;border:1px solid ${isSel ? 'var(--accent,#4797FF)' : 'var(--border)'};background:${isSel ? 'var(--accent,#4797FF)' : 'var(--surface-2,var(--bg-lift))'};color:${isSel ? '#fff' : 'var(--text,var(--ink))'};font-size:13px;font-weight:500;cursor:pointer;transition:all 0.15s;font-family:inherit;text-align:left;line-height:1.4">
+      style="padding:10px 20px;border-radius:10px;border:1px solid ${isSel ? 'var(--accent,#F59E0B)' : 'var(--border)'};background:${isSel ? 'var(--accent,#F59E0B)' : 'var(--surface-2,var(--bg-lift))'};color:${isSel ? '#fff' : 'var(--text,var(--ink))'};font-size:13px;font-weight:500;cursor:pointer;transition:all 0.15s;font-family:inherit;text-align:left;line-height:1.4">
       ${s.label}${priceNote}
     </button>`;
   }).join('');
@@ -6474,7 +6474,7 @@ function renderBuyLeadsPacks() {
       ? `<span style="display:inline-block;margin-left:6px;padding:1px 6px;border-radius:20px;font-size:10px;font-weight:700;background:${isSelected ? 'rgba(255,255,255,0.25)' : '#22c55e22'};color:${isSelected ? '#fff' : '#16a34a'}">${t.discount_percent}% off</span>`
       : '';
     const popular = t.is_popular
-      ? `<div style="font-size:10px;font-weight:600;color:${isSelected ? 'rgba(255,255,255,0.8)' : 'var(--accent,#4797FF)'};margin-top:2px">Most popular</div>`
+      ? `<div style="font-size:10px;font-weight:600;color:${isSelected ? 'rgba(255,255,255,0.8)' : 'var(--accent,#F59E0B)'};margin-top:2px">Most popular</div>`
       : '';
     if (overCap) {
       return `<button type="button" disabled title="Not available in this area right now"
@@ -6484,7 +6484,7 @@ function renderBuyLeadsPacks() {
     }
     return `<button type="button" id="packCard-${t.min_quantity}"
       onclick="buyLeadsSelectPack(${t.min_quantity}, ${t.discount_percent})"
-      style="padding:12px 18px;border-radius:10px;border:1px solid ${isSelected ? '#4797FF' : 'var(--border)'};background:${isSelected ? '#4797FF' : 'var(--surface-2,var(--bg-lift))'};color:${isSelected ? '#fff' : 'var(--text,var(--ink))'};font-size:13px;font-weight:600;cursor:pointer;transition:all 0.15s;font-family:inherit;text-align:left;line-height:1.4;min-width:100px">
+      style="padding:12px 18px;border-radius:10px;border:1px solid ${isSelected ? '#F59E0B' : 'var(--border)'};background:${isSelected ? '#F59E0B' : 'var(--surface-2,var(--bg-lift))'};color:${isSelected ? '#fff' : 'var(--text,var(--ink))'};font-size:13px;font-weight:600;cursor:pointer;transition:all 0.15s;font-family:inherit;text-align:left;line-height:1.4;min-width:100px">
       ${t.label}${badge}
       ${popular}
     </button>`;
@@ -6687,8 +6687,8 @@ function buyLeadsSetLocType(type) {
 
   const rBtn = document.getElementById('locTypeRadius');
   const pBtn = document.getElementById('locTypePostcodes');
-  if (rBtn) { rBtn.style.background = isRadius ? 'var(--accent,#4797FF)' : 'var(--surface-2,var(--bg-lift))'; rBtn.style.borderColor = isRadius ? 'var(--accent,#4797FF)' : 'var(--border)'; rBtn.style.color = isRadius ? '#fff' : 'var(--text,var(--ink))'; }
-  if (pBtn) { pBtn.style.background = !isRadius ? 'var(--accent,#4797FF)' : 'var(--surface-2,var(--bg-lift))'; pBtn.style.borderColor = !isRadius ? 'var(--accent,#4797FF)' : 'var(--border)'; pBtn.style.color = !isRadius ? '#fff' : 'var(--text,var(--ink))'; }
+  if (rBtn) { rBtn.style.background = isRadius ? 'var(--accent,#F59E0B)' : 'var(--surface-2,var(--bg-lift))'; rBtn.style.borderColor = isRadius ? 'var(--accent,#F59E0B)' : 'var(--border)'; rBtn.style.color = isRadius ? '#fff' : 'var(--text,var(--ink))'; }
+  if (pBtn) { pBtn.style.background = !isRadius ? 'var(--accent,#F59E0B)' : 'var(--surface-2,var(--bg-lift))'; pBtn.style.borderColor = !isRadius ? 'var(--accent,#F59E0B)' : 'var(--border)'; pBtn.style.color = !isRadius ? '#fff' : 'var(--text,var(--ink))'; }
 
   document.getElementById('locRadiusPanel').style.display    = isRadius ? '' : 'none';
   document.getElementById('locPostcodesPanel').style.display = !isRadius ? '' : 'none';
@@ -6798,7 +6798,7 @@ function renderBuyLeadsOrders(orders) {
   if (!orders.length) { el.innerHTML = `<div class="notice">No orders yet. Purchase your first lead pack above.</div>`; return; }
 
   const fmt = v => new Intl.NumberFormat('en-AU', { style: 'currency', currency: 'AUD' }).format(v);
-  const statusColor = s => ({ paid:'#4797FF', active:'#22c55e', fulfilled:'#22c55e', cancelled:'#9a9a9a' }[s] || '#9a9a9a');
+  const statusColor = s => ({ paid:'#F59E0B', active:'#22c55e', fulfilled:'#22c55e', cancelled:'#9a9a9a' }[s] || '#9a9a9a');
 
   const pending = orders.filter(o => o.status === 'pending');
   const active  = orders.filter(o => o.status !== 'pending');

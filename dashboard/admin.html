@@ -8,7 +8,7 @@
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap');
 *{box-sizing:border-box;margin:0;padding:0}
-:root{--accent:#1f6fff;--bg:#f3f5f9;--surface:#fff;--surface-2:#f7f9fc;--border:#d8e0ec;--text:#121826;--muted:#667284;--radius:18px;--shadow:0 12px 30px rgba(17,24,39,.08)}
+:root{--accent:#F59E0B;--bg:#f3f5f9;--surface:#fff;--surface-2:#f7f9fc;--border:#d8e0ec;--text:#121826;--muted:#667284;--radius:18px;--shadow:0 12px 30px rgba(17,24,39,.08)}
 [data-theme=dark]{--bg:#050505;--surface:#101010;--surface-2:#161616;--border:#252525;--text:#f5f5f5;--muted:#9a9a9a;--shadow:0 16px 38px rgba(0,0,0,.45)}
 body{font-family:"Poppins",sans-serif;font-size:14px;background:radial-gradient(circle at top,rgba(31,111,255,.08),transparent 24%),var(--bg);color:var(--text);min-height:100vh}
 button,input{font:inherit;color:inherit}
@@ -56,8 +56,8 @@ h1{font-size:18px;font-weight:500}
 .tag{display:inline-flex;align-items:center;padding:2px 8px;border-radius:999px;font-size:10px;font-weight:600;border:1px solid var(--border);background:var(--surface)}
 .tag-admin{background:rgba(239,68,68,.1);border-color:rgba(239,68,68,.3);color:#b91c1c}
 [data-theme=dark] .tag-admin{color:#f87171}
-.tag-owner{background:rgba(31,111,255,.1);border-color:rgba(31,111,255,.3);color:#1d4ed8}
-[data-theme=dark] .tag-owner{color:#60a5fa}
+.tag-owner{background:rgba(31,111,255,.1);border-color:rgba(31,111,255,.3);color:#B45309}
+[data-theme=dark] .tag-owner{color:#FBBF24}
 .tag-inactive{background:rgba(251,191,36,.1);border-color:rgba(251,191,36,.35);color:#92400e}
 [data-theme=dark] .tag-inactive{color:#fbbf24}
 .tag-deletion{background:rgba(239,68,68,.1);border-color:rgba(239,68,68,.3);color:#b91c1c}
@@ -104,8 +104,8 @@ h1{font-size:18px;font-weight:500}
 .dispute-lead{font-size:13px;font-weight:500}
 .dispute-badges{display:flex;gap:5px;flex-wrap:wrap;margin-top:6px}
 .badge-reason,.badge-status{display:inline-flex;align-items:center;padding:2px 9px;border-radius:999px;font-size:10px;font-weight:700;border:1px solid var(--border)}
-.badge-reason{background:rgba(31,111,255,.08);border-color:rgba(31,111,255,.25);color:#1d4ed8}
-[data-theme=dark] .badge-reason{color:#60a5fa}
+.badge-reason{background:rgba(31,111,255,.08);border-color:rgba(31,111,255,.25);color:#B45309}
+[data-theme=dark] .badge-reason{color:#FBBF24}
 .badge-pending{background:rgba(251,191,36,.1);border-color:rgba(251,191,36,.35);color:#92400e}
 [data-theme=dark] .badge-pending{color:#fbbf24}
 .badge-manual{background:rgba(234,88,12,.1);border-color:rgba(234,88,12,.3);color:#c2410c}
@@ -152,7 +152,7 @@ h1{font-size:18px;font-weight:500}
 .panel-chevron svg{transition:transform .2s;display:block}
 .panel-chevron.open svg{transform:rotate(180deg)}
 .panel-h-title{cursor:pointer}
-.panel-h-title:hover h2{color:var(--accent,#4797FF)}
+.panel-h-title:hover h2{color:var(--accent,#F59E0B)}
 
 /* ── Responsive ──────────────────────────────────────────────────── */
 @media(max-width:600px){
@@ -178,7 +178,7 @@ h1{font-size:18px;font-weight:500}
 .bb-due{background:rgba(245,158,11,.14);color:#b45309;border-color:rgba(245,158,11,.4)}
 .bb-paid{background:rgba(16,185,129,.14);color:#047857;border-color:rgba(16,185,129,.4)}
 .bb-unpaid{background:rgba(239,68,68,.14);color:#b91c1c;border-color:rgba(239,68,68,.4)}
-.bb-sent{background:rgba(71,151,255,.14);color:#1d4ed8;border-color:rgba(71,151,255,.4)}
+.bb-sent{background:rgba(71,151,255,.14);color:#B45309;border-color:rgba(71,151,255,.4)}
 .bb-new{background:rgba(139,92,246,.16);color:#6d28d9;border-color:rgba(139,92,246,.4)}
 .bill-invs{margin-top:10px;font-size:12px}
 .bill-inv-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:6px 0;border-top:1px dashed var(--border)}
@@ -4279,7 +4279,7 @@ h1{font-size:18px;font-weight:500}
   function lgrStatusPill(status) {
     var map = {
       available: ['#0f8a4d', 'rgba(15,138,77,.12)'],
-      rented:    ['#1f6fff', 'rgba(31,111,255,.12)'],
+      rented:    ['#F59E0B', 'rgba(31,111,255,.12)'],
       paused:    ['#b45309', 'rgba(180,83,9,.12)'],
       retired:   ['#6b7280', 'rgba(107,114,128,.12)'],
     };
