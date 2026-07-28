@@ -336,7 +336,7 @@ Deno.serve(async (req) => {
         leadCount = 0;
 
       if (companyId) {
-        const [compRes, twilioRes, rentalRes, smsRes, leadRes] = await Promise.all([
+        const [compRes, twilioRes, _unused, smsRes, leadRes] = await Promise.all([
           adminClient
             .from("companies")
             .select("*")
@@ -348,10 +348,10 @@ Deno.serve(async (req) => {
             .eq("company_id", companyId)
             .order("created_at"),
           adminClient
-            .from("rentals")
-            .select("id, monthly_price_aud, floor_leads, started_at, ended_at, assets(brand_name, tier, niches(name), regions(name, state))")
-            .is("ended_at", null)
-            .order("started_at", { ascending: false }),
+            .from("sms_credits")
+            .select("company_id")
+            .eq("company_id", companyId)
+            .maybeSingle(),
           adminClient
             .from("sms_credits")
             .select("balance, lifetime_used, monthly_free_sms, next_reset_at")
@@ -365,9 +365,29 @@ Deno.serve(async (req) => {
 
         company       = compRes.data;
         twilioNumbers = twilioRes.data || [];
-        rentals       = rentalRes.data || [];
         smsCredits    = smsRes.data;
         leadCount     = leadRes.count ?? 0;
+
+        // Rentals hang off installers, not companies, so resolve the installer
+        // by business name first. Without this the query returned every active
+        // rental in the system for whichever user was opened.
+        const companyName = (company as { name?: string } | null)?.name;
+        if (companyName) {
+          const { data: inst } = await adminClient
+            .from("installers")
+            .select("id")
+            .eq("business_name", companyName)
+            .maybeSingle();
+          if (inst?.id) {
+            const { data: rentalRows } = await adminClient
+              .from("rentals")
+              .select("id, monthly_price_aud, floor_leads, started_at, ended_at, assets(brand_name, tier, niches(name), regions(name, state))")
+              .eq("installer_id", inst.id)
+              .is("ended_at", null)
+              .order("started_at", { ascending: false });
+            rentals = rentalRows || [];
+          }
+        }
       }
 
       return json({
