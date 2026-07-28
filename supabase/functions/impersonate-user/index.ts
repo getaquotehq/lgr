@@ -1144,7 +1144,7 @@ Deno.serve(async (req) => {
     Hi ${userName},
   </p>
   <p style="font-size:14px;color:#555;line-height:1.7;margin:0 0 16px">
-    Your LeadGenRentalsHQ account has been inactive for 30 days. As a result, <strong>your account and all associated data will be permanently deleted in 7 days</strong>.
+    Your Lead Gen Rentals account has been inactive for 30 days. As a result, <strong>your account and all associated data will be permanently deleted in 7 days</strong>.
   </p>
   <p style="font-size:14px;color:#555;line-height:1.7;margin:0 0 16px">
     If you'd like to keep your account, simply <strong>log in</strong> before the 7-day period ends. We also recommend exporting any leads you may need.
@@ -1164,7 +1164,7 @@ Deno.serve(async (req) => {
 </body>
 </html>`.trim();
 
-      const emailText = `Hi ${userName},\n\nYour LeadGenRentalsHQ account has been inactive for 30 days. Your account and all associated data will be permanently deleted in 7 days.\n\nIf you'd like to keep your account, simply log in before the 7-day period ends. We also recommend exporting any leads you may need.\n\nTo delete your account immediately: ${deleteNowUrl}\n\nIf you believe this is a mistake, contact support@leadgenrentals.com.au.`;
+      const emailText = `Hi ${userName},\n\nYour Lead Gen Rentals account has been inactive for 30 days. Your account and all associated data will be permanently deleted in 7 days.\n\nIf you'd like to keep your account, simply log in before the 7-day period ends. We also recommend exporting any leads you may need.\n\nTo delete your account immediately: ${deleteNowUrl}\n\nIf you believe this is a mistake, contact support@leadgenrentals.com.au.`;
 
       // Send via resend-email edge function
       const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
@@ -1176,7 +1176,7 @@ Deno.serve(async (req) => {
         },
         body: JSON.stringify({
           to: targetUser.email,
-          subject: "Your LeadGenRentalsHQ account will be deleted in 7 days",
+          subject: "Your Lead Gen Rentals account will be deleted in 7 days",
           html: emailHtml,
           text: emailText,
         }),

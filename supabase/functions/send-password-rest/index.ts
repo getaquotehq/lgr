@@ -1,5 +1,5 @@
 // =============================================================================
-// LeadGenRentalsHQ - Send Password Reset via Resend
+// Lead Gen Rentals - Send Password Reset via Resend
 // =============================================================================
 // Same pattern as invite-rep:
 //   1. admin.generateLink({ type: "recovery", redirectTo: index.html })
@@ -13,8 +13,8 @@
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
-const BRAND_COLOR = "#1f6fff";
-const BRAND_NAME = "LeadGenRentalsHQ";
+const BRAND_COLOR = "#F59E0B";
+const BRAND_NAME = "Lead Gen Rentals";
 
 function baseLayout(content: string): string {
   return `<!DOCTYPE html>
@@ -49,7 +49,7 @@ function buttonHtml(text: string, url: string): string {
 
 function passwordResetEmail(resetLink: string): { subject: string; html: string } {
   return {
-    subject: "Reset your LeadGenRentalsHQ password",
+    subject: "Reset your Lead Gen Rentals password",
     html: baseLayout(`
       <h2 style="margin:0 0 16px;font-size:18px;color:#111827">Password Reset</h2>
       <p style="margin:0 0 16px;font-size:14px;color:#374151">We received a request to reset your password. Click the button below to choose a new password.</p>

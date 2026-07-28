@@ -1,5 +1,5 @@
 // =============================================================================
-// LeadGenRentalsHQ - Public Quote Viewer
+// Lead Gen Rentals - Public Quote Viewer
 // =============================================================================
 // Unauthenticated edge function for external quote recipients.
 //

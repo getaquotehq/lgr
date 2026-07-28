@@ -1,5 +1,5 @@
 // =============================================================================
-// LeadGenRentalsHQ - Quote Draft Generator
+// Lead Gen Rentals - Quote Draft Generator
 // =============================================================================
 // Triggered by twilio-inbound-sms when AI detects the lead is ready for a quote.
 // Receives conversation context and creates a draft quote with AI-extracted details.
@@ -19,8 +19,8 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 // ── Inline email template (avoids local-file import that breaks deployment) ──
-const _BRAND_COLOR = "#1f6fff";
-const _BRAND_NAME = "LeadGenRentalsHQ";
+const _BRAND_COLOR = "#F59E0B";
+const _BRAND_NAME = "Lead Gen Rentals";
 function _baseLayout(content: string): string {
   return `<!DOCTYPE html>
 <html lang="en">

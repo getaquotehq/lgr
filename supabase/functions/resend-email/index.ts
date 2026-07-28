@@ -1,5 +1,5 @@
 // =============================================================================
-// LeadGenRentalsHQ - Resend Email Sender
+// Lead Gen Rentals - Resend Email Sender
 // =============================================================================
 // Centralised email sending via Resend (https://resend.com).
 // Called internally by other edge functions (twilio-inbound-sms, quote-draft,

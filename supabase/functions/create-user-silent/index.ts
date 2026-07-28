@@ -12,7 +12,7 @@ async function sendSetupEmail(
 ): Promise<void> {
   const ctaSection = setupLink
     ? `<a href="${setupLink}"
-         style="display:inline-block;background:#1f6fff;color:#ffffff;text-decoration:none;padding:12px 24px;border-radius:8px;font-size:14px;font-weight:600">
+         style="display:inline-block;background:#F59E0B;color:#ffffff;text-decoration:none;padding:12px 24px;border-radius:8px;font-size:14px;font-weight:600">
          Set your password &rarr;
        </a>
        <p style="margin:16px 0 0;font-size:12px;color:#9ca3af">
@@ -20,7 +20,7 @@ async function sendSetupEmail(
        </p>`
     : `<p style="margin:0;font-size:14px;color:#374151">
          To finish setting up, go to
-         <a href="https://leadgenrentals.com.au/dashboard" style="color:#1f6fff">leadgenrentals.com.au/dashboard</a>
+         <a href="https://leadgenrentals.com.au/dashboard" style="color:#F59E0B">leadgenrentals.com.au/dashboard</a>
          and use “Forgot password” to choose your password.
        </p>`;
 
@@ -33,14 +33,14 @@ async function sendSetupEmail(
 <table width="100%" cellpadding="0" cellspacing="0" style="background:#f3f5f9;padding:40px 20px">
 <tr><td align="center">
 <table width="600" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 4px 12px rgba(0,0,0,0.08)">
-<tr><td style="background:#1f6fff;padding:24px 32px">
-  <h1 style="margin:0;color:#ffffff;font-size:20px;font-weight:600">LeadGenRentalsHQ</h1>
+<tr><td style="background:#F59E0B;padding:24px 32px">
+  <h1 style="margin:0;color:#ffffff;font-size:20px;font-weight:600">Lead Gen Rentals</h1>
 </td></tr>
 <tr><td style="padding:32px">
   <h2 style="margin:0 0 16px;font-size:18px;color:#111827">Welcome - let's set up your account</h2>
   <p style="margin:0 0 16px;font-size:14px;color:#374151">Hi ${name},</p>
   <p style="margin:0 0 24px;font-size:14px;color:#374151">
-    An account has been created for you on LeadGenRentalsHQ. Click the button below to choose your password and log in.
+    An account has been created for you on Lead Gen Rentals. Click the button below to choose your password and log in.
   </p>
   <table cellpadding="0" cellspacing="0" style="background:#f8f9fb;border:1px solid #e5e7eb;border-radius:8px;padding:16px 20px;margin-bottom:24px;width:100%">
     <tr><td style="font-size:13px;color:#6b7280;padding-bottom:6px">Your login email</td></tr>
@@ -50,7 +50,7 @@ async function sendSetupEmail(
 </td></tr>
 <tr><td style="padding:16px 32px;background:#f8f9fb;border-top:1px solid #e5e7eb">
   <p style="margin:0;font-size:12px;color:#9ca3af;text-align:center">
-    LeadGenRentalsHQ &mdash; All rights reserved.
+    Lead Gen Rentals &mdash; All rights reserved.
   </p>
 </td></tr>
 </table>
@@ -70,9 +70,9 @@ async function sendSetupEmail(
     body: JSON.stringify({
       from: fromAddress,
       to: [email],
-      subject: "Set up your LeadGenRentalsHQ account",
+      subject: "Set up your Lead Gen Rentals account",
       html,
-      text: `Hi ${name},\n\nAn account has been created for you on LeadGenRentalsHQ.\n\nYour login email: ${email}\n\n${ctaText}`,
+      text: `Hi ${name},\n\nAn account has been created for you on Lead Gen Rentals.\n\nYour login email: ${email}\n\n${ctaText}`,
     }),
   });
 

@@ -1,5 +1,5 @@
 // =============================================================================
-// LeadGenRentalsHQ - Send Review Request (Scheduled)
+// Lead Gen Rentals - Send Review Request (Scheduled)
 // =============================================================================
 // Processes pending review requests that are due for sending.
 // Called via cron job (pg_cron or external scheduler) or manually.

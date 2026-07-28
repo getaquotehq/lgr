@@ -1,5 +1,5 @@
 // =============================================================================
-// LeadGenRentalsHQ - Twilio Inbound SMS Webhook
+// Lead Gen Rentals - Twilio Inbound SMS Webhook
 // =============================================================================
 // Replaces the full Make.com workflow. Receives inbound SMS from Twilio,
 // runs the AI nurturing pipeline, and replies via Twilio.
@@ -26,8 +26,8 @@
 import { createClient, SupabaseClient } from "npm:@supabase/supabase-js@2";
 
 // ── Inline email templates (avoids local-file import that breaks deployment) ──
-const _BRAND_COLOR = "#1f6fff";
-const _BRAND_NAME = "LeadGenRentalsHQ";
+const _BRAND_COLOR = "#F59E0B";
+const _BRAND_NAME = "Lead Gen Rentals";
 function _baseLayout(content: string): string {
   return `<!DOCTYPE html>
 <html lang="en">

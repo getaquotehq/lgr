@@ -1,8 +1,8 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 // ── Inline email template (avoids local-file import that breaks deployment) ──
-const _BRAND_COLOR = "#1f6fff";
-const _BRAND_NAME = "LeadGenRentalsHQ";
+const _BRAND_COLOR = "#F59E0B";
+const _BRAND_NAME = "Lead Gen Rentals";
 function _baseLayout(content: string): string {
   return `<!DOCTYPE html>
 <html lang="en">
@@ -34,7 +34,7 @@ function _buttonHtml(text: string, url: string): string {
 }
 function inviteRepEmail(repName: string, companyName: string, inviteLink: string): { subject: string; html: string } {
   return {
-    subject: `You've been invited to join ${companyName} on LeadGenRentalsHQ`,
+    subject: `You've been invited to join ${companyName} on Lead Gen Rentals`,
     html: _baseLayout(`
       <h2 style="margin:0 0 16px;font-size:18px;color:#111827">You're Invited!</h2>
       <p style="margin:0 0 8px;font-size:14px;color:#374151">Hi ${repName},</p>

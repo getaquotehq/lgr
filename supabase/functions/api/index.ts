@@ -1,5 +1,5 @@
 // =============================================================================
-// LeadGenRentalsHQ - Public REST API Gateway
+// Lead Gen Rentals - Public REST API Gateway
 // =============================================================================
 // Authenticated via Bearer token (company_api_tokens).
 // Routes:

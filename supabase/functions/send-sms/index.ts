@@ -1,5 +1,5 @@
 // =============================================================================
-// LeadGenRentalsHQ - Manual SMS Send
+// Lead Gen Rentals - Manual SMS Send
 // =============================================================================
 // Allows company users to manually send an SMS to a lead from the dashboard.
 // Messages are sent via Twilio and stored in the conversation history.
