@@ -232,7 +232,7 @@ Deno.serve(async (req) => {
     let emailError: string | null = null;
     let actionLink: string | null = null;
 
-    const siteUrl = Deno.env.get("SITE_URL") ?? "http://localhost:3000";
+    const siteUrl = (Deno.env.get("SITE_URL") ?? "http://localhost:3000").replace(/\/$/, "");
     const linkType = isNewUser ? "invite" : "magiclink";
 
     const { data: linkData, error: linkError } =
