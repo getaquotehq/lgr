@@ -210,11 +210,19 @@
   async function vaApi(body) {
     const { data: { session } } = await sb.auth.getSession();
     if (!session) { location.href = 'index.html'; throw new Error('no session'); }
-    const res = await fetch(SUPABASE_URL + '/functions/v1/va-api', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + session.access_token, 'apikey': SUPABASE_ANON_KEY },
-      body: JSON.stringify(body),
-    });
+    // A missing or erroring function rejects the fetch outright (no CORS
+    // headers on the failure), which would otherwise take down init() and
+    // leave the page sitting on 'Loading…' with nothing to explain it.
+    let res;
+    try {
+      res = await fetch(SUPABASE_URL + '/functions/v1/va-api', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + session.access_token, 'apikey': SUPABASE_ANON_KEY },
+        body: JSON.stringify(body),
+      });
+    } catch (err) {
+      return { ok: false, status: 0, data: { error: 'Could not reach the va-api function: ' + err.message } };
+    }
     const data = await res.json().catch(() => ({}));
     return { ok: res.ok, status: res.status, data };
   }
@@ -324,7 +332,7 @@
 
   async function loadAdminMode() {
     const { ok, data } = await vaApi({ action: 'list_vas' });
-    if (!ok) { $('gate').textContent = 'Could not load VAs.'; return; }
+    if (!ok) { $('gate').textContent = (data && data.error) ? data.error : 'Could not load VAs.'; return; }
     const vas = data.vas || [];
     if (!vas.length) {
       $('gate').textContent = 'No VAs configured yet.';
