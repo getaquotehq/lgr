@@ -633,7 +633,7 @@ tbody tr:hover{background:var(--side-hover);transition:background .1s}
                 <span id="oc_step2_icon" style="font-size:18px;flex-shrink:0">○</span>
                 <div>
                   <strong style="font-size:13px">Receive your first lead</strong>
-                  <span class="muted" style="display:block;font-size:12px">Leads are delivered automatically via PPL or inbound SMS</span>
+                  <span class="muted" style="display:block;font-size:12px">Leads are delivered automatically from your rented assets and inbound SMS</span>
                 </div>
               </div>
               <div id="oc_step3" class="check-row" style="cursor:pointer" onclick="navigateTo('buy-leads')">
@@ -1330,58 +1330,7 @@ tbody tr:hover{background:var(--side-hover);transition:background .1s}
             </form>
           </div>
         </section>
-        <!-- PPL Orders -->
-        <section class="panel" style="margin-top:24px">
-          <div class="panel-h">
-            <div><h2>PPL Orders</h2><p>Track Pay-Per-Lead orders. Each order records how many leads were contracted, when they were purchased, and the delivery deadline. Leads delivered with source <strong>PPL</strong> are counted automatically.</p></div>
-            <div class="actions"><button id="openPplOrderModal" class="btn2" type="button"><span class="icon" data-icon="plus"></span><span>New Order</span></button></div>
-          </div>
-          <div class="panel-b">
-            <div id="pplOrdersList"><div class="notice">Loading orders…</div></div>
-          </div>
-        </section>
-        <!-- PPL Service Areas -->
-        <section class="panel" style="margin-top:24px">
-          <div class="panel-h">
-            <div>
-              <h2>PPL Service Areas <span id="serviceAreaLockBadge" style="display:none;font-size:11px;font-weight:600;padding:2px 8px;border-radius:6px;margin-left:8px;border:1px solid"></span></h2>
-              <p>The postcodes your company has contracted to receive leads for. Used to auto-check <em>Outside Agreed Criteria</em> disputes.</p>
-            </div>
-            <button id="requestServiceAreaChangeBtn" class="btn" style="font-size:12px;display:none" type="button">Request Change</button>
-          </div>
-          <div class="panel-b">
-            <div id="serviceAreaTagsContainer" class="tags" style="min-height:32px;margin-bottom:12px"></div>
-            <!-- locked: no pending request -->
-            <div id="serviceAreaLockedNote" style="display:none">
-              <p class="muted" style="font-size:12px">Service areas are locked to prevent dispute abuse. Click <strong>Request Change</strong> to ask an admin to unlock them.</p>
-            </div>
-            <!-- locked: pending request -->
-            <div id="serviceAreaPendingNote" class="notice" style="display:none;font-size:12px">Your change request is pending admin review. You'll be able to edit once it's approved.</div>
-            <!-- locked: last request was rejected -->
-            <div id="serviceAreaRejectedNote" class="notice" style="display:none;font-size:12px;border-color:rgba(185,28,28,.4);background:rgba(185,28,28,.06);color:#b91c1c">Your last change request was declined.<span id="serviceAreaRejectedReason"></span> You can submit a new request below.</div>
-            <!-- unlocked: edit UI -->
-            <div id="serviceAreaEditSection" style="display:none">
-              <div class="notice" style="margin-bottom:12px;font-size:12px;border-color:rgba(251,191,36,.4);background:rgba(251,191,36,.06);color:#92400e">Your service area has been temporarily unlocked. Make your changes and save - <strong>saving will re-lock it.</strong></div>
-              <div style="display:flex;gap:8px;align-items:flex-start;margin-bottom:12px">
-                <textarea id="serviceAreaInput" placeholder="e.g. 2000, 2010, 2486" style="width:320px;height:64px;resize:vertical" maxlength="100000"></textarea>
-                <button type="button" id="addServiceAreaBtn" class="btn" style="font-size:12px">Add Postcodes</button>
-              </div>
-              <p id="serviceAreaAutoNote" class="muted" style="font-size:11px;margin-bottom:10px;display:none">These postcodes were automatically set from your last lead pack order.</p>
-              <p class="muted" style="font-size:11px;margin-bottom:12px">Paste postcodes, one per line or comma-separated. Duplicates are ignored.</p>
-              <div class="actions"><button id="saveServiceAreasBtn" class="btn2" type="button">Save &amp; Re-lock Service Areas</button></div>
-            </div>
-            <!-- request change inline form -->
-            <div id="serviceAreaRequestForm" style="display:none;margin-top:12px">
-              <p class="muted" style="font-size:12px;margin-bottom:8px">Briefly explain why you need to update your service areas:</p>
-              <textarea id="serviceAreaRequestMessage" placeholder="e.g. We're expanding into new suburbs and need to add additional postcodes." style="width:100%;height:72px;resize:vertical;margin-bottom:8px" maxlength="1000"></textarea>
-              <div style="display:flex;gap:8px">
-                <button id="serviceAreaRequestSubmitBtn" class="btn2" style="font-size:12px" type="button">Submit Request</button>
-                <button id="serviceAreaRequestCancelBtn" class="btn" style="font-size:12px" type="button">Cancel</button>
-              </div>
-            </div>
-          </div>
-        </section>
-        <div class="actions" style="margin-top:24px"><button id="logoutButton" class="btn-danger btn" type="button"><span class="icon" data-icon="logout"></span><span>Log Out</span></button></div>
+<div class="actions" style="margin-top:24px"><button id="logoutButton" class="btn-danger btn" type="button"><span class="icon" data-icon="logout"></span><span>Log Out</span></button></div>
       </div>
 
       <!-- ── AI Insights Page ──────────────────────────────────────────────── -->
@@ -1752,7 +1701,7 @@ tbody tr:hover{background:var(--side-hover);transition:background .1s}
           <div class="field"><label for="leadPhone">Phone</label><input id="leadPhone" name="phone" type="tel"></div>
           <div class="field"><label for="leadPostcode">Postcode</label><input id="leadPostcode" name="postcode" type="text"></div>
           <div class="full"><label for="leadAddress">Address</label><input id="leadAddress" name="address" type="text"></div>
-          <div class="field"><label for="leadSource">Source</label><select id="leadSource" name="source"><option value="">Select source</option><option value="PPL">PPL</option><option value="Lead Gen Rentals PPL">Lead Gen Rentals PPL</option><option value="Google">Google</option><option value="Meta">Meta</option><option value="Website/Organic">Website/Organic</option><option value="Other">Other</option></select></div>
+          <div class="field"><label for="leadSource">Source</label><select id="leadSource" name="source"><option value="">Select source</option><option value="Asset">Rented Asset</option><option value="Google">Google</option><option value="Meta">Meta</option><option value="Website/Organic">Website/Organic</option><option value="Other">Other</option></select></div>
           <div class="field"><label for="leadStatus">Opportunity Status</label><select id="leadStatus" name="status"><option>New Lead</option><option>Qualifying</option><option>Quote in Progress</option><option>Quoted</option><option>Closed Won</option><option>Closed Lost</option></select></div>
           <div class="field"><label for="leadValue">Estimated Value</label><input id="leadValue" name="value" type="number" min="0" step="0.01"></div>
           <div class="full"><label for="leadNotes">Notes</label><textarea id="leadNotes" name="notes"></textarea></div>
@@ -1760,149 +1709,16 @@ tbody tr:hover{background:var(--side-hover);transition:background .1s}
         <div id="customFieldInputs" class="customs"></div>
       </form>
 
-      <!-- PPL call log - visible only for PPL leads -->
-      <div id="pplCallLogSection" class="hidden" style="margin-top:20px;border-top:1px solid var(--border,#e0e0e0);padding-top:16px">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
-          <div>
-            <span style="font-size:13px;font-weight:600">Call Log</span>
-            <span id="pplDisputeEligibilityBadge" style="display:inline-block;margin-left:8px;font-size:11px;padding:2px 7px;border-radius:10px;vertical-align:middle"></span>
-          </div>
-          <button id="openLogCallBtn" class="btn" type="button" style="font-size:12px;padding:4px 10px">Log Call Attempt</button>
-        </div>
-        <div id="pplCallLogList" style="font-size:12px;color:var(--muted)">No call attempts logged yet.</div>
-      </div>
-    </div>
+</div>
     <div class="mf">
       <div class="helper" id="leadModalHelper">Custom fields saved here are attached directly to each lead record.</div>
       <div class="actions">
-        <button id="openDisputeFromLead" class="btn hidden" type="button" style="margin-right:auto;color:var(--danger,#d00)">Dispute Lead</button>
         <button id="cancelLeadModal" class="btn" type="button">Cancel</button>
         <button class="btn2" type="submit" form="leadForm">Save Lead</button>
       </div>
     </div>
   </div>
 </div>
-
-<!-- ── Log Call Attempt Modal ─────────────────────────────────────────────── -->
-<div id="logCallModal" class="modal">
-  <div class="modal-card" style="max-width:400px">
-    <div class="mh">
-      <h2>Log Call Attempt</h2>
-      <p>Record a call attempt on this PPL lead. Logging within 24 hours of delivery keeps all dispute reasons available.</p>
-    </div>
-    <div class="mb">
-      <div class="stack" style="gap:14px">
-        <div class="field">
-          <label for="callOutcome">Outcome</label>
-          <select id="callOutcome">
-            <option value="no_answer">No Answer</option>
-            <option value="voicemail">Voicemail</option>
-            <option value="connected">Connected</option>
-            <option value="wrong_number">Wrong Number</option>
-            <option value="callback_requested">Callback Requested</option>
-          </select>
-        </div>
-        <div class="field">
-          <label for="callNotes">Notes <span style="font-weight:400;color:var(--muted)">(optional)</span></label>
-          <textarea id="callNotes" rows="2" placeholder="e.g. Left voicemail at 10:32am"></textarea>
-        </div>
-        <div class="field">
-          <label for="callAttemptedAt">Called at <span style="font-weight:400;color:var(--muted)">(defaults to now)</span></label>
-          <input id="callAttemptedAt" type="datetime-local">
-        </div>
-      </div>
-    </div>
-    <div class="mf">
-      <div class="actions">
-        <button id="cancelLogCallModal" class="btn" type="button">Cancel</button>
-        <button id="saveCallAttemptBtn" class="btn2" type="button">Save Attempt</button>
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- ── Dispute Lead Modal ────────────────────────────────────────────────── -->
-<div id="disputeModal" class="modal">
-  <div class="modal-card" style="max-width:520px">
-    <div class="mh">
-      <h2>Dispute PPL Lead</h2>
-      <p id="disputeLeadName" style="font-weight:500;color:var(--text)"></p>
-    </div>
-    <div class="mb">
-
-      <!-- Step 1: choose reason -->
-      <div id="disputeStep1">
-        <!-- Eligibility status strip - populated by JS -->
-        <div id="disputeEligibilityStrip" style="margin-bottom:14px"></div>
-        <p style="font-size:13px;margin-bottom:16px;color:var(--muted)">Select the reason for this dispute. Each reason is automatically verified - only submit if you believe the lead does not meet the agreed criteria.</p>
-        <div class="stack" style="gap:10px">
-          <label id="disputeReasonInvalidLabel" class="check-row" style="align-items:flex-start;gap:10px;cursor:pointer">
-            <input type="radio" name="disputeReason" value="invalid_number" style="margin-top:2px;accent-color:var(--accent)">
-            <div>
-              <strong style="font-size:13px">Invalid Number</strong>
-              <p style="font-size:12px;color:var(--muted);margin:2px 0 0">Auto-checked against Veriphone in E164 format. Approved if the number is unreachable or invalid.</p>
-              <p id="disputeInvalidNumberNote" class="hidden" style="font-size:11px;color:#b45309;margin:4px 0 0;font-style:italic"></p>
-            </div>
-          </label>
-          <label class="check-row" style="align-items:flex-start;gap:10px;cursor:pointer">
-            <input type="radio" name="disputeReason" value="duplicate" style="margin-top:2px;accent-color:var(--accent)">
-            <div>
-              <strong style="font-size:13px">Duplicate</strong>
-              <p style="font-size:12px;color:var(--muted);margin:2px 0 0">Auto-checked against your existing lead records. Approved if the same phone number was already in your account.</p>
-            </div>
-          </label>
-          <label class="check-row" style="align-items:flex-start;gap:10px;cursor:pointer">
-            <input type="radio" name="disputeReason" value="outside_agreed_criteria" style="margin-top:2px;accent-color:var(--accent)">
-            <div>
-              <strong style="font-size:13px">Outside Agreed Criteria</strong>
-              <p style="font-size:12px;color:var(--muted);margin:2px 0 0">Auto-checked against your agreed postcode list. If outside territory, approved automatically. If inconclusive, you may request manual review.</p>
-            </div>
-          </label>
-        </div>
-      </div>
-
-      <!-- Step 2: auto-check result -->
-      <div id="disputeStep2" class="hidden">
-        <div id="disputeCheckSpinner" style="text-align:center;padding:24px 0;display:none">
-          <div class="spinner" style="margin:0 auto 12px"></div>
-          <p style="font-size:13px;color:var(--muted)">Running automated checks…</p>
-        </div>
-        <div id="disputeResult" class="hidden">
-          <div id="disputeResultBanner" style="padding:14px;border-radius:8px;margin-bottom:16px;font-size:13px"></div>
-          <div id="disputeResultDetail" style="font-size:12px;color:var(--muted);margin-bottom:16px"></div>
-
-          <!-- Manual review section - only shown for outside_agreed_criteria -->
-          <div id="disputeManualReviewSection" class="hidden">
-            <div style="border:1px solid var(--border,#e0e0e0);border-radius:8px;padding:14px;background:var(--bg-alt,#fafafa);margin-bottom:12px">
-              <p style="font-size:12px;font-weight:600;margin:0 0 8px;color:var(--text)">Send for Manual Review</p>
-              <div id="disputeScrubBar" style="margin-bottom:10px"></div>
-              <div style="background:#fff8e1;border:1px solid #ffe082;border-radius:6px;padding:10px;font-size:12px;color:#5d4037;margin-bottom:10px">
-                <strong>Important:</strong> Manual review is only for leads that fall outside Lead Gen Rentals' agreed delivery criteria. Leads where a prospect said "not interested", changed their mind, or any outcome outside Lead Gen Rentals' direct control do not qualify for replacement.
-              </div>
-              <div id="disputeCapWarning" class="hidden" style="background:#fdecea;border:1px solid #f5c6cb;border-radius:6px;padding:10px;font-size:12px;color:#7f1d1d;margin-bottom:10px"></div>
-              <button id="sendManualReviewBtn" class="btn2" type="button" style="width:100%;font-size:13px">Confirm - Send for Manual Review</button>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Step 3: done -->
-      <div id="disputeStep3" class="hidden" style="text-align:center;padding:24px 0">
-        <div id="disputeDoneIcon" style="font-size:32px;margin-bottom:12px"></div>
-        <p id="disputeDoneMsg" style="font-size:14px;font-weight:500;margin:0 0 6px"></p>
-        <p id="disputeDoneSubMsg" style="font-size:12px;color:var(--muted);margin:0"></p>
-      </div>
-
-    </div>
-    <div class="mf">
-      <div class="actions">
-        <button id="cancelDisputeModal" class="btn" type="button">Close</button>
-        <button id="runDisputeCheckBtn" class="btn2" type="button" disabled>Run Auto-Check</button>
-      </div>
-    </div>
-  </div>
-</div>
-
 
 <!-- ── Custom Field Modal ─────────────────────────────────────────────────── -->
 <div id="customFieldModal" class="modal">
@@ -2155,29 +1971,6 @@ tbody tr:hover{background:var(--side-hover);transition:background .1s}
     <div class="mf">
       <div></div>
       <div class="actions"><button class="btn2" type="submit" form="passwordResetForm">Update Password</button></div>
-    </div>
-  </div>
-</div>
-
-<!-- ── New PPL Order Modal ──────────────────────────────────────────────────── -->
-<div id="pplOrderModal" class="modal">
-  <div class="modal-card small">
-    <div class="mh"><h2>New PPL Order</h2><p>Manually record a Pay-Per-Lead order. Leads delivered with source PPL will count against this order automatically.</p></div>
-    <div class="mb">
-      <form id="pplOrderForm" class="stack">
-        <div class="form2">
-          <div class="field"><label for="pplOrderNiche">Niche</label><select id="pplOrderNiche" required><option value="">Select niche…</option><option value="solar">Solar</option><option value="solar_battery">Solar + Battery</option><option value="hvac">HVAC</option><option value="battery_retrofit">Battery Retrofit</option></select></div>
-          <div class="field"><label for="pplOrderCity">City</label><input id="pplOrderCity" type="text" required placeholder="e.g. Brisbane"></div>
-          <div class="field"><label for="pplOrderQty">Quantity</label><input id="pplOrderQty" type="number" min="1" required placeholder="e.g. 20"></div>
-          <div class="field"><label for="pplOrderPPL">Price Per Lead ($)</label><input id="pplOrderPPL" type="number" min="0" step="0.01" required placeholder="e.g. 75.00"></div>
-        </div>
-      </form>
-    </div>
-    <div class="mf">
-      <div class="actions">
-        <button id="cancelPplOrderModal" class="btn" type="button">Cancel</button>
-        <button class="btn2" type="submit" form="pplOrderForm">Create Order</button>
-      </div>
     </div>
   </div>
 </div>

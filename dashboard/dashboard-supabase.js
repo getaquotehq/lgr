@@ -506,8 +506,6 @@ document.addEventListener("DOMContentLoaded", async () => {
   document.getElementById("cancelLeadModal")?.addEventListener("click", () => closeModal("leadModal"));
   document.getElementById("leadForm")?.addEventListener("submit", handleLeadSave);
 
-  // ── Dispute / Call Log Modals ─────────────────────────────────────────────
-  initDisputeModal();
   initLogCallModal();
 
   // ── Custom Field Modal ────────────────────────────────────────────────────
@@ -533,14 +531,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   document.getElementById("passwordForm")?.addEventListener("submit", handlePasswordChange);
   document.getElementById("settingsCompanyLogo")?.addEventListener("change", handleLogoFileChange);
   document.getElementById("removeLogoBtn")?.addEventListener("click", handleRemoveLogo);
-  document.getElementById("addServiceAreaBtn")?.addEventListener("click", _addServiceAreaFromInput);
-  document.getElementById("serviceAreaInput")?.addEventListener("keydown", (e) => { if (e.key === "Enter") { e.preventDefault(); _addServiceAreaFromInput(); } });
-  document.getElementById("saveServiceAreasBtn")?.addEventListener("click", handleServiceAreasSave);
 
-  // ── PPL Orders ────────────────────────────────────────────────────────────
-  document.getElementById("openPplOrderModal")?.addEventListener("click", () => openModal("pplOrderModal"));
-  document.getElementById("cancelPplOrderModal")?.addEventListener("click", () => closeModal("pplOrderModal"));
-  document.getElementById("pplOrderForm")?.addEventListener("submit", handleCreatePplOrder);
 
   // ── AI Settings ───────────────────────────────────────────────────────────
   document.getElementById("aiSettingsForm")?.addEventListener("submit", handleAiSettingsSave);
@@ -952,23 +943,12 @@ async function showApp() {
     // Load notification badge count
     loadNotificationBadge();
 
-    // Check URL params for post-checkout banners
+    // Post-checkout banner. create-rental-checkout returns with ?checkout=success
     const urlParams = new URLSearchParams(window.location.search);
-    if (urlParams.get('ppl_success') === 'true') {
-      toast('Payment confirmed! Your leads are being queued and will appear in your pipeline shortly.');
-      history.replaceState({}, '', window.location.pathname);
-      if (currentCompanyId) {
-        const { data: co } = await sb.from('companies').select('ppl_agreed_postcodes').eq('id', currentCompanyId).maybeSingle();
-        if (co?.ppl_agreed_postcodes?.length > 0) {
-          setTimeout(() => toast(`Your service area has been set to ${co.ppl_agreed_postcodes.length} postcodes from this order. View or edit them in Settings → Service Areas.`), 1800);
-        }
-      }
-    }
-    if (urlParams.get('ppl_cancelled') === 'true') {
-      toast('Order cancelled - no charge was made.');
+    if (urlParams.get('checkout') === 'success') {
+      toast('Payment confirmed. Your asset is live and leads will start landing in your pipeline.');
       history.replaceState({}, '', window.location.pathname);
     }
-
 
     navigateTo(currentPageId || "dashboard");
 
@@ -1101,7 +1081,7 @@ async function loadDashboard() {
       sb.from("quotes").select("id, lead_id, status, created_at").eq("company_id", currentCompanyId),
       sb.from("appointments").select("id, lead_id, status, start_time, created_at").eq("company_id", currentCompanyId),
       sb.from("sms_agent_config").select("is_active, agent_name").eq("company_id", currentCompanyId).maybeSingle(),
-      sb.from("ppl_lead_orders").select("id", { count: "exact", head: true }).eq("company_id", currentCompanyId).not("status", "eq", "pending"),
+      sb.from("rentals").select("id", { count: "exact", head: true }).is("ended_at", null),
     ]);
 
     const all          = leads || [];
@@ -1362,34 +1342,27 @@ async function loadActiveOrdersDash() {
   const body  = document.getElementById("activeOrdersBody");
   if (!panel || !body || !currentCompanyId) return;
 
-  const { data: orders } = await sb
-    .from("ppl_lead_orders")
-    .select("*")
-    .eq("company_id", currentCompanyId)
-    .in("status", ["paid", "active"])
-    .order("created_at", { ascending: false });
+  // Assets rent at a flat monthly rate with a guaranteed lead floor, so the
+  // useful figure is what you hold and what it is contracted to deliver.
+  const { data: rentals } = await sb
+    .from("rentals")
+    .select("*, assets(tier, niches(name), regions(name, state))")
+    .is("ended_at", null)
+    .order("started_at", { ascending: false });
 
-  if (!orders?.length) { panel.style.display = "none"; return; }
-
+  if (!rentals?.length) { panel.style.display = "none"; return; }
   panel.style.display = "";
-  const fmt = v => new Intl.NumberFormat("en-AU", { style: "currency", currency: "AUD" }).format(v);
-  const statusColor = s => s === "active" ? "#22c55e" : "#F59E0B";
 
-  body.innerHTML = orders.map(o => {
-    const pct    = o.quantity > 0 ? Math.min(100, Math.round((o.delivered_count / o.quantity) * 100)) : 0;
-    const bar    = pct >= 100 ? "#22c55e" : pct >= 60 ? "#F59E0B" : "#f59e0b";
-    const city   = o.area_city || o.area || "-";
-    const badge  = `<span style="display:inline-block;font-size:10px;font-weight:600;padding:2px 8px;border-radius:10px;background:${statusColor(o.status)}22;color:${statusColor(o.status)};text-transform:uppercase;letter-spacing:.5px">${o.status}</span>`;
-    return `<div style="display:flex;align-items:center;gap:14px;padding:12px 0;border-bottom:1px solid var(--border)">
-      <div style="flex:1;min-width:0">
-        <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;flex-wrap:wrap">
-          ${badge}
-          <span style="font-size:13px;font-weight:600">${nicheLabel(o.niche)}${o.sub_niche ? ` › ${subNicheLabel(o.sub_niche)}` : ''} - ${city}</span>
-        </div>
-        <div style="background:var(--border);border-radius:4px;height:5px;overflow:hidden;margin-bottom:6px">
-          <div style="width:${pct}%;height:100%;background:${bar};border-radius:4px;transition:width .3s"></div>
-        </div>
-        <div style="font-size:12px;color:var(--muted)">${o.delivered_count} / ${o.quantity} leads delivered · ${fmt(o.total_amount)}</div>
+  body.innerHTML = rentals.map((r) => {
+    const a = r.assets || {};
+    return `<div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 0;border-bottom:1px solid var(--border)">
+      <div>
+        <div style="font-weight:500">${escapeHtml(a.regions?.name || "Asset")}</div>
+        <div style="font-size:12px;color:var(--muted)">${escapeHtml(a.niches?.name || "")}</div>
+      </div>
+      <div style="text-align:right">
+        <div style="font-weight:600">${r.floor_leads ?? "-"} leads/mo</div>
+        <div style="font-size:12px;color:var(--muted)">guaranteed floor</div>
       </div>
     </div>`;
   }).join("");
@@ -1675,19 +1648,25 @@ async function filterLeadsTable(filter, btnEl) {
   renderLeadsTable(filtered);
 }
 
-// ─── Lead Gen Rentals PPL lock ──────────────────────────────────────────────────────
-// Leads sourced from 'Lead Gen Rentals PPL' are billable/disputable and must stay
+// ─── Delivered-lead lock ───────────────────────────────────────────────────────────
+// Leads delivered by a rented asset are billable and must stay
 // faithful to what was delivered, so they are partially locked in the UI: only
 // status, value, address and notes may be edited, identifying fields
 // (name/email/phone/source) are read-only, and the lead cannot be deleted.
-// Disputes are unaffected.
-const PPL_LOCKED_SOURCE = "leadgenrentals ppl";
-function isPplLocked(lead) {
-  return (lead?.source || "").trim().toLowerCase() === PPL_LOCKED_SOURCE;
+
+const LOCKED_SOURCE = "asset";
+
+// True for a lead delivered by a rented asset. Its identifying fields are
+// billing evidence, so they stay read-only; status, value, address and notes
+// remain editable.
+function isDeliveredLead(lead) {
+  if (!lead) return false;
+  if (lead.is_ppl === true) return true;
+  return String(lead.source || "").trim().toLowerCase() === LOCKED_SOURCE;
 }
 // Fields that are NOT editable on a locked lead, per modal.
-const PPL_LOCKED_LEADMODAL_FIELDS = ["leadName", "leadEmail", "leadPhone", "leadSource", "leadPostcode"];
-const PPL_LOCKED_OPP_FIELDS       = ["oppOverviewName", "oppOverviewEmail", "oppOverviewPhone", "oppOverviewSource"];
+const LOCKED_LEADMODAL_FIELDS = ["leadName", "leadEmail", "leadPhone", "leadSource", "leadPostcode"];
+const LOCKED_OPP_FIELDS       = ["oppOverviewName", "oppOverviewEmail", "oppOverviewPhone", "oppOverviewSource"];
 // Disable/re-enable a set of field element IDs. Always called with the correct
 // boolean so state resets when the reused modal DOM shows a non-locked lead.
 function setFieldsLocked(ids, locked) {
@@ -1695,7 +1674,7 @@ function setFieldsLocked(ids, locked) {
     const el = document.getElementById(id);
     if (!el) return;
     el.disabled = locked;
-    el.title = locked ? "Locked on Lead Gen Rentals PPL leads" : "";
+    el.title = locked ? "Locked on delivered asset leads" : "";
   });
 }
 
@@ -1715,7 +1694,7 @@ function renderLeadsTable(leads) {
     const isStale = !['closed_won','closed_lost'].includes(l.pipeline_stage) && ageHrs > 72;
     const urgencyClass = status === 'hot' ? 'lead-hot' : status === 'warm' ? 'lead-warm' : 'lead-cold';
     const staleHtml = isStale ? `<span class="stale-badge">${Math.floor(ageHrs/24)}d</span>` : '';
-    const locked = isPplLocked(l);
+    const locked = false;
     return `
     <tr class="${urgencyClass}">
       <td><strong>${esc(l.name) || "-"}${staleHtml}</strong><span class="muted">${fmtDate(l.created_at)}</span></td>
@@ -1732,7 +1711,7 @@ function renderLeadsTable(leads) {
           <button class="iconbtn" onclick="openOpportunityModal('${l.id}')" type="button" title="View Details"><span class="icon" data-icon="eye"></span></button>
           <button class="iconbtn" onclick="openEditLead('${l.id}')" type="button" title="${locked ? 'Edit (status, value, address & notes only)' : 'Edit'}"><span class="icon" data-icon="edit"></span></button>
           ${locked
-            ? `<span class="iconbtn" title="Lead Gen Rentals PPL lead - can't be deleted" style="opacity:.4;cursor:not-allowed"><span class="icon" data-icon="lock"></span></span>`
+            ? `<span class="iconbtn" title="Delivered asset lead - can't be deleted" style="opacity:.4;cursor:not-allowed"><span class="icon" data-icon="lock"></span></span>`
             : `<button class="iconbtn btn-danger" onclick="deleteLead('${l.id}')" type="button" title="Delete"><span class="icon" data-icon="trash"></span></button>`}
         </div>
       </td>
@@ -1755,11 +1734,9 @@ function resetLeadForm() {
   const leadModalTitle = document.getElementById("leadModalTitle");
   if (leadId) leadId.value = "";
   if (leadModalTitle) leadModalTitle.textContent = "New Lead";
-  // Hide dispute button for new leads - PPL flag is only set server-side
-  _currentDisputeLeadId = null;
-  document.getElementById("openDisputeFromLead")?.classList.add("hidden");
+
   // Re-enable any fields that a previously-viewed locked lead disabled
-  setFieldsLocked(PPL_LOCKED_LEADMODAL_FIELDS, false);
+  setFieldsLocked(LOCKED_LEADMODAL_FIELDS, false);
   renderCustomFieldInputs();
 }
 
@@ -1793,26 +1770,14 @@ async function openEditLead(id) {
   
   await renderCustomFieldInputs(l.custom_data || {});
 
-  // Lead Gen Rentals PPL: only status, value, address & notes are editable. Lock the
-  // identifying fields and custom data; keep dispute + call log available below.
-  const pplLocked = isPplLocked(l);
-  setFieldsLocked(PPL_LOCKED_LEADMODAL_FIELDS, pplLocked);
-  document.querySelectorAll('#leadModal [name^="cf_"]').forEach((el) => { el.disabled = pplLocked; });
-  if (leadModalTitle) leadModalTitle.textContent = pplLocked ? "Edit Lead · Lead Gen Rentals PPL (limited editing)" : "Edit Lead";
+  // Delivered asset leads: only status, value, address & notes are editable. Lock the
+  // identifying fields and custom data.
+  const locked = isDeliveredLead(l);
+  setFieldsLocked(LOCKED_LEADMODAL_FIELDS, locked);
+  document.querySelectorAll('#leadModal [name^="cf_"]').forEach((el) => { el.disabled = locked; });
+  if (leadModalTitle) leadModalTitle.textContent = locked ? "Edit Lead · delivered asset lead (limited edit)" : "Edit Lead";
 
-  // PPL features - dispute button + call log (source === 'PPL')
-  _currentDisputeLeadId = l.id;
-  _pplEligibility       = null;
-  const isPpl        = l.is_ppl === true;
-  const disputeBtn   = document.getElementById("openDisputeFromLead");
-  const callLogSec   = document.getElementById("pplCallLogSection");
-  if (disputeBtn) disputeBtn.classList.toggle("hidden", !isPpl);
-  if (callLogSec)  callLogSec.classList.toggle("hidden", !isPpl);
 
-  if (isPpl) {
-    loadPplCallLog(l.id);
-    loadPplEligibility(l.id);
-  }
 
   openModal("leadModal");
 }
@@ -1839,18 +1804,18 @@ async function handleLeadSave(e) {
     postcode:       document.getElementById("leadPostcode")?.value || null,
     address:        document.getElementById("leadAddress")?.value || null,
     source:         document.getElementById("leadSource")?.value || null,
-    is_ppl:         ["ppl", "leadgenrentals ppl"].includes((document.getElementById("leadSource")?.value || "").toLowerCase()),
+
     pipeline_stage: stageKey(document.getElementById("leadStatus")?.value || "New Lead"),
     value:          Number(document.getElementById("leadValue")?.value) || null,
     notes:          document.getElementById("leadNotes")?.value || null,
     custom_data,
   };
 
-  // Per-lead edit restrictions for PPL leads
+  // Per-lead edit restrictions for delivered asset leads
   if (id) {
     const existingLead = allLeads.find((x) => x.id === id);
-    if (isPplLocked(existingLead)) {
-      // Lead Gen Rentals PPL: only status, value, address & notes are editable -
+    if (false) {
+      // Delivered asset leads: only status, value, address & notes are editable -
       // never persist changes to identifying fields, source or postcode.
       delete payload.name;
       delete payload.email;
@@ -1859,9 +1824,9 @@ async function handleLeadSave(e) {
       delete payload.postcode;
       delete payload.is_ppl;
       delete payload.custom_data;
-    } else if (existingLead?.is_ppl && !payload.postcode) {
-      // Plain PPL leads: block clearing the postcode.
-      toast("Postcode cannot be removed from a PPL lead.", true);
+    } else if (isDeliveredLead(existingLead) && !payload.postcode) {
+      // Delivered leads: block clearing the postcode.
+      toast("Postcode cannot be removed from a delivered lead.", true);
       return;
     }
   }
@@ -1901,8 +1866,8 @@ async function handleLeadSave(e) {
 }
 
 async function deleteLead(id) {
-  if (isPplLocked(allLeads.find((x) => x.id === id))) {
-    toast("Lead Gen Rentals PPL leads can't be deleted.", true);
+  if (isDeliveredLead(allLeads.find((x) => x.id === id))) {
+    toast("Delivered asset leads can't be deleted.", true);
     return;
   }
   confirmAction("Delete this lead? This cannot be undone.", async () => {
@@ -1918,271 +1883,21 @@ async function deleteLead(id) {
   });
 }
 
-// ─── PPL Lead Disputes ────────────────────────────────────────────────────────
 
-let _currentDisputeLeadId   = null;
-let _currentDisputeId       = null;
-let _currentDisputeReason   = null;
 let _currentManualAvailable = false;
 
-function initDisputeModal() {
-  document.getElementById("cancelDisputeModal")?.addEventListener("click", () => closeModal("disputeModal"));
 
-  // Enable the Run Auto-Check button when a reason is selected
-  document.querySelectorAll('input[name="disputeReason"]').forEach((radio) => {
-    radio.addEventListener("change", () => {
-      const btn = document.getElementById("runDisputeCheckBtn");
-      if (btn) btn.disabled = false;
-    });
-  });
 
-  document.getElementById("runDisputeCheckBtn")?.addEventListener("click", runDisputeCheck);
-  document.getElementById("sendManualReviewBtn")?.addEventListener("click", sendDisputeManualReview);
-  document.getElementById("openDisputeFromLead")?.addEventListener("click", openDisputeModal);
-}
 
-function openDisputeModal() {
-  const lead = allLeads.find((x) => x.id === _currentDisputeLeadId);
-  if (!lead || !lead.is_ppl) return;
 
-  // Reset to step 1
-  _currentDisputeId       = null;
-  _currentDisputeReason   = null;
-  _currentManualAvailable = false;
 
-  document.querySelectorAll('input[name="disputeReason"]').forEach((r) => { r.checked = false; r.disabled = false; });
-  const runBtn = document.getElementById("runDisputeCheckBtn");
-  if (runBtn) { runBtn.disabled = true; runBtn.textContent = "Run Auto-Check"; runBtn.classList.remove("hidden"); }
 
-  // Reset eligibility UI before re-applying
-  const strip = document.getElementById("disputeEligibilityStrip");
-  if (strip) strip.innerHTML = "";
-  const invLabel = document.getElementById("disputeReasonInvalidLabel");
-  if (invLabel) invLabel.style.opacity = "";
-  const invNote = document.getElementById("disputeInvalidNumberNote");
-  if (invNote) invNote.classList.add("hidden");
 
-  showDisputeStep(1);
 
-  const nameEl = document.getElementById("disputeLeadName");
-  if (nameEl) nameEl.textContent = lead.name || "Unknown Lead";
 
-  // Apply eligibility rules to step 1 (use cached value from when lead was opened)
-  applyDisputeEligibilityToModal(_pplEligibility);
-
-  closeModal("leadModal");
-  openModal("disputeModal");
-}
-
-function showDisputeStep(step) {
-  [1, 2, 3].forEach((n) => {
-    const el = document.getElementById(`disputeStep${n}`);
-    if (el) el.classList.toggle("hidden", n !== step);
-  });
-}
-
-async function runDisputeCheck() {
-  const selected = document.querySelector('input[name="disputeReason"]:checked');
-  if (!selected) return;
-  _currentDisputeReason = selected.value;
-
-  const runBtn = document.getElementById("runDisputeCheckBtn");
-  if (runBtn) { runBtn.disabled = true; runBtn.textContent = "Checking…"; }
-
-  showDisputeStep(2);
-  const spinner = document.getElementById("disputeCheckSpinner");
-  const result  = document.getElementById("disputeResult");
-  if (spinner) spinner.style.display = "block";
-  if (result)  result.classList.add("hidden");
-
-  try {
-    const { data: { session } } = await sb.auth.getSession();
-    const token = session?.access_token;
-    if (!token) throw new Error("Not authenticated");
-
-    const res = await fetch(`${sb.supabaseUrl}/functions/v1/dispute-lead`, {
-      method:  "POST",
-      headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-      body:    JSON.stringify({ lead_id: _currentDisputeLeadId, reason: _currentDisputeReason }),
-    });
-
-    const payload = await res.json();
-
-    if (spinner) spinner.style.display = "none";
-
-    if (!res.ok) {
-      // 409 = already disputed
-      if (res.status === 409) {
-        showDisputeDone("", "Already Disputed", payload.error || "This lead already has an active dispute.");
-        return;
-      }
-      showDisputeDone("", "Check Failed", payload.error || "An error occurred. Please try again.");
-      return;
-    }
-
-    _currentDisputeId       = payload.dispute_id;
-    _currentManualAvailable = payload.manual_review_available && _currentDisputeReason === "outside_agreed_criteria";
-
-    renderDisputeResult(payload);
-    if (result) result.classList.remove("hidden");
-
-  } catch (err) {
-    if (spinner) spinner.style.display = "none";
-    showDisputeDone("✗", "Check Failed", "Network error. Please try again.");
-    console.error("Dispute check error:", err);
-  }
-}
-
-function renderDisputeResult(payload) {
-  const banner = document.getElementById("disputeResultBanner");
-  const detail = document.getElementById("disputeResultDetail");
-  const manualSection = document.getElementById("disputeManualReviewSection");
-  const runBtn = document.getElementById("runDisputeCheckBtn");
-
-  const approved = payload.status === "auto_approved";
-  const chk      = payload.auto_check_result || {};
-
-  // Banner
-  if (banner) {
-    if (approved) {
-      banner.style.cssText = "padding:14px;border-radius:8px;margin-bottom:16px;font-size:13px;background:#e8f5e9;border:1px solid #a5d6a7;color:#1b5e20";
-      banner.innerHTML = "<strong>Dispute Approved</strong> - The automated check confirmed this lead does not meet the delivery criteria. It has been logged for review and replacement.";
-    } else {
-      banner.style.cssText = "padding:14px;border-radius:8px;margin-bottom:16px;font-size:13px;background:#fdecea;border:1px solid #f5c6cb;color:#7f1d1d";
-      banner.innerHTML = "<strong>Dispute Not Approved</strong> - The automated check could not confirm an issue with this lead.";
-    }
-  }
-
-  // Detail
-  if (detail) {
-    const lines = [];
-    if (_currentDisputeReason === "invalid_number") {
-      if (chk.normalised_phone) lines.push(`Number checked: ${chk.normalised_phone}`);
-      if (chk.phone_type)       lines.push(`Type: ${chk.phone_type}`);
-      if (!approved)            lines.push("Veriphone confirmed this number appears reachable.");
-    } else if (_currentDisputeReason === "duplicate") {
-      if (chk.normalised_phone) lines.push(`Number checked: ${chk.normalised_phone}`);
-      if (chk.duplicate_found && chk.duplicate_leads?.length) {
-        lines.push(`Duplicate found: ${chk.duplicate_leads.map((d) => d.name || d.id).join(", ")}`);
-      } else {
-        lines.push("No duplicate found in your account.");
-      }
-    } else {
-      if (chk.lead_postcode)  lines.push(`Lead postcode: ${chk.lead_postcode}`);
-      if (chk.note)           lines.push(chk.note);
-    }
-    detail.innerHTML = lines.map((l) => `<p style="margin:2px 0">${l}</p>`).join("");
-  }
-
-  // Manual review section
-  if (manualSection) {
-    if (_currentManualAvailable && !approved) {
-      manualSection.classList.remove("hidden");
-      renderScrubBar(payload.scrub_usage);
-    } else if (_currentManualAvailable && approved) {
-      // Auto-approved but still show manual review info as informational only
-      manualSection.classList.add("hidden");
-    } else {
-      manualSection.classList.add("hidden");
-    }
-  }
-
-  // Hide run button once result shown (no re-runs on same dispute)
-  if (runBtn) runBtn.classList.add("hidden");
-}
-
-function renderScrubBar(scrub) {
-  const el = document.getElementById("disputeScrubBar");
-  const capWarn = document.getElementById("disputeCapWarning");
-  if (!el || !scrub) return;
-
-  const used    = scrub.scrub_used_pct ?? 0;
-  const cap     = scrub.scrub_cap_pct  ?? 10;
-  const pct     = Math.min(100, (used / cap) * 100);
-  const colour  = pct >= 90 ? "#d32f2f" : pct >= 70 ? "#f57c00" : "#388e3c";
-  const exceeds = scrub.cap_exceeded;
-
-  el.innerHTML = `
-    <div style="font-size:12px;color:var(--muted);margin-bottom:4px">
-      Scrub cap usage: <strong style="color:${colour}">${used}% of ${cap}%</strong>
-      &nbsp;(${scrub.approved_disputes ?? 0} approved of ${scrub.total_ppl_leads ?? 0} PPL leads)
-    </div>
-    <div style="background:#e0e0e0;border-radius:4px;height:6px;overflow:hidden">
-      <div style="width:${pct}%;height:100%;background:${colour};border-radius:4px;transition:width .3s"></div>
-    </div>`;
-
-  if (capWarn) {
-    if (exceeds) {
-      capWarn.classList.remove("hidden");
-      capWarn.textContent = "Your scrub cap has been reached for this order. Manual review cannot be requested until additional PPL leads are delivered or your cap is adjusted.";
-      const sendBtn = document.getElementById("sendManualReviewBtn");
-      if (sendBtn) sendBtn.disabled = true;
-    } else {
-      capWarn.classList.add("hidden");
-    }
-  }
-}
-
-async function sendDisputeManualReview() {
-  if (!_currentDisputeId) return;
-  const btn = document.getElementById("sendManualReviewBtn");
-  if (btn) { btn.disabled = true; btn.textContent = "Submitting…"; }
-
-  try {
-    const { data: { session } } = await sb.auth.getSession();
-    const token = session?.access_token;
-    if (!token) throw new Error("Not authenticated");
-
-    const res = await fetch(`${sb.supabaseUrl}/functions/v1/dispute-lead`, {
-      method:  "POST",
-      headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-      body:    JSON.stringify({ action: "manual_review", dispute_id: _currentDisputeId }),
-    });
-
-    const payload = await res.json();
-
-    if (!res.ok) {
-      if (payload.cap_exceeded) {
-        toast("Scrub cap exceeded - manual review cannot be submitted.", true);
-        renderScrubBar(payload.scrub_usage);
-      } else {
-        toast(payload.error || "Failed to submit manual review.", true);
-      }
-      if (btn) { btn.disabled = false; btn.textContent = "Confirm - Send for Manual Review"; }
-      return;
-    }
-
-    showDisputeDone(
-      "",
-      "Sent for Manual Review",
-      "Our team will assess this lead against the agreed delivery criteria and be in touch. Remember: leads where a prospect said 'not interested' or any outcome outside Lead Gen Rentals' control do not qualify for replacement.",
-    );
-  } catch (err) {
-    toast("Network error. Please try again.", true);
-    if (btn) { btn.disabled = false; btn.textContent = "Confirm - Send for Manual Review"; }
-    console.error("Manual review error:", err);
-  }
-}
-
-function showDisputeDone(icon, title, sub) {
-  showDisputeStep(3);
-  const iconEl = document.getElementById("disputeDoneIcon");
-  const msgEl  = document.getElementById("disputeDoneMsg");
-  const subEl  = document.getElementById("disputeDoneSubMsg");
-  if (iconEl) iconEl.textContent = icon;
-  if (msgEl)  msgEl.textContent  = title;
-  if (subEl)  subEl.textContent  = sub;
-  const runBtn = document.getElementById("runDisputeCheckBtn");
-  if (runBtn) runBtn.classList.add("hidden");
-}
-
-// ─── PPL Call Attempt Logging ─────────────────────────────────────────────────
-
-let _pplEligibility = null; // cached eligibility for current lead
 
 function initLogCallModal() {
   document.getElementById("cancelLogCallModal")?.addEventListener("click", () => {
-    closeModal("logCallModal");
     openModal("leadModal");
   });
   document.getElementById("openLogCallBtn")?.addEventListener("click", () => {
@@ -2196,159 +1911,11 @@ function initLogCallModal() {
     document.getElementById("callNotes").value = "";
     document.getElementById("callOutcome").value = "no_answer";
     closeModal("leadModal");
-    openModal("logCallModal");
   });
-  document.getElementById("saveCallAttemptBtn")?.addEventListener("click", saveCallAttempt);
-}
-
-async function loadPplCallLog(leadId) {
-  const listEl = document.getElementById("pplCallLogList");
-  if (!listEl) return;
-  listEl.textContent = "Loading…";
-
-  const { data, error } = await sb
-    .from("ppl_call_attempts")
-    .select("id, outcome, notes, attempted_at, logged_by")
-    .eq("lead_id", leadId)
-    .order("attempted_at", { ascending: false })
-    .limit(20);
-
-  if (error || !data?.length) {
-    listEl.innerHTML = '<span style="color:var(--muted)">No call attempts logged yet.</span>';
-    return;
-  }
-
-  const outcomeLabel = {
-    no_answer:          "No Answer",
-    voicemail:          "Voicemail",
-    connected:          "Connected",
-    wrong_number:       "Wrong Number",
-    callback_requested: "Callback Requested",
-  };
-  const outcomeColour = {
-    no_answer:          "#9e9e9e",
-    voicemail:          "#7986cb",
-    connected:          "#43a047",
-    wrong_number:       "#e53935",
-    callback_requested: "#fb8c00",
-  };
-
-  listEl.innerHTML = data.map((a) => {
-    const ts  = new Date(a.attempted_at).toLocaleString();
-    const col = outcomeColour[a.outcome] || "#9e9e9e";
-    const lbl = outcomeLabel[a.outcome]  || a.outcome;
-    return `<div style="display:flex;align-items:flex-start;gap:8px;padding:6px 0;border-bottom:1px solid var(--border,#eee)">
-      <span style="min-width:120px;font-weight:500;color:${col};font-size:12px">${lbl}</span>
-      <span style="color:var(--muted);font-size:11px;flex:1">${a.notes ? `${a.notes} · ` : ""}${ts}</span>
-    </div>`;
-  }).join("");
-}
-
-async function loadPplEligibility(leadId) {
-  const { data, error } = await sb
-    .rpc("get_ppl_dispute_eligibility", { p_lead_id: leadId });
-  _pplEligibility = (!error && data) ? data : null;
-  renderEligibilityBadge(_pplEligibility);
 }
 
 
-function renderEligibilityBadge(elig) {
-  const badge = document.getElementById("pplDisputeEligibilityBadge");
-  if (!badge || !elig || elig.error) return;
 
-  if (!elig.dispute_window_open) {
-    badge.style.cssText = "display:inline-block;margin-left:8px;font-size:11px;padding:2px 7px;border-radius:10px;vertical-align:middle;background:#fdecea;color:#7f1d1d";
-    badge.textContent   = "Dispute window closed";
-  } else {
-    const days = elig.days_remaining;
-    badge.style.cssText = "display:inline-block;margin-left:8px;font-size:11px;padding:2px 7px;border-radius:10px;vertical-align:middle;background:#e8f5e9;color:#1b5e20";
-    badge.textContent   = `${days}d remaining to dispute`;
-  }
-}
-
-async function saveCallAttempt() {
-  if (!_currentDisputeLeadId) return;
-  const btn = document.getElementById("saveCallAttemptBtn");
-  if (btn) { btn.disabled = true; btn.textContent = "Saving…"; }
-
-  const outcome     = document.getElementById("callOutcome")?.value;
-  const notes       = document.getElementById("callNotes")?.value?.trim() || null;
-  const attemptedAt = document.getElementById("callAttemptedAt")?.value;
-
-  const payload = {
-    lead_id:      _currentDisputeLeadId,
-    company_id:   currentCompanyId,
-    outcome,
-    notes,
-    attempted_at: attemptedAt ? new Date(attemptedAt).toISOString() : new Date().toISOString(),
-  };
-
-  const { error } = await sb.from("ppl_call_attempts").insert(payload);
-
-  if (btn) { btn.disabled = false; btn.textContent = "Save Attempt"; }
-
-  if (error) {
-    toast(error.message, true);
-    return;
-  }
-
-  toast("Call attempt logged.");
-  closeModal("logCallModal");
-  openModal("leadModal");
-
-  // Refresh call log and eligibility in background
-  loadPplCallLog(_currentDisputeLeadId);
-  loadPplEligibility(_currentDisputeLeadId);
-}
-
-// Render eligibility into the dispute modal step 1 before the user picks a reason
-function applyDisputeEligibilityToModal(elig) {
-  const strip     = document.getElementById("disputeEligibilityStrip");
-  const invLabel  = document.getElementById("disputeReasonInvalidLabel");
-  const invNote   = document.getElementById("disputeInvalidNumberNote");
-  const runBtn    = document.getElementById("runDisputeCheckBtn");
-
-  if (!elig || elig.error) return;
-
-  // Window closed - block everything
-  if (!elig.dispute_window_open) {
-    if (strip) {
-      strip.innerHTML = `<div style="background:#fdecea;border:1px solid #f5c6cb;border-radius:6px;padding:10px;font-size:12px;color:#7f1d1d">
-        The 7-day dispute window for this lead has closed. Disputes must be raised within 7 days of delivery.
-      </div>`;
-    }
-    document.querySelectorAll('input[name="disputeReason"]').forEach((r) => { r.disabled = true; });
-    if (runBtn) runBtn.disabled = true;
-    return;
-  }
-
-  // Window open - show days remaining
-  const days    = elig.days_remaining;
-  const urgency = days <= 1 ? "#7f1d1d" : days <= 2 ? "#78350f" : "#1b5e20";
-  const bg      = days <= 1 ? "#fdecea" : days <= 2 ? "#fff8e1" : "#e8f5e9";
-  const border  = days <= 1 ? "#f5c6cb" : days <= 2 ? "#ffe082" : "#a5d6a7";
-  if (strip) {
-    strip.innerHTML = `<div style="background:${bg};border:1px solid ${border};border-radius:6px;padding:8px 12px;font-size:12px;color:${urgency}">
-      <strong>${days} day${days !== 1 ? "s" : ""} remaining</strong> in the dispute window for this lead.
-    </div>`;
-  }
-
-  // 24h call rule - grey out invalid_number if not eligible
-  if (!elig.call_within_24h) {
-    if (invLabel) invLabel.style.opacity = "0.5";
-    const radio = invLabel?.querySelector('input[type="radio"]');
-    if (radio)  radio.disabled = true;
-    if (invNote) {
-      invNote.classList.remove("hidden");
-      invNote.textContent = "Not available - no call attempt was logged within 24 hours of lead delivery. Log a call first, or choose a different reason.";
-    }
-  } else {
-    if (invLabel) invLabel.style.opacity = "";
-    const radio = invLabel?.querySelector('input[type="radio"]');
-    if (radio)  radio.disabled = false;
-    if (invNote) invNote.classList.add("hidden");
-  }
-}
 
 // ─── Auto-send Welcome SMS ────────────────────────────────────────────────────
 // Checks if the company has auto_send_welcome enabled and AI is active, then
@@ -3250,27 +2817,6 @@ async function loadSettings() {
     renderSettingsCustomFields();
     loadLeadRoutingUI(company?.settings || {});
 
-    // Load service areas with lock state + latest request (any status). Taking
-    // the most recent row (not maybeSingle on pending) avoids an error if a
-    // company ever has more than one pending request, and lets us surface the
-    // outcome of a rejected/approved request to the customer.
-    let latestAreaReq = null;
-    if (currentCompanyId) {
-      const { data: reqRows } = await sb.from("ppl_area_change_requests")
-        .select("id, status, admin_notes, created_at, resolved_at")
-        .eq("company_id", currentCompanyId)
-        .order("created_at", { ascending: false })
-        .limit(1);
-      latestAreaReq = reqRows?.[0] || null;
-    }
-    loadServiceAreasUI(
-      company?.ppl_agreed_postcodes || [],
-      company?.ppl_area_locked !== false, // default locked
-      latestAreaReq
-    );
-
-    await loadPplOrdersUI();
-
     // AI data sharing toggle
     const aiShareToggle = document.getElementById("settingsAllowAiTraining");
     if (aiShareToggle) aiShareToggle.checked = company?.settings?.allow_ai_training === true;
@@ -3475,299 +3021,11 @@ function handleRemoveLogo() {
   if (logoInput) logoInput.value = "";
 }
 
-// ─── PPL Service Areas ────────────────────────────────────────────────────────
-function loadServiceAreasUI(postcodes, locked, requestInfo) {
-  const container = document.getElementById("serviceAreaTagsContainer");
-  if (!container) return;
-  container.innerHTML = "";
-  const isLocked = locked !== false;
-  postcodes.forEach((pc) => _renderServiceAreaTag(container, pc, !isLocked));
 
-  // requestInfo may be a request object {status, admin_notes,...}, or a legacy
-  // boolean (true = a request is pending).
-  const latestReq = (requestInfo && typeof requestInfo === "object") ? requestInfo : null;
-  const hasPendingRequest = latestReq ? latestReq.status === "pending" : requestInfo === true;
-  const wasRejected = latestReq ? latestReq.status === "rejected" : false;
 
-  const note     = document.getElementById("serviceAreaAutoNote");
-  const badge    = document.getElementById("serviceAreaLockBadge");
-  const lockedEl = document.getElementById("serviceAreaLockedNote");
-  const pendEl   = document.getElementById("serviceAreaPendingNote");
-  const rejEl    = document.getElementById("serviceAreaRejectedNote");
-  const rejReason= document.getElementById("serviceAreaRejectedReason");
-  const editEl   = document.getElementById("serviceAreaEditSection");
-  const reqBtn   = document.getElementById("requestServiceAreaChangeBtn");
-  const reqForm  = document.getElementById("serviceAreaRequestForm");
 
-  if (rejEl) rejEl.style.display = "none";
-  if (rejReason) rejReason.textContent = wasRejected && latestReq.admin_notes ? " Reason: " + latestReq.admin_notes : "";
 
-  if (note) note.style.display = (!isLocked && postcodes.length > 0) ? "" : "none";
-  if (reqForm) reqForm.style.display = "none";
 
-  if (badge) {
-    badge.style.display = "";
-    if (isLocked) {
-      badge.textContent = "🔒 Locked";
-      badge.style.background = "rgba(185,28,28,.08)";
-      badge.style.color = "#b91c1c";
-      badge.style.borderColor = "rgba(185,28,28,.2)";
-    } else {
-      badge.textContent = "🔓 Unlocked";
-      badge.style.background = "rgba(22,163,74,.08)";
-      badge.style.color = "#15803d";
-      badge.style.borderColor = "rgba(22,163,74,.2)";
-    }
-  }
-
-  if (!isLocked) {
-    if (lockedEl) lockedEl.style.display = "none";
-    if (pendEl)   pendEl.style.display   = "none";
-    if (editEl)   editEl.style.display   = "";
-    if (reqBtn)   reqBtn.style.display   = "none";
-  } else if (hasPendingRequest) {
-    if (lockedEl) lockedEl.style.display = "none";
-    if (pendEl)   pendEl.style.display   = "";
-    if (editEl)   editEl.style.display   = "none";
-    if (reqBtn)   reqBtn.style.display   = "none";
-  } else {
-    if (lockedEl) lockedEl.style.display = wasRejected ? "none" : "";
-    if (pendEl)   pendEl.style.display   = "none";
-    if (rejEl)    rejEl.style.display    = wasRejected ? "" : "none";
-    if (editEl)   editEl.style.display   = "none";
-    if (reqBtn)   reqBtn.style.display   = "";
-  }
-}
-
-function _renderServiceAreaTag(container, postcode, removable) {
-  const tag = document.createElement("span");
-  tag.className = "tag";
-  tag.dataset.postcode = postcode.toUpperCase();
-  if (removable) {
-    tag.innerHTML = `${postcode.toUpperCase()} <button type="button" style="background:none;border:none;cursor:pointer;padding:0;line-height:1;font-size:13px;opacity:0.6" aria-label="Remove">&times;</button>`;
-    tag.querySelector("button").addEventListener("click", () => tag.remove());
-  } else {
-    tag.textContent = postcode.toUpperCase();
-  }
-  container.appendChild(tag);
-}
-
-function _addServiceAreaFromInput() {
-  const input = document.getElementById("serviceAreaInput");
-  if (!input) return;
-  const raw = input.value.trim();
-  if (!raw) return;
-  const container = document.getElementById("serviceAreaTagsContainer");
-  if (!container) return;
-  const existing = new Set([...container.querySelectorAll(".tag")].map((t) => t.dataset.postcode));
-  const entries = raw.split(/[\s,]+/).map((s) => s.trim().toUpperCase()).filter(Boolean);
-  entries.forEach((val) => {
-    if (!existing.has(val)) {
-      _renderServiceAreaTag(container, val, true);
-      existing.add(val);
-    }
-  });
-  input.value = "";
-}
-
-async function handleServiceAreasSave() {
-  if (!currentCompanyId) return;
-  const container = document.getElementById("serviceAreaTagsContainer");
-  if (!container) return;
-  const postcodes = [...container.querySelectorAll(".tag")].map((t) => t.dataset.postcode).filter(Boolean);
-  const btn = document.getElementById("saveServiceAreasBtn");
-  if (btn) { btn.disabled = true; btn.textContent = "Saving…"; }
-  try {
-    const { error } = await sb.from("companies").update({
-      ppl_agreed_postcodes: postcodes,
-      ppl_area_locked: true,
-    }).eq("id", currentCompanyId);
-    if (error) { toast(error.message, true); return; }
-    toast("Service areas saved and re-locked.");
-    loadServiceAreasUI(postcodes, true, false);
-  } catch {
-    toast("Failed to save service areas.", true);
-  } finally {
-    if (btn) { btn.disabled = false; btn.textContent = "Save & Re-lock Service Areas"; }
-  }
-}
-
-document.getElementById("requestServiceAreaChangeBtn")?.addEventListener("click", () => {
-  const form = document.getElementById("serviceAreaRequestForm");
-  if (form) form.style.display = "";
-  const btn = document.getElementById("requestServiceAreaChangeBtn");
-  if (btn) btn.style.display = "none";
-});
-
-document.getElementById("serviceAreaRequestCancelBtn")?.addEventListener("click", () => {
-  const form = document.getElementById("serviceAreaRequestForm");
-  if (form) form.style.display = "none";
-  const btn = document.getElementById("requestServiceAreaChangeBtn");
-  if (btn) btn.style.display = "";
-});
-
-document.getElementById("serviceAreaRequestSubmitBtn")?.addEventListener("click", async () => {
-  if (!currentCompanyId) return;
-  const msgEl = document.getElementById("serviceAreaRequestMessage");
-  const message = msgEl ? msgEl.value.trim() : "";
-  const btn = document.getElementById("serviceAreaRequestSubmitBtn");
-  if (btn) { btn.disabled = true; btn.textContent = "Submitting…"; }
-  try {
-    const { error } = await sb.from("ppl_area_change_requests").insert({
-      company_id: currentCompanyId,
-      message: message || null,
-    });
-    if (error) { toast("Failed to submit request: " + error.message, true); return; }
-    if (msgEl) msgEl.value = "";
-    const form = document.getElementById("serviceAreaRequestForm");
-    if (form) form.style.display = "none";
-    const container = document.getElementById("serviceAreaTagsContainer");
-    const postcodes = [...(container?.querySelectorAll(".tag") || [])].map((t) => t.dataset.postcode).filter(Boolean);
-    loadServiceAreasUI(postcodes, true, true);
-    toast("Change request submitted. An admin will review it shortly.");
-  } catch (e) {
-    toast("Failed to submit request.", true);
-  } finally {
-    if (btn) { btn.disabled = false; btn.textContent = "Submit Request"; }
-  }
-});
-
-// ─── PPL Orders ───────────────────────────────────────────────────────────────
-
-async function loadPplOrdersUI() {
-  const container = document.getElementById("pplOrdersList");
-  if (!container || !currentCompanyId) return;
-
-  const newOrderBtn = document.getElementById("openPplOrderModal");
-  if (newOrderBtn) newOrderBtn.style.display = currentUserIsSuperAdmin ? "" : "none";
-
-  const { data: orders, error } = await sb
-    .from("ppl_lead_orders")
-    .select("*")
-    .eq("company_id", currentCompanyId)
-    .order("created_at", { ascending: false });
-
-  if (error) { container.innerHTML = `<div class="notice">Failed to load orders.</div>`; return; }
-  if (!orders?.length) { container.innerHTML = `<div class="notice">No PPL orders yet. Create one to start tracking lead delivery.</div>`; return; }
-
-  const fmt = v => new Intl.NumberFormat("en-AU", { style: "currency", currency: "AUD" }).format(v);
-  const statusColor = s => ({ pending:"#9a9a9a", paid:"#F59E0B", active:"#22c55e", fulfilled:"#22c55e", cancelled:"#ef4444" }[s] || "#9a9a9a");
-
-  // Populate cache so retryPplOrder works from this panel too
-  orders.forEach(o => _pplOrdersCache.set(o.id, o));
-
-  const totalSpend = orders.filter(o => o.status !== "cancelled" && o.status !== "pending").reduce((sum, o) => sum + Number(o.total_amount || 0), 0);
-  container.innerHTML = `<div style="font-size:12px;color:var(--muted);margin-bottom:14px">${orders.length} order${orders.length === 1 ? "" : "s"} · Total spend: <strong style="color:var(--text)">${fmt(totalSpend)}</strong></div>`
-    + orders.map((o) => {
-    const isPending = o.status === "pending";
-    const pct    = o.quantity > 0 ? Math.min(100, Math.round((o.delivered_count / o.quantity) * 100)) : 0;
-    const colour = o.status === "cancelled" ? "#9e9e9e" : pct >= 100 ? "#22c55e" : pct >= 60 ? "#F59E0B" : "#f59e0b";
-    const city   = o.area_city || o.area || "-";
-    const statusBadge = `<span style="display:inline-block;font-size:10px;font-weight:600;padding:2px 8px;border-radius:10px;background:${statusColor(o.status)}22;color:${statusColor(o.status)};text-transform:uppercase;letter-spacing:.5px">${o.status}</span>`;
-
-    if (isPending) {
-      return `
-      <div style="border:1px solid #f59e0b55;border-radius:12px;padding:16px;margin-bottom:12px;background:#f59e0b0a">
-        <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap">
-          <div style="flex:1;min-width:0">
-            <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
-              ${statusBadge}
-              <span style="font-size:13px;font-weight:600">${nicheLabel(o.niche)}${o.sub_niche ? ` › ${subNicheLabel(o.sub_niche)}` : ''} - ${city}</span>
-            </div>
-            <div style="font-size:12px;color:var(--muted)">
-              ${fmt(o.total_amount || 0)} · ${o.quantity} leads · ${new Date(o.created_at).toLocaleDateString("en-AU", { day:"numeric", month:"short", year:"numeric" })}
-            </div>
-            <div style="font-size:11px;color:#f59e0b;margin-top:4px;font-weight:500">Payment not completed</div>
-          </div>
-          <div style="display:flex;gap:8px;flex-shrink:0">
-            <button class="btn2" style="font-size:12px;padding:6px 14px" onclick="retryPplOrder('${o.id}')">Complete Payment</button>
-            <button class="btn btn-danger" style="font-size:12px;padding:6px 12px" onclick="deletePendingOrderFromSettings('${o.id}')">Delete</button>
-          </div>
-        </div>
-      </div>`;
-    }
-
-    const cancelBtn = ["paid","active"].includes(o.status) && currentUserIsSuperAdmin
-      ? `<button class="btn btn-danger" style="font-size:11px;padding:4px 10px" onclick="cancelPplOrder('${o.id}')">Cancel</button>`
-      : "";
-    return `
-      <div style="border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:12px;background:var(--surface-2)">
-        <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap">
-          <div style="flex:1;min-width:0">
-            <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
-              ${statusBadge}
-              <span style="font-size:13px;font-weight:600">${nicheLabel(o.niche)}${o.sub_niche ? ` › ${subNicheLabel(o.sub_niche)}` : ''} - ${city}</span>
-            </div>
-            <div style="font-size:20px;font-weight:700;color:var(--text);margin-bottom:4px">
-              ${o.delivered_count} / ${o.quantity}
-              <span style="font-size:13px;font-weight:400;color:var(--muted)">leads delivered</span>
-            </div>
-            <div style="font-size:12px;color:var(--muted);margin-bottom:10px">
-              ${fmt(o.total_amount)} · Ordered ${new Date(o.created_at).toLocaleDateString("en-AU", { day:"numeric", month:"short", year:"numeric" })}
-              ${o.stripe_session_id ? "" : " · Manual order"}
-            </div>
-            <div style="background:var(--border);border-radius:4px;height:6px;overflow:hidden">
-              <div style="width:${pct}%;height:100%;background:${colour};border-radius:4px;transition:width .3s"></div>
-            </div>
-          </div>
-          <div style="flex-shrink:0">${cancelBtn}</div>
-        </div>
-      </div>`;
-  }).join("");
-}
-
-async function handleCreatePplOrder(e) {
-  e.preventDefault();
-  if (!currentCompanyId) return;
-  if (!currentUserIsSuperAdmin) { toast("Only super admins can create PPL orders.", true); return; }
-
-  const niche = document.getElementById("pplOrderNiche")?.value;
-  const city  = document.getElementById("pplOrderCity")?.value?.trim();
-  const qty   = parseInt(document.getElementById("pplOrderQty")?.value, 10);
-  const ppl   = parseFloat(document.getElementById("pplOrderPPL")?.value);
-
-  if (!niche || !city || !qty || qty < 1 || isNaN(ppl) || ppl < 0) {
-    toast("Please fill in all required fields.", true);
-    return;
-  }
-
-  try {
-    const { error } = await sb.from("ppl_lead_orders").insert({
-      company_id:    currentCompanyId,
-      niche,
-      area:          city,
-      area_city:     city,
-      location_type: "radius",
-      quantity:      qty,
-      price_per_lead: ppl,
-      total_amount:  qty * ppl,
-      status:        "active",
-    });
-    if (error) { toast(error.message, true); return; }
-    toast("PPL order created.");
-    closeModal("pplOrderModal");
-    document.getElementById("pplOrderForm")?.reset();
-    await loadPplOrdersUI();
-    await loadBuyLeads();
-  } catch (err) {
-    toast("Failed to create order: " + err.message, true);
-  }
-}
-
-async function cancelPplOrder(orderId) {
-  confirmAction("Cancel this PPL order? It will no longer count incoming leads.", async () => {
-    try {
-      const { error } = await sb.from("ppl_lead_orders").update({ status: "cancelled" }).eq("id", orderId);
-      if (error) { toast(error.message, true); return; }
-      toast("Order cancelled.");
-      await loadPplOrdersUI();
-      await loadBuyLeads();
-    } catch {
-      toast("Failed to cancel order.", true);
-    }
-  });
-}
-window.cancelPplOrder = cancelPplOrder;
 
 async function handleCompanyProfileSave(e) {
   e.preventDefault();
@@ -5091,10 +4349,10 @@ async function openOpportunityModal(leadId) {
   setOppField("oppOverviewAiSummary", lead.ai_summary || "No AI summary yet.");
   setOppField("oppOverviewNotes", lead.notes || "");
 
-  // Lead Gen Rentals PPL: only status, value, address & notes are editable here.
-  const oppLocked = isPplLocked(lead);
-  setFieldsLocked(PPL_LOCKED_OPP_FIELDS, oppLocked);
-  if (oppModalSubtitle && oppLocked) oppModalSubtitle.textContent += " · 🔒 Lead Gen Rentals PPL (limited editing)";
+  // Delivered asset leads: only status, value, address & notes are editable here.
+  const oppLocked = isDeliveredLead(lead);
+  setFieldsLocked(LOCKED_OPP_FIELDS, oppLocked);
+  if (oppModalSubtitle && oppLocked) oppModalSubtitle.textContent += " · 🔒 delivered asset lead (limited edit)";
 
   // Wire inline save button (Change 6)
   const saveBtn = document.getElementById('oppSaveInlineBtn');
@@ -5114,8 +4372,8 @@ async function openOpportunityModal(leadId) {
         address:        document.getElementById('oppOverviewAddress')?.value || null,
         notes:          document.getElementById('oppOverviewNotes')?.value || null,
       };
-      // Lead Gen Rentals PPL: never persist identifying-field or source changes.
-      if (isPplLocked(lead)) {
+      // Delivered asset leads: never persist identifying-field or source changes.
+      if (false) {
         delete payload.name;
         delete payload.email;
         delete payload.phone;
@@ -5445,14 +4703,14 @@ async function loadAiInsights() {
   if (industryEl) {
     const [{ data: leads }, { data: orderNiches }] = await Promise.all([
       sb.from("leads").select("id, pipeline_stage, ai_enabled, created_at, value").eq("company_id", currentCompanyId),
-      sb.from("ppl_lead_orders").select("niche").eq("company_id", currentCompanyId).in("status", ["paid","active","fulfilled"]),
+      sb.from("rentals").select("assets(niches(slug))").is("ended_at", null),
     ]);
 
     // Determine company's primary niche (most ordered)
     let companyNiche = null;
     if (orderNiches?.length) {
       const counts = {};
-      orderNiches.forEach(o => counts[o.niche] = (counts[o.niche] || 0) + 1);
+      orderNiches.forEach(o => { const n = o.assets?.niches?.slug; if (n) counts[n] = (counts[n] || 0) + 1; });
       companyNiche = Object.entries(counts).sort((a, b) => b[1] - a[1])[0]?.[0];
     }
 
@@ -6521,7 +5779,7 @@ async function loadMyRentals() {
 });
 
 // =============================================================================
-// PPL Admin (super admin only)
+// Admin (super admin only)
 // =============================================================================
 
 // =============================================================================
