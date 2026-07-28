@@ -1676,153 +1676,36 @@ tbody tr:hover{background:var(--side-hover);transition:background .1s}
         <div class="stack">
           <section class="panel">
             <div class="panel-h">
-              <div><h2>Purchase Lead Pack</h2><p>Exclusive leads delivered in real-time to your pipeline. Minimum 25 per order.</p></div>
+              <div>
+                <h2>Rent an Asset</h2>
+                <p>An asset is a lead generation engine for one trade in one area. Rent it and every lead it produces is yours alone, for a flat monthly rate.</p>
+              </div>
+              <div style="display:flex;gap:6px;flex-wrap:wrap">
+                <select id="rentNicheFilter" class="filter-select"><option value="">All trades</option></select>
+                <select id="rentAreaFilter" class="filter-select"><option value="">All areas</option></select>
+                <select id="rentTierFilter" class="filter-select">
+                  <option value="">All tiers</option>
+                  <option value="starter">Starter</option>
+                  <option value="growth">Growth</option>
+                  <option value="scale">Scale</option>
+                </select>
+              </div>
             </div>
             <div class="panel-b">
-              <div class="stack" style="max-width:580px;gap:24px">
-
-                <!-- Step 1: City -->
-                <div class="field" id="buyLeadsCityField">
-                  <label for="buyLeadsCity" style="font-size:12px;font-weight:500;color:var(--muted);text-transform:uppercase;letter-spacing:.04em">1. LOCATION</label>
-                  <select id="buyLeadsCity" style="margin-top:8px">
-                    <option value="">Select a city or state…</option>
-                    <optgroup label="Queensland">
-                      <option value="Queensland" data-statewide="1">Queensland (State Wide)</option>
-                      <option value="Brisbane">Brisbane</option>
-                      <option value="Gold Coast">Gold Coast</option>
-                      <option value="Sunshine Coast">Sunshine Coast</option>
-                      <option value="Toowoomba">Toowoomba</option>
-
-                      <option value="Cairns">Cairns</option>
-                    </optgroup>
-                    <optgroup label="New South Wales">
-                      <option value="New South Wales" data-statewide="1">New South Wales (State Wide)</option>
-                      <option value="Sydney">Sydney</option>
-                      <option value="Newcastle">Newcastle</option>
-                      <option value="Wollongong">Wollongong</option>
-                      <option value="Central Coast">Central Coast</option>
-                    </optgroup>
-                    <optgroup label="Victoria">
-                      <option value="Victoria" data-statewide="1">Victoria (State Wide)</option>
-                      <option value="Melbourne">Melbourne</option>
-                      <option value="Geelong">Geelong</option>
-                    </optgroup>
-                    <optgroup label="Western Australia">
-                      <option value="Western Australia" data-statewide="1">Western Australia (State Wide)</option>
-                      <option value="Perth">Perth</option>
-                    </optgroup>
-                    <optgroup label="South Australia">
-                      <option value="South Australia" data-statewide="1">South Australia (State Wide)</option>
-                      <option value="Adelaide">Adelaide</option>
-                    </optgroup>
-                    <optgroup label="Australian Capital Territory">
-                      <option value="Australian Capital Territory" data-statewide="1">Australian Capital Territory (State Wide)</option>
-                      <option value="Canberra">Canberra</option>
-                    </optgroup>
-                  </select>
-                </div>
-
-                <!-- Step 2: Niche -->
-                <div class="field" id="buyLeadsNicheField" style="display:none">
-                  <label style="font-size:12px;font-weight:500;color:var(--muted);text-transform:uppercase;letter-spacing:.04em">2. Select Trade</label>
-                  <div id="buyLeadsNicheCards" style="display:flex;flex-wrap:wrap;gap:8px;margin-top:8px"></div>
-                </div>
-
-                <!-- Step 3: Sub-Niche (conditional - HVAC only) -->
-                <div class="field" id="buyLeadsSubNicheField" style="display:none">
-                  <label style="font-size:12px;font-weight:500;color:var(--muted);text-transform:uppercase;letter-spacing:.04em">3. Refine Lead Type <span style="text-transform:none;font-style:italic;font-weight:400">(optional)</span></label>
-                  <div id="buyLeadsSubNicheCards" style="display:flex;flex-wrap:wrap;gap:8px;margin-top:8px"></div>
-                </div>
-
-                <!-- Step 4: Location type -->
-                <div id="buyLeadsLocationField" style="display:none">
-                  <label style="font-size:12px;font-weight:500;color:var(--muted);text-transform:uppercase;letter-spacing:.04em">4. Define Coverage Area</label>
-                  <div id="buyLeadsLocToggle" style="display:flex;gap:8px;margin-top:8px;margin-bottom:16px">
-                    <button id="locTypeRadius" type="button" onclick="buyLeadsSetLocType('radius')"
-                      style="padding:8px 16px;border-radius:8px;border:1px solid var(--accent);background:var(--accent);color:#fff;font-size:13px;font-weight:500;cursor:pointer;font-family:inherit">
-                      Radius
-                    </button>
-                    <button id="locTypePostcodes" type="button" onclick="buyLeadsSetLocType('postcodes')"
-                      style="padding:8px 16px;border-radius:8px;border:1px solid var(--border);background:var(--surface-2,var(--bg-lift));color:var(--text,var(--ink));font-size:13px;font-weight:500;cursor:pointer;font-family:inherit">
-                      Postcode List
-                    </button>
-                  </div>
-
-                  <div id="locRadiusPanel">
-                    <label for="buyLeadsRadius" style="font-size:13px;font-weight:500">Radius from city centre</label>
-                    <select id="buyLeadsRadius" style="margin-top:6px">
-                      <option value="50" selected>50 km</option>
-                      <option value="75">75 km</option>
-                      <option value="100">100 km</option>
-                    </select>
-                  </div>
-
-                  <div id="locPostcodesPanel" style="display:none">
-                    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
-                      <label style="font-size:13px;font-weight:500">Paste postcode list</label>
-                      <a href="https://www.embr.com.au/find-australian-postcodes-inside-radius/index.html" target="_blank" rel="noopener"
-                        style="font-size:12px;color:var(--accent,#F59E0B);text-decoration:none">
-                        Find postcodes by radius →
-                      </a>
-                    </div>
-                    <textarea id="buyLeadsPostcodes" rows="4"
-                      placeholder="Paste postcodes here, one per line or comma-separated&#10;e.g. 4000, 4001, 4005, 4006"
-                      style="width:100%;padding:10px;border:1px solid var(--border);border-radius:8px;background:var(--bg);color:var(--text,var(--ink));font-family:inherit;font-size:13px;resize:vertical;line-height:1.6"></textarea>
-                    <p style="font-size:12px;color:var(--muted);margin-top:6px">Use the link above to find all postcodes within a radius, then paste them here.</p>
-                  </div>
-
-                  <div id="locStatewidePanel" style="display:none">
-                    <div style="display:flex;gap:12px;align-items:flex-start;background:var(--surface-2,var(--bg-lift));border:1px solid var(--accent,#F59E0B);border-radius:8px;padding:14px 16px">
-                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--accent,#F59E0B)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;margin-top:1px"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
-                      <div>
-                        <div style="font-size:13px;font-weight:600;color:var(--text,var(--ink));margin-bottom:3px">State-wide coverage - <span id="buyLeadsStatewideName">this state</span></div>
-                        <div style="font-size:12px;color:var(--muted);line-height:1.6">Leads will be sourced from anywhere across the state - no radius or postcode list needed. Pick a city instead to target a specific area.</div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                <!-- Step 5: Quantity -->
-                <div class="field" id="buyLeadsQtyField" style="display:none">
-                  <label style="font-size:12px;font-weight:500;color:var(--muted);text-transform:uppercase;letter-spacing:.04em">5. Select Quantity</label>
-                  <div id="buyLeadsPackGrid" style="display:flex;flex-wrap:wrap;gap:10px;margin-top:8px"></div>
-                  <div id="buyLeadsCapNote" style="display:none;margin-top:8px;font-size:12px;color:var(--muted)"></div>
-                  <div style="margin-top:12px;display:flex;align-items:center;gap:8px">
-                    <span style="font-size:12px;color:var(--muted)">Custom:</span>
-                    <input id="buyLeadsCustomQty" type="number" min="25" step="1" placeholder="e.g. 35"
-                      style="width:88px;padding:6px 10px;border:1px solid var(--border);border-radius:8px;background:var(--bg);color:var(--text,var(--ink));font-size:13px;font-family:inherit">
-                    <span style="font-size:12px;color:var(--muted)">leads (min. 25)</span>
-                  </div>
-                </div>
-
-                <!-- Order summary -->
-                <div id="buyLeadsSummary" style="display:none;background:var(--surface-2,var(--bg-lift));border:1px solid var(--border);border-radius:10px;padding:18px">
-                  <p style="font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:12px">Order Summary</p>
-                  <div style="font-size:13px;color:var(--muted);line-height:2.1">
-                    <div style="display:flex;justify-content:space-between"><span>Niche</span><span id="buyLeadsSumNiche" style="color:var(--text,var(--ink));font-weight:500">-</span></div>
-                    <div id="buyLeadsSumSubNicheRow" style="display:none;justify-content:space-between"><span>Lead Type</span><span id="buyLeadsSumSubNiche" style="color:var(--text,var(--ink));font-weight:500">-</span></div>
-                    <div style="display:flex;justify-content:space-between"><span id="buyLeadsSumCityLbl">City</span><span id="buyLeadsSumCity" style="color:var(--text,var(--ink));font-weight:500">-</span></div>
-                    <div style="display:flex;justify-content:space-between"><span>Coverage</span><span id="buyLeadsSumCoverage" style="color:var(--text,var(--ink));font-weight:500">-</span></div>
-                    <div style="display:flex;justify-content:space-between"><span>Quantity</span><span id="buyLeadsSumQty" style="color:var(--text,var(--ink));font-weight:500">-</span></div>
-                    <div style="display:flex;justify-content:space-between"><span>Price per lead</span><span id="buyLeadsSumPPL" style="color:var(--text,var(--ink));font-weight:500">-</span></div>
-                    <div id="buyLeadsSumDiscountRow" style="display:none;justify-content:space-between"><span>Volume discount</span><span id="buyLeadsSumDiscount" style="color:#22c55e;font-weight:500">-</span></div>
-                    <div style="display:flex;justify-content:space-between;border-top:1px solid var(--border);margin-top:8px;padding-top:10px;font-size:15px;font-weight:600;color:var(--text,var(--ink))"><span>Total (ex GST)</span><span id="buyLeadsSumTotal">-</span></div>
-                  </div>
-                  <button id="buyLeadsCheckoutBtn" class="btn2" type="button" style="width:100%;margin-top:16px">Purchase Leads →</button>
-                  <p style="font-size:11px;color:var(--muted);margin-top:10px;line-height:1.6;text-align:center">
-                    Leads delivered in real-time over 7-14 days. By purchasing you agree to the
-                    <a href="https://leadgenrentals.com.au/pay-per-lead-terms" target="_blank" rel="noopener" style="color:var(--muted);text-decoration:underline">Pay-Per-Lead Terms</a>.
-                  </p>
-                </div>
-
-              </div>
+              <div id="rentLoading" class="notice">Loading available assets…</div>
+              <div id="rentGrid" class="hidden"></div>
+              <div id="rentEmpty" class="notice hidden">Nothing available matching that. Try a different trade or area.</div>
             </div>
           </section>
 
           <section class="panel">
-            <div class="panel-h"><div><h2>Order History</h2><p>Your lead pack purchases and delivery status.</p></div></div>
+            <div class="panel-h">
+              <div><h2>Your Rentals</h2><p id="rentMineCount">Loading…</p></div>
+            </div>
             <div class="panel-b">
-              <div id="buyLeadsOrdersTable"><div class="notice">Loading orders…</div></div>
+              <div id="rentMineLoading" class="notice">Loading…</div>
+              <div id="rentMine" class="hidden"></div>
+              <div id="rentMineEmpty" class="notice hidden">You are not renting an asset yet.</div>
             </div>
           </section>
         </div>

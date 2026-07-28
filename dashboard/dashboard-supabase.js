@@ -6264,669 +6264,261 @@ async function skipReviewRequest(requestId) {
 }
 
 // =============================================================================
-// Rent Assets helpers
+// Rent Assets
 // =============================================================================
-function nicheLabel(niche) {
-  if (niche === 'solar_battery' || niche === 'solar-battery') return 'Solar + Battery';
-  if (niche === 'battery_retrofit' || niche === 'battery-retrofit') return 'Battery Retrofit';
-  return (niche || '').split(/[_-]/).map(function(w) { return w.charAt(0).toUpperCase() + w.slice(1); }).join(' ');
+// An asset is one lead generation engine: a brand funnel for a single trade in
+// a single area. It rents for a flat monthly rate with a guaranteed lead floor,
+// so there is nothing to price per lead and no quantity to choose - either the
+// asset is available or somebody else already has it.
+
+const RENT_TIERS = ['starter', 'growth', 'scale'];
+
+let _rentAssets = [];
+let _rentMine   = [];
+
+function rentMoney(n) {
+  return (n == null || n === '') ? '-' : '$' + Number(n).toLocaleString('en-AU');
 }
 
-// =============================================================================
-// Rent Assets state
-// =============================================================================
-let _pplPricing      = [];  // kept for sub-niche compat; primary prices are _blCityPrices
-let _blDiscountTiers = [];  // [{min_quantity, discount_percent, label, is_popular}]
-let _blNiche         = null;
-let _blSubNiche      = null;
-let _blCity          = null;
-let _blLocType       = 'radius';
-let _blStatewide     = false;       // true when an entire state is selected
-let _blCovMode       = 'radius';    // remembers radius/postcodes when not state-wide
-let _blPPL           = null;
-let _blQty           = 25;
-let _blDiscount      = 0;
-let _blCityPrices    = {};  // niche → price_per_lead for selected city
-let _blCitySubPrices = {};  // 'niche:sub_niche' → price_per_lead for selected city
-let _blSoldOut       = {};  // 'niche' or 'niche:sub_niche' → true when sold out for selected city
-let _blMax           = {};  // 'niche' or 'niche:sub_niche' → max leads per order for selected city (null = unlimited)
-const BL_HARD_MAX    = 500; // absolute ceiling per order regardless of cap
-const _pplOrdersCache = new Map();
-
-// Effective per-order cap for the current selection (sub-niche cap wins, then
-// niche cap; null cap means unlimited, so fall back to the hard ceiling).
-function blActiveMax() {
-  let cap = null;
-  if (_blNiche && _blSubNiche && _blMax[_blNiche + ':' + _blSubNiche] != null) cap = _blMax[_blNiche + ':' + _blSubNiche];
-  else if (_blNiche && _blMax[_blNiche] != null) cap = _blMax[_blNiche];
-  return cap == null ? BL_HARD_MAX : Math.min(cap, BL_HARD_MAX);
+function rentTierLabel(t) {
+  return t ? t.charAt(0).toUpperCase() + t.slice(1) : '-';
 }
 
-// Sub-niche definitions per parent niche
-const NICHE_SUB_NICHES = {
-  hvac: [
-    { id: 'split_ducted',              label: 'Installations (Split & Ducted)' },
-    { id: 'installations_maintenance', label: 'Installations & Maintenance'    },
-  ],
-};
+// What a lead actually costs on this asset: the monthly rate spread across the
+// volume it produces. Best case is the top of the typical range, worst case is
+// the guaranteed floor - which is the number we are contractually held to.
+function rentLeadRange(a) {
+  const m = Number(a.monthly_price_aud || 0);
+  if (!m || !a.floor_leads || !a.typical_max) return null;
+  return {
+    low:  m / a.typical_max,
+    high: m / a.floor_leads,
+  };
+}
 
-function subNicheLabel(subNiche) {
-  for (const subs of Object.values(NICHE_SUB_NICHES)) {
-    const found = subs.find(s => s.id === subNiche);
-    if (found) return found.label;
-  }
-  return nicheLabel(subNiche);
+function rentPreviewUrl(a) {
+  const d = String(a.brand_domain || '').replace(/^https?:\/\//, '').replace(/\/.*$/, '');
+  if (!d) return null;
+  const slug = a.regions?.slug ? String(a.regions.slug).toLowerCase() : '';
+  return 'https://' + d + (slug ? '/' + slug + '/' : '/');
 }
 
 async function loadBuyLeads() {
-  if (!currentCompanyId) return;
+  const loading = document.getElementById('rentLoading');
+  const grid    = document.getElementById('rentGrid');
 
-  const [{ data: orders }, { data: tiers }] = await Promise.all([
-    sb.from('ppl_lead_orders').select('*').eq('company_id', currentCompanyId).order('created_at', { ascending: false }),
-    sb.from('volume_discount_tiers').select('min_quantity, discount_percent, label, is_popular').eq('active', true).order('sort_order'),
-  ]);
-
-  _pplPricing = []; _blCityPrices = {}; _blCitySubPrices = {}; _blSoldOut = {}; _blMax = {};
-  _blDiscountTiers = tiers || [];
-  _blNiche = null; _blSubNiche = null; _blCity = null; _blPPL = null; _blLocType = 'radius';
-  _blStatewide = false; _blCovMode = 'radius';
-  _blQty = _blDiscountTiers[0]?.min_quantity ?? 25;
-  _blDiscount = 0;
-
-  // City visible from the start; niche hidden until city chosen
-  document.getElementById('buyLeadsCityField').style.display = '';
-  document.getElementById('buyLeadsNicheField').style.display = 'none';
-  document.getElementById('buyLeadsSubNicheField').style.display = 'none';
-  document.getElementById('buyLeadsLocationField').style.display = 'none';
-  document.getElementById('buyLeadsQtyField').style.display = 'none';
-  document.getElementById('buyLeadsSummary').style.display = 'none';
-
-  const cityEl = document.getElementById('buyLeadsCity');
-  if (cityEl) {
-    cityEl.value = '';
-    cityEl.onchange = () => {
-      _blCity = cityEl.value || null;
-      _blStatewide = !!cityEl.value && cityEl.selectedOptions[0]?.dataset.statewide === '1';
-      buyLeadsOnCityChange();
-    };
-  }
-
-  renderBuyLeadsNiches();
-  renderBuyLeadsOrders(orders || []);
-
-  document.getElementById('buyLeadsRadius')?.addEventListener('change', buyLeadsUpdateSummary);
-  document.getElementById('buyLeadsPostcodes')?.addEventListener('input', buyLeadsUpdateSummary);
-}
-
-const BL_NICHES = ['solar', 'solar-battery', 'hvac', 'battery-retrofit'];
-
-function renderBuyLeadsNiches() {
-  const el = document.getElementById('buyLeadsNicheCards');
-  if (!el) return;
-  el.innerHTML = BL_NICHES.map(niche => {
-    const label = nicheLabel(niche);
-    // Sold out for this city - render greyed out, non-selectable, no price.
-    if (_blSoldOut[niche]) {
-      return `<button type="button" disabled
-        id="nicheCard-${niche}"
-        style="padding:10px 20px;border-radius:10px;border:1px solid var(--border);background:var(--surface-2,var(--bg-lift));color:var(--text,var(--ink));font-size:13px;font-weight:500;cursor:not-allowed;opacity:0.45;transition:all 0.15s;font-family:inherit;text-align:left;line-height:1.4">
-        ${label} - <span style="color:#f87171">Sold out</span>
-      </button>`;
-    }
-    const price = _blCityPrices[niche];
-    const priceNote = _blCity
-      ? (price ? ` - $${price}/lead` : ' - loading…')
-      : '';
-    const isSelected = niche === _blNiche;
-    return `<button type="button" onclick="buyLeadsSelectNiche('${niche}')"
-      id="nicheCard-${niche}"
-      style="padding:10px 20px;border-radius:10px;border:1px solid ${isSelected ? 'var(--accent,#F59E0B)' : 'var(--border)'};background:${isSelected ? 'var(--accent,#F59E0B)' : 'var(--surface-2,var(--bg-lift))'};color:${isSelected ? '#fff' : 'var(--text,var(--ink))'};font-size:13px;font-weight:500;cursor:pointer;transition:all 0.15s;font-family:inherit;text-align:left;line-height:1.4">
-      ${label}${priceNote}
-    </button>`;
-  }).join('');
-}
-
-function renderBuyLeadsSubNiches(niche) {
-  const field = document.getElementById('buyLeadsSubNicheField');
-  const el    = document.getElementById('buyLeadsSubNicheCards');
-  const subs  = NICHE_SUB_NICHES[niche];
-  if (!field || !el || !subs) { if (field) field.style.display = 'none'; return; }
-
-  const parentPPL = _blCityPrices[niche] ?? null;
-  const anyNote   = parentPPL != null ? ` - $${parentPPL}/lead` : '';
-  const isAny     = _blSubNiche === null;
-
-  let html = `<button type="button" onclick="buyLeadsSelectSubNiche(null)"
-    id="subNicheCard-any"
-    style="padding:10px 20px;border-radius:10px;border:1px solid ${isAny ? 'var(--accent,#F59E0B)' : 'var(--border)'};background:${isAny ? 'var(--accent,#F59E0B)' : 'var(--surface-2,var(--bg-lift))'};color:${isAny ? '#fff' : 'var(--text,var(--ink))'};font-size:13px;font-weight:500;cursor:pointer;transition:all 0.15s;font-family:inherit;text-align:left;line-height:1.4">
-    Any ${nicheLabel(niche)}${anyNote}
-  </button>`;
-
-  html += subs.map(s => {
-    // Sold out for this city - render greyed out, non-selectable, no price.
-    if (_blSoldOut[niche + ':' + s.id]) {
-      return `<button type="button" disabled
-        id="subNicheCard-${s.id}"
-        style="padding:10px 20px;border-radius:10px;border:1px solid var(--border);background:var(--surface-2,var(--bg-lift));color:var(--text,var(--ink));font-size:13px;font-weight:500;cursor:not-allowed;opacity:0.45;transition:all 0.15s;font-family:inherit;text-align:left;line-height:1.4">
-        ${s.label} - <span style="color:#f87171">Sold out</span>
-      </button>`;
-    }
-    const cached    = _blCitySubPrices[niche + ':' + s.id];
-    const priceNote = cached != null ? ` - $${cached}/lead` : (_blCity ? ' - loading…' : '');
-    const isSel     = _blSubNiche === s.id;
-    return `<button type="button" onclick="buyLeadsSelectSubNiche('${s.id}')"
-      id="subNicheCard-${s.id}"
-      style="padding:10px 20px;border-radius:10px;border:1px solid ${isSel ? 'var(--accent,#F59E0B)' : 'var(--border)'};background:${isSel ? 'var(--accent,#F59E0B)' : 'var(--surface-2,var(--bg-lift))'};color:${isSel ? '#fff' : 'var(--text,var(--ink))'};font-size:13px;font-weight:500;cursor:pointer;transition:all 0.15s;font-family:inherit;text-align:left;line-height:1.4">
-      ${s.label}${priceNote}
-    </button>`;
-  }).join('');
-
-  el.innerHTML = html;
-  field.style.display = '';
-
-  // Prefetch sub-niche prices in background
-  if (_blCity) subs.forEach(s => blFetchSubNichePrice(niche, s.id));
-}
-
-async function blFetchSubNichePrice(niche, subNicheId) {
-  const cacheKey = niche + ':' + subNicheId;
-  if (_blCitySubPrices[cacheKey] != null || _blSoldOut[cacheKey] || !_blCity) return;
   try {
-    const r = await fetch(
-      `${SUPABASE_URL}/functions/v1/get-ppl-pricing?niche=${encodeURIComponent(niche)}&sub_niche=${encodeURIComponent(subNicheId)}&area=${encodeURIComponent(_blCity)}`
+    const { data, error } = await sb
+      .from('assets')
+      .select('*, niches(id,slug,name), regions(id,slug,name,state)')
+      .is('deleted_at', null)
+      .eq('status', 'available');
+    if (error) throw error;
+
+    _rentAssets = (data || []).sort((a, b) =>
+      (a.regions?.name || '').localeCompare(b.regions?.name || '') ||
+      RENT_TIERS.indexOf(a.tier) - RENT_TIERS.indexOf(b.tier)
     );
-    if (!r.ok) return;
-    const d = await r.json();
-    if (d.sold_out === true) {
-      _blSoldOut[cacheKey] = true;
-      // If this sub-niche is currently selected, drop it back to "Any".
-      if (_blNiche === niche && _blSubNiche === subNicheId) {
-        _blSubNiche = null;
-        _blPPL = _blCityPrices[niche] ?? null;
-        buyLeadsUpdateSummary();
-      }
-      renderBuyLeadsSubNiches(niche);
-    } else if (d.price_per_lead != null) {
-      _blCitySubPrices[cacheKey] = d.price_per_lead;
-      _blMax[cacheKey] = d.max_order_qty ?? null;
-      renderBuyLeadsSubNiches(niche);
-      // If this sub-niche is currently selected, update PPL
-      if (_blNiche === niche && _blSubNiche === subNicheId) {
-        _blPPL = d.price_per_lead;
-        buyLeadsUpdateSummary();
-      }
-    }
-  } catch {}
-}
-
-function renderBuyLeadsPacks() {
-  const el = document.getElementById('buyLeadsPackGrid');
-  if (!el) return;
-  if (!_blDiscountTiers.length) {
-    el.innerHTML = `<p style="font-size:13px;color:var(--muted)">No packs available.</p>`;
-    return;
-  }
-  const cap = blActiveMax();
-  el.innerHTML = _blDiscountTiers.map(t => {
-    const isSelected = t.min_quantity === _blQty;
-    const overCap = t.min_quantity > cap;
-    const badge = t.discount_percent > 0
-      ? `<span style="display:inline-block;margin-left:6px;padding:1px 6px;border-radius:20px;font-size:10px;font-weight:700;background:${isSelected ? 'rgba(255,255,255,0.25)' : '#22c55e22'};color:${isSelected ? '#fff' : '#16a34a'}">${t.discount_percent}% off</span>`
-      : '';
-    const popular = t.is_popular
-      ? `<div style="font-size:10px;font-weight:600;color:${isSelected ? 'rgba(255,255,255,0.8)' : 'var(--accent,#F59E0B)'};margin-top:2px">Most popular</div>`
-      : '';
-    if (overCap) {
-      return `<button type="button" disabled title="Not available in this area right now"
-        style="padding:12px 18px;border-radius:10px;border:1px solid var(--border);background:var(--surface-2,var(--bg-lift));color:var(--muted);font-size:13px;font-weight:600;cursor:not-allowed;opacity:0.5;font-family:inherit;text-align:left;line-height:1.4;min-width:100px">
-        ${t.label}
-      </button>`;
-    }
-    return `<button type="button" id="packCard-${t.min_quantity}"
-      onclick="buyLeadsSelectPack(${t.min_quantity}, ${t.discount_percent})"
-      style="padding:12px 18px;border-radius:10px;border:1px solid ${isSelected ? '#F59E0B' : 'var(--border)'};background:${isSelected ? '#F59E0B' : 'var(--surface-2,var(--bg-lift))'};color:${isSelected ? '#fff' : 'var(--text,var(--ink))'};font-size:13px;font-weight:600;cursor:pointer;transition:all 0.15s;font-family:inherit;text-align:left;line-height:1.4;min-width:100px">
-      ${t.label}${badge}
-      ${popular}
-    </button>`;
-  }).join('');
-  const note = document.getElementById('buyLeadsCapNote');
-  if (note) {
-    if (cap < BL_HARD_MAX) {
-      note.textContent = `Up to ${cap} leads per order available for this lead type in this area.`;
-      note.style.display = '';
-    } else {
-      note.style.display = 'none';
-    }
-  }
-}
-
-function buyLeadsSelectNiche(niche) {
-  if (_blSoldOut[niche]) return;   // sold out for this city - not selectable
-  _blNiche    = niche;
-  _blSubNiche = null;
-  _blPPL      = _blCityPrices[niche] ?? null;
-
-  // Re-render niche cards to update selection highlight
-  renderBuyLeadsNiches();
-
-  document.getElementById('buyLeadsLocationField').style.display = 'none';
-  document.getElementById('buyLeadsQtyField').style.display = 'none';
-  document.getElementById('buyLeadsSummary').style.display = 'none';
-
-  const hasSubs = !!NICHE_SUB_NICHES[niche];
-  if (hasSubs) {
-    renderBuyLeadsSubNiches(niche);
-  } else {
-    const subField = document.getElementById('buyLeadsSubNicheField');
-    if (subField) subField.style.display = 'none';
-    // Go straight to coverage
-    document.getElementById('buyLeadsLocationField').style.display = '';
-    document.getElementById('buyLeadsQtyField').style.display = '';
-    buyLeadsApplyCoverageMode();
-    renderBuyLeadsPacks();
-    wireCustomQtyInput();
-  }
-}
-
-function buyLeadsSelectSubNiche(subNicheId) {
-  if (subNicheId && _blSoldOut[_blNiche + ':' + subNicheId]) return;   // sold out - not selectable
-  _blSubNiche = subNicheId;
-
-  // Resolve price: use cached city-specific price or fall back to parent niche price
-  if (subNicheId) {
-    const cached = _blCitySubPrices[_blNiche + ':' + subNicheId];
-    _blPPL = cached ?? _blCityPrices[_blNiche] ?? null;
-    if (!cached && _blCity) blFetchSubNichePrice(_blNiche, subNicheId);
-  } else {
-    _blPPL = _blCityPrices[_blNiche] ?? null;
-  }
-
-  // Re-render sub-niche cards to update selection highlight
-  renderBuyLeadsSubNiches(_blNiche);
-
-  // Advance to coverage + quantity
-  document.getElementById('buyLeadsLocationField').style.display = '';
-  document.getElementById('buyLeadsQtyField').style.display = '';
-  document.getElementById('buyLeadsSummary').style.display = 'none';
-  buyLeadsApplyCoverageMode();
-  renderBuyLeadsPacks();
-  wireCustomQtyInput();
-}
-window.buyLeadsSelectSubNiche = buyLeadsSelectSubNiche;
-
-function buyLeadsSelectPack(qty, discountPct) {
-  _blQty      = qty;
-  _blDiscount = discountPct;
-  const input = document.getElementById('buyLeadsCustomQty');
-  if (input) input.value = qty;
-  renderBuyLeadsPacks();
-  buyLeadsUpdateSummary();
-}
-
-// Returns the best active discount tier for a given quantity (highest min_qty ≤ qty)
-function blGetTierForQty(qty) {
-  let best = null;
-  for (const t of _blDiscountTiers) {
-    if (t.min_quantity <= qty) best = t;
-    else break;
-  }
-  return best;
-}
-
-async function buyLeadsOnCityChange() {
-  const city = _blCity;
-  if (!city) {
-    _blCityPrices = {}; _blCitySubPrices = {}; _blSoldOut = {};
-    document.getElementById('buyLeadsNicheField').style.display = 'none';
-    document.getElementById('buyLeadsSubNicheField').style.display = 'none';
-    document.getElementById('buyLeadsLocationField').style.display = 'none';
-    document.getElementById('buyLeadsQtyField').style.display = 'none';
-    document.getElementById('buyLeadsSummary').style.display = 'none';
+  } catch (err) {
+    loading.textContent = 'Could not load available assets: ' + err.message;
     return;
   }
 
-  // Show niche field with loading placeholders
-  _blCityPrices = {}; _blSoldOut = {}; _blMax = {};
-  renderBuyLeadsNiches();
-  document.getElementById('buyLeadsNicheField').style.display = '';
+  // Build the filters from what is actually on the market, so we can never
+  // offer a trade or area with nothing behind it.
+  const niches = {}, areas = {};
+  _rentAssets.forEach((a) => {
+    if (a.niches) niches[a.niches.id] = a.niches;
+    if (a.regions) areas[a.regions.id] = a.regions;
+  });
 
-  // Fetch all niche prices in parallel
-  const results = await Promise.allSettled(
-    BL_NICHES.map(niche =>
-      fetch(`${SUPABASE_URL}/functions/v1/get-ppl-pricing?niche=${encodeURIComponent(niche)}&area=${encodeURIComponent(city)}`)
-        .then(r => r.ok ? r.json() : Promise.reject())
-        .then(d => ({ niche, price: d.price_per_lead, soldOut: d.sold_out === true, maxQty: d.max_order_qty ?? null, tiers: d.discount_tiers }))
-    )
+  const nicheSel = document.getElementById('rentNicheFilter');
+  const areaSel  = document.getElementById('rentAreaFilter');
+  const keepN = nicheSel.value, keepA = areaSel.value;
+
+  nicheSel.innerHTML = '<option value="">All trades</option>' +
+    Object.values(niches).sort((a, b) => a.name.localeCompare(b.name))
+      .map((n) => `<option value="${escapeHtml(n.id)}">${escapeHtml(n.name)}</option>`).join('');
+  areaSel.innerHTML = '<option value="">All areas</option>' +
+    Object.values(areas).sort((a, b) => a.name.localeCompare(b.name))
+      .map((r) => `<option value="${escapeHtml(r.id)}">${escapeHtml(r.name)}${r.state ? ' · ' + escapeHtml(r.state) : ''}</option>`).join('');
+  nicheSel.value = keepN;
+  areaSel.value  = keepA;
+
+  renderRentGrid();
+  loadMyRentals();
+}
+
+function renderRentGrid() {
+  const loading = document.getElementById('rentLoading');
+  const grid    = document.getElementById('rentGrid');
+  const empty   = document.getElementById('rentEmpty');
+
+  const niche = document.getElementById('rentNicheFilter').value;
+  const area  = document.getElementById('rentAreaFilter').value;
+  const tier  = document.getElementById('rentTierFilter').value;
+
+  const rows = _rentAssets.filter((a) =>
+    (!niche || a.niche_id === niche) &&
+    (!area  || a.region_id === area) &&
+    (!tier  || a.tier === tier)
   );
 
-  results.forEach(r => {
-    if (r.status !== 'fulfilled') return;
-    if (r.value.tiers?.length) _blDiscountTiers = r.value.tiers;
-    if (r.value.soldOut) {
-      _blSoldOut[r.value.niche] = true;
-    } else if (r.value.price != null) {
-      _blCityPrices[r.value.niche] = r.value.price;
-      _blMax[r.value.niche] = r.value.maxQty;
-    }
-  });
-
-  renderBuyLeadsNiches();
-
-  // If niche already selected (city changed after), re-resolve PPL and re-render sub-niches
-  if (_blNiche) {
-    if (_blSoldOut[_blNiche]) {
-      // The trade the user had selected is sold out for this city - drop the
-      // selection so they can't proceed on a greyed-out card.
-      _blNiche = null; _blSubNiche = null; _blPPL = null;
-      document.getElementById('buyLeadsSubNicheField').style.display = 'none';
-      document.getElementById('buyLeadsLocationField').style.display = 'none';
-      document.getElementById('buyLeadsQtyField').style.display = 'none';
-      document.getElementById('buyLeadsSummary').style.display = 'none';
-      renderBuyLeadsNiches();
-    } else {
-      _blPPL = _blCityPrices[_blNiche] || null;
-      _blCitySubPrices = {};
-      if (NICHE_SUB_NICHES[_blNiche]) {
-        renderBuyLeadsSubNiches(_blNiche);
-        if (_blSubNiche) blFetchSubNichePrice(_blNiche, _blSubNiche);
-      }
-      buyLeadsApplyCoverageMode();
-    }
+  loading.classList.add('hidden');
+  if (!rows.length) {
+    grid.classList.add('hidden');
+    empty.classList.remove('hidden');
+    return;
   }
-  buyLeadsUpdateSummary();
-}
+  empty.classList.add('hidden');
+  grid.classList.remove('hidden');
 
-function wireCustomQtyInput() {
-  const input = document.getElementById('buyLeadsCustomQty');
-  if (!input) return;
-  const fresh = input.cloneNode(true);
-  fresh.max = blActiveMax();
-  input.parentNode.replaceChild(fresh, input);
-  fresh.value = _blQty;
-  fresh.addEventListener('input', buyLeadsOnCustomQtyChange);
-}
-
-function buyLeadsOnCustomQtyChange() {
-  const input = document.getElementById('buyLeadsCustomQty');
-  let raw = parseInt(input?.value || '0');
-  if (isNaN(raw) || raw < 25) return; // wait until valid
-  const cap = blActiveMax();
-  if (raw > cap) { raw = cap; if (input) input.value = cap; toast(`Up to ${cap} leads per order for this area.`, true); }
-  _blQty = raw;
-  const tier = blGetTierForQty(_blQty);
-  _blDiscount = tier ? tier.discount_percent : 0;
-  renderBuyLeadsPacks(); // re-render to reflect active state
-  buyLeadsUpdateSummary();
-}
-
-// Locks coverage to "state-wide" when an entire state is selected; otherwise
-// restores the Radius / Postcode controls for a specific city.
-function buyLeadsApplyCoverageMode() {
-  const toggle = document.getElementById('buyLeadsLocToggle');
-  const sPanel = document.getElementById('locStatewidePanel');
-  if (_blStatewide) {
-    _blLocType = 'statewide';
-    if (toggle) toggle.style.display = 'none';
-    document.getElementById('locRadiusPanel').style.display    = 'none';
-    document.getElementById('locPostcodesPanel').style.display = 'none';
-    if (sPanel) sPanel.style.display = '';
-    const nm = document.getElementById('buyLeadsStatewideName');
-    if (nm) nm.textContent = _blCity || 'this state';
-    buyLeadsUpdateSummary();
-  } else {
-    if (toggle) toggle.style.display = '';
-    if (sPanel) sPanel.style.display = 'none';
-    buyLeadsSetLocType(_blCovMode);
-  }
-}
-
-function buyLeadsSetLocType(type) {
-  _blLocType = type;
-  _blCovMode = type;
-  const isRadius = type === 'radius';
-
-  const rBtn = document.getElementById('locTypeRadius');
-  const pBtn = document.getElementById('locTypePostcodes');
-  if (rBtn) { rBtn.style.background = isRadius ? 'var(--accent,#F59E0B)' : 'var(--surface-2,var(--bg-lift))'; rBtn.style.borderColor = isRadius ? 'var(--accent,#F59E0B)' : 'var(--border)'; rBtn.style.color = isRadius ? '#fff' : 'var(--text,var(--ink))'; }
-  if (pBtn) { pBtn.style.background = !isRadius ? 'var(--accent,#F59E0B)' : 'var(--surface-2,var(--bg-lift))'; pBtn.style.borderColor = !isRadius ? 'var(--accent,#F59E0B)' : 'var(--border)'; pBtn.style.color = !isRadius ? '#fff' : 'var(--text,var(--ink))'; }
-
-  document.getElementById('locRadiusPanel').style.display    = isRadius ? '' : 'none';
-  document.getElementById('locPostcodesPanel').style.display = !isRadius ? '' : 'none';
-  buyLeadsUpdateSummary();
-}
-
-function buyLeadsUpdateSummary() {
-  if (!_blNiche || !_blCity || !_blPPL) return;
-  if (_blQty < 10) { document.getElementById('buyLeadsSummary').style.display = 'none'; return; }
-
-  const fmt = v => new Intl.NumberFormat('en-AU', { style: 'currency', currency: 'AUD' }).format(v);
-
-  let coverage = '';
-  if (_blStatewide) {
-    coverage = 'State wide';
-  } else if (_blLocType === 'postcodes') {
-    const raw = (document.getElementById('buyLeadsPostcodes')?.value || '').trim();
-    const count = raw ? raw.split(/[\s,]+/).filter(Boolean).length : 0;
-    if (!count) { document.getElementById('buyLeadsSummary').style.display = 'none'; return; }
-    coverage = `${count} postcode${count !== 1 ? 's' : ''}`;
-  } else {
-    const radius = document.getElementById('buyLeadsRadius')?.value || 50;
-    coverage = `${radius}km radius`;
-  }
-
-  const subtotal = _blQty * _blPPL;
-  const saving   = subtotal * (_blDiscount / 100);
-  const total    = subtotal - saving;
-
-  document.getElementById('buyLeadsSumNiche').textContent    = nicheLabel(_blNiche);
-  const subNicheRow = document.getElementById('buyLeadsSumSubNicheRow');
-  if (subNicheRow) {
-    if (_blSubNiche) {
-      document.getElementById('buyLeadsSumSubNiche').textContent = subNicheLabel(_blSubNiche);
-      subNicheRow.style.display = 'flex';
-    } else {
-      subNicheRow.style.display = 'none';
-    }
-  }
-  const cityLbl = document.getElementById('buyLeadsSumCityLbl');
-  if (cityLbl) cityLbl.textContent = _blStatewide ? 'State' : 'City';
-  document.getElementById('buyLeadsSumCity').textContent     = _blCity;
-  document.getElementById('buyLeadsSumCoverage').textContent = coverage;
-  document.getElementById('buyLeadsSumQty').textContent      = `${_blQty} leads`;
-  document.getElementById('buyLeadsSumPPL').textContent      = fmt(_blPPL);
-  document.getElementById('buyLeadsSumTotal').textContent    = fmt(total);
-
-  const discRow = document.getElementById('buyLeadsSumDiscountRow');
-  if (discRow) {
-    if (_blDiscount > 0) {
-      document.getElementById('buyLeadsSumDiscount').textContent = `−${fmt(saving)} (${_blDiscount}% off)`;
-      discRow.style.display = 'flex';
-    } else {
-      discRow.style.display = 'none';
-    }
-  }
-
-  document.getElementById('buyLeadsSummary').style.display = '';
-  const btn = document.getElementById('buyLeadsCheckoutBtn');
-  if (btn) btn.onclick = () => startPplCheckout();
-}
-
-async function startPplCheckout() {
-  const radius    = parseInt(document.getElementById('buyLeadsRadius')?.value || 50);
-  const postcodes = (document.getElementById('buyLeadsPostcodes')?.value || '').trim();
-
-  if (!_blNiche || !_blCity) { toast('Please select a niche and city.', true); return; }
-  if (_blSoldOut[_blNiche] || (_blSubNiche && _blSoldOut[_blNiche + ':' + _blSubNiche])) {
-    toast('That trade is sold out in this area. Please choose another.', true); return;
-  }
-  const cap = blActiveMax();
-  if (_blQty > cap) { toast(`Up to ${cap} leads per order for this area. Please lower the quantity.`, true); return; }
-  if (_blLocType === 'postcodes' && !postcodes) { toast('Please paste your postcode list.', true); return; }
-
-  const btn = document.getElementById('buyLeadsCheckoutBtn');
-  if (btn) { btn.disabled = true; btn.textContent = 'Redirecting to checkout…'; }
-
-  try {
-    const { data: { session } } = await sb.auth.getSession();
-    const res = await fetch(`${SUPABASE_URL}/functions/v1/create-ppl-checkout`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session.access_token}`, 'apikey': SUPABASE_ANON_KEY },
-      body: JSON.stringify({
-        company_id:    currentCompanyId,
-        niche:         _blNiche,
-        sub_niche:     _blSubNiche || null,
-        area_city:     _blCity,
-        location_type: _blLocType,
-        radius_km:     _blLocType === 'radius' ? radius : null,
-        postcode_list: _blLocType === 'postcodes' ? postcodes : null,
-        quantity:      _blQty,
-      }),
-    });
-    const data = await res.json();
-    if (!res.ok || !data.url) throw new Error(data.error || 'No checkout URL returned');
-    window.location.href = data.url;
-  } catch (err) {
-    toast(err.message || 'Failed to start checkout', true);
-    if (btn) { btn.disabled = false; btn.textContent = 'Purchase Leads →'; }
-  }
-}
-
-function renderBuyLeadsOrders(orders) {
-  const el = document.getElementById('buyLeadsOrdersTable');
-  if (!el) return;
-  orders.forEach(o => _pplOrdersCache.set(o.id, o));
-  if (!orders.length) { el.innerHTML = `<div class="notice">No orders yet. Purchase your first lead pack above.</div>`; return; }
-
-  const fmt = v => new Intl.NumberFormat('en-AU', { style: 'currency', currency: 'AUD' }).format(v);
-  const statusColor = s => ({ paid:'#F59E0B', active:'#22c55e', fulfilled:'#22c55e', cancelled:'#9a9a9a' }[s] || '#9a9a9a');
-
-  const pending = orders.filter(o => o.status === 'pending');
-  const active  = orders.filter(o => o.status !== 'pending');
-
-  let html = '';
-
-  // Pending (incomplete checkout) - shown as banners above the table
-  if (pending.length) {
-    html += pending.map(o => {
-      const city  = o.area_city || o.area || '-';
-      const pendingNicheDisplay = nicheLabel(o.niche) + (o.sub_niche ? ` › ${subNicheLabel(o.sub_niche)}` : '');
-      const label = `${pendingNicheDisplay} - ${city} - ${o.quantity} leads - ${fmt(o.total_amount)}`;
-      return `<div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 16px;border-radius:12px;border:1px solid #f59e0b44;background:#fffbeb;margin-bottom:10px;flex-wrap:wrap">
-        <div style="display:flex;align-items:center;gap:10px;min-width:0">
+  grid.innerHTML =
+    '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px">' +
+    rows.map((a) => {
+      const r = rentLeadRange(a);
+      const preview = rentPreviewUrl(a);
+      return `
+      <div style="border:1px solid var(--border);border-radius:12px;padding:16px;background:var(--surface,transparent);display:flex;flex-direction:column;gap:10px">
+        <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px">
           <div>
-            <div style="font-size:13px;font-weight:600;color:#92400e">Payment not completed</div>
-            <div style="font-size:12px;color:#b45309;margin-top:1px">${label}</div>
+            <div style="font-weight:600">${escapeHtml(a.regions?.name || 'Area')}</div>
+            <div style="font-size:12px;color:var(--muted)">${escapeHtml(a.niches?.name || '')}${a.regions?.state ? ' · ' + escapeHtml(a.regions.state) : ''}</div>
           </div>
+          <span style="font-size:11px;font-weight:600;padding:3px 9px;border-radius:999px;background:rgba(245,158,11,.14);color:#B45309">${escapeHtml(rentTierLabel(a.tier))}</span>
         </div>
-        <div style="display:flex;gap:8px;flex-shrink:0">
-          <button onclick="retryPplOrder('${o.id}')" style="font-size:12px;padding:6px 14px;border-radius:8px;border:1px solid #f59e0b;background:#f59e0b;color:#fff;cursor:pointer;font-family:inherit;font-weight:500">Complete Payment</button>
-          <button onclick="deletePendingOrder('${o.id}')" style="font-size:12px;padding:6px 14px;border-radius:8px;border:1px solid #ef4444;background:transparent;color:#ef4444;cursor:pointer;font-family:inherit">Delete</button>
+
+        <div style="display:flex;align-items:baseline;gap:6px">
+          <span style="font-size:26px;font-weight:700">${rentMoney(a.monthly_price_aud)}</span>
+          <span style="font-size:12px;color:var(--muted)">per month + GST</span>
         </div>
+
+        <div style="font-size:13px;line-height:1.7">
+          <div><strong>${a.floor_leads ?? '-'}</strong> leads guaranteed each month</div>
+          <div style="color:var(--muted)">Typically ${a.typical_min ?? '-'} to ${a.typical_max ?? '-'}</div>
+          ${r ? `<div style="color:var(--muted)">Works out at $${r.low.toFixed(2)} to $${r.high.toFixed(2)} a lead</div>` : ''}
+        </div>
+
+        ${preview ? `<a href="${escapeHtml(preview)}" target="_blank" rel="noopener" style="font-size:12px;color:var(--accent,#F59E0B)">See the page your leads land on →</a>` : ''}
+
+        <button class="btn-primary" type="button" data-rent="${escapeHtml(a.id)}" style="margin-top:auto">Rent this asset</button>
       </div>`;
-    }).join('');
-  }
+    }).join('') + '</div>';
 
-  // Active / fulfilled / cancelled orders - table
-  if (active.length) {
-    html += `<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:12px"><thead><tr style="border-bottom:1px solid var(--border)">
-      <th style="padding:8px 10px;text-align:left;font-weight:500;color:var(--muted)">Niche</th>
-      <th style="padding:8px 10px;text-align:left;font-weight:500;color:var(--muted)">City</th>
-      <th style="padding:8px 10px;text-align:left;font-weight:500;color:var(--muted)">Coverage</th>
-      <th style="padding:8px 10px;text-align:left;font-weight:500;color:var(--muted)">Delivered</th>
-      <th style="padding:8px 10px;text-align:left;font-weight:500;color:var(--muted)">Total</th>
-      <th style="padding:8px 10px;text-align:left;font-weight:500;color:var(--muted)">Status</th>
-      <th style="padding:8px 10px;text-align:left;font-weight:500;color:var(--muted)">Date</th>
-    </tr></thead><tbody>
-    ${active.map(o => {
-      const city = o.area_city || o.area || '-';
-      const coverage = o.location_type === 'statewide'
-        ? 'State wide'
-        : o.location_type === 'postcodes'
-        ? (o.postcode_list ? `${o.postcode_list.split(/[\s,]+/).filter(Boolean).length} postcodes` : 'Postcodes')
-        : `${o.radius_km || 50}km radius`;
-      const nicheDisplay = nicheLabel(o.niche) + (o.sub_niche ? ` › ${subNicheLabel(o.sub_niche)}` : '');
-      return `<tr style="border-bottom:1px solid var(--border)">
-        <td style="padding:10px">${nicheDisplay}</td>
-        <td style="padding:10px">${city}</td>
-        <td style="padding:10px;color:var(--muted)">${coverage}</td>
-        <td style="padding:10px">${o.delivered_count} / ${o.quantity}</td>
-        <td style="padding:10px">${fmt(o.total_amount)}</td>
-        <td style="padding:10px"><span style="display:inline-block;padding:2px 8px;border-radius:20px;font-size:11px;background:${statusColor(o.status)}22;color:${statusColor(o.status)};font-weight:500">${o.status}</span></td>
-        <td style="padding:10px;color:var(--muted)">${new Date(o.created_at).toLocaleDateString('en-AU')}</td>
-      </tr>`;
-    }).join('')}
-    </tbody></table></div>`;
-  }
-
-  el.innerHTML = html;
+  grid.querySelectorAll('[data-rent]').forEach((b) =>
+    b.addEventListener('click', () => startRental(b.getAttribute('data-rent')))
+  );
 }
 
-async function retryPplOrder(orderId) {
-  const o = _pplOrdersCache.get(orderId);
-  if (!o) { toast('Order not found.', true); return; }
+// Checkout is the same edge function the public fleet page uses, so a rental
+// started here and one started from the website produce identical records.
+async function startRental(assetId) {
+  const asset = _rentAssets.find((a) => a.id === assetId);
+  if (!asset) return;
 
-  const btn = document.getElementById('buyLeadsCheckoutBtn');
-  if (btn) { btn.disabled = true; btn.textContent = 'Redirecting to checkout…'; }
+  const label = `${asset.regions?.name || ''} ${asset.niches?.name || ''}`.trim();
+  if (!confirm(`Rent the ${label} asset for ${rentMoney(asset.monthly_price_aud)} + GST a month?\n\nYou will be taken to Stripe to set up the subscription. The asset is held for you the moment payment succeeds.`)) return;
+
+  const btn = document.querySelector(`[data-rent="${assetId}"]`);
+  if (btn) { btn.disabled = true; btn.textContent = 'Opening checkout…'; }
 
   try {
-    // Delete the stale pending row before creating a fresh checkout
-    await sb.from('ppl_lead_orders').delete().eq('id', orderId).eq('status', 'pending');
+    const { data: company } = await sb
+      .from('companies')
+      .select('name, email, phone')
+      .eq('id', currentCompanyId)
+      .maybeSingle();
 
-    const { data: { session } } = await sb.auth.getSession();
-    const res = await fetch(`${SUPABASE_URL}/functions/v1/create-ppl-checkout`, {
+    const res = await fetch(`${SUPABASE_URL}/functions/v1/create-rental-checkout`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session.access_token}`, 'apikey': SUPABASE_ANON_KEY },
+      headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_ANON_KEY },
       body: JSON.stringify({
-        company_id:    currentCompanyId,
-        niche:         o.niche,
-        sub_niche:     o.sub_niche || null,
-        area_city:     o.area_city || o.area,
-        location_type: o.location_type || 'radius',
-        radius_km:     o.radius_km || 50,
-        postcode_list: o.postcode_list || null,
-        quantity:      o.quantity,
+        asset_id: assetId,
+        business_name: company?.name || '',
+        contact_name: '',
+        email: company?.email || '',
+        phone: company?.phone || '',
       }),
     });
-    const data = await res.json();
-    if (!res.ok || !data.url) throw new Error(data.error || 'No checkout URL returned');
-    window.location.href = data.url;
+    const out = await res.json();
+    if (!res.ok || !out.url) throw new Error(out.error || 'Checkout could not be created');
+    window.location.href = out.url;
   } catch (err) {
-    toast(err.message || 'Failed to start checkout', true);
-    if (btn) { btn.disabled = false; btn.textContent = 'Purchase Leads →'; }
+    toast(err.message, true);
+    if (btn) { btn.disabled = false; btn.textContent = 'Rent this asset'; }
   }
 }
-window.retryPplOrder = retryPplOrder;
 
-async function deletePendingOrder(orderId) {
-  confirmAction('Delete this pending order? This cannot be undone.', async () => {
-    try {
-      const { error } = await sb.from('ppl_lead_orders').delete().eq('id', orderId).eq('status', 'pending');
-      if (error) { toast(error.message, true); return; }
-      toast('Pending order deleted.');
-      _pplOrdersCache.delete(orderId);
-      await loadBuyLeads();
-    } catch (err) {
-      toast('Failed to delete order.', true);
+async function loadMyRentals() {
+  const loading = document.getElementById('rentMineLoading');
+  const list    = document.getElementById('rentMine');
+  const empty   = document.getElementById('rentMineEmpty');
+  const count   = document.getElementById('rentMineCount');
+
+  try {
+    const { data: company } = await sb
+      .from('companies').select('name').eq('id', currentCompanyId).maybeSingle();
+
+    // Rentals hang off installers, which are keyed by the business name used at
+    // checkout rather than by company_id, so match on that.
+    const { data: inst } = await sb
+      .from('installers').select('id').eq('business_name', company?.name || '').maybeSingle();
+
+    if (!inst) { _rentMine = []; }
+    else {
+      const { data } = await sb
+        .from('rentals')
+        .select('*, assets(brand_name, brand_domain, tier, niches(name), regions(name, state, slug))')
+        .eq('installer_id', inst.id)
+        .order('created_at', { ascending: false });
+      _rentMine = data || [];
     }
-  });
-}
-window.deletePendingOrder = deletePendingOrder;
+  } catch {
+    _rentMine = [];
+  }
 
-async function deletePendingOrderFromSettings(orderId) {
-  confirmAction('Delete this pending order? This cannot be undone.', async () => {
-    try {
-      const { error } = await sb.from('ppl_lead_orders').delete().eq('id', orderId).eq('status', 'pending');
-      if (error) { toast(error.message, true); return; }
-      toast('Pending order deleted.');
-      _pplOrdersCache.delete(orderId);
-      await loadPplOrdersUI();
-    } catch (err) {
-      toast('Failed to delete order.', true);
-    }
-  });
-}
-window.deletePendingOrderFromSettings = deletePendingOrderFromSettings;
+  const active = _rentMine.filter((r) => !r.ended_at);
+  count.textContent = active.length
+    ? `${active.length} active · ${rentMoney(active.reduce((t, r) => t + Number(r.monthly_price_aud || 0), 0))} a month`
+    : 'None active';
 
+  loading.classList.add('hidden');
+  if (!_rentMine.length) {
+    list.classList.add('hidden');
+    empty.classList.remove('hidden');
+    return;
+  }
+  empty.classList.add('hidden');
+  list.classList.remove('hidden');
+
+  list.innerHTML =
+    '<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:13px">' +
+    '<thead><tr style="text-align:left;color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.04em">' +
+    '<th style="padding:8px 10px">Asset</th><th style="padding:8px 10px">Tier</th>' +
+    '<th style="padding:8px 10px">Monthly</th><th style="padding:8px 10px">Guaranteed</th>' +
+    '<th style="padding:8px 10px">Started</th><th style="padding:8px 10px">Status</th>' +
+    '</tr></thead><tbody>' +
+    _rentMine.map((r) => {
+      const a = r.assets || {};
+      return `<tr style="border-top:1px solid var(--border)">
+        <td style="padding:8px 10px">
+          <div style="font-weight:500">${escapeHtml(a.regions?.name || '-')}</div>
+          <div style="font-size:11px;color:var(--muted)">${escapeHtml(a.niches?.name || '')}</div>
+        </td>
+        <td style="padding:8px 10px">${escapeHtml(rentTierLabel(a.tier))}</td>
+        <td style="padding:8px 10px;font-weight:500">${rentMoney(r.monthly_price_aud)}</td>
+        <td style="padding:8px 10px">${r.floor_leads ?? '-'} a month</td>
+        <td style="padding:8px 10px;color:var(--muted)">${r.started_at ? new Date(r.started_at).toLocaleDateString('en-AU') : '-'}</td>
+        <td style="padding:8px 10px">${r.ended_at ? 'Ended ' + new Date(r.ended_at).toLocaleDateString('en-AU') : '<span style="color:#0f8a4d;font-weight:600">Active</span>'}</td>
+      </tr>`;
+    }).join('') + '</tbody></table></div>';
+}
+
+['rentNicheFilter', 'rentAreaFilter', 'rentTierFilter'].forEach((id) => {
+  document.addEventListener('DOMContentLoaded', () => {
+    document.getElementById(id)?.addEventListener('change', renderRentGrid);
+  });
+});
 
 // =============================================================================
 // PPL Admin (super admin only)
