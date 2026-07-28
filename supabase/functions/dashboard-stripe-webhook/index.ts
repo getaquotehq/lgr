@@ -40,90 +40,6 @@ serve(async (req) => {
   })
 })
 
-// ── Shared helpers ─────────────────────────────────────────────────────────────
-
-async function createMagicLink(email: string): Promise<string> {
-  const { data, error } = await supabase.auth.admin.generateLink({
-    type: 'magiclink',
-    email,
-    options: { redirectTo: `${Deno.env.get('SITE_URL') ?? 'https://leadgenrentals.com.au/dashboard'}/index.html`, expiresIn: 86400 },
-  })
-  if (error) throw new Error(`Magic link: ${error.message}`)
-  return data.properties.action_link
-}
-
-function buildSmsPrompts(company: string, niche: string): { system_prompt: string; welcome_message: string } {
-  const system_prompt =
-    `Use natural Australian English, not American English.
-
-Never quote specific prices or guarantees - always defer to the team. For financing specifics, defer to the team.
-
-If someone says not interested, acknowledge it politely and close the conversation.
-
-Escalate to a human immediately if: the lead mentions a complaint, asks about an existing job, mentions anything legal or billing related, or asks for the owner or manager. Do not attempt to handle these yourself.`
-
-  const welcome_message =
-    `Hi, thanks for reaching out to ${company}. We just wanted to confirm you're looking for a ${niche} quote - is that correct?`
-
-  return { system_prompt, welcome_message }
-}
-
-function buildSystemPrompt(m: Record<string, string>): string {
-  return `You are a friendly and professional sales assistant for ${m.company}, a ${m.industry} business based in ${m.service_location}.
-
-Your job is to qualify inbound leads via SMS. Keep messages short, warm and conversational - never more than 2-3 sentences.
-
-Key details:
-- Business: ${m.company}
-- Industry: ${m.industry}
-- Service area: ${m.service_location} within ${m.service_radius}
-${m.special_offers   ? `- Current offers: ${m.special_offers}`     : ''}
-${m.products_brands  ? `- Products/brands: ${m.products_brands}`   : ''}
-
-Goals in order:
-1. Confirm what the lead needs and their name
-2. Qualify their timeline and rough budget
-3. Book a callback or on-site visit
-4. If ready, initiate a quote
-
-Always be helpful, never pushy. Sign off as the ${m.company} team.`
-}
-
-async function insertSmsAgentConfig(companyId: string, m: Record<string, string>) {
-  await supabase.from('sms_agent_config').insert({
-    company_id:               companyId,
-    model:                    'gpt-4o',
-    is_active:                false,
-    auto_reply:               false,
-    callback_enabled:         true,
-    onsite_enabled:           false,
-    quote_drafting_enabled:   false,
-    lead_scoring_enabled:     true,
-    auto_send_welcome:        false,
-    agent_name:               'Alex',
-    reply_delay_seconds:      8,
-    max_sms_words:            60,
-    special_offers:           m.special_offers  || null,
-    service_locations:        [m.service_location].filter(Boolean),
-    max_travel_distance:      50,
-    max_travel_distance_unit: 'km',
-    callback_hours_start:     '08:00',
-    callback_hours_end:       '18:00',
-    welcome_message:          `Hi {{first_name}}, thanks for reaching out to ${m.company}! We'll be in touch shortly.`,
-    automate_quote_followup:  true,
-    days_until_followup:      3,
-    followup_message:         `Hi {{first_name}}, just following up on your quote. Let us know if you have any questions!`,
-    quote_pricing_config: {
-      items:    [],
-      tax_rate: 10,
-      tax_mode: 'exclusive',
-      currency: 'AUD',
-      formula:  m.products_brands ? `Products/brands: ${m.products_brands}` : '',
-    },
-    system_prompt: buildSystemPrompt(m),
-  })
-}
-
 // ── SMS credits top-up (existing dashboard company) ────────────────────────
 async function handleSmsCreditsTopUp(session: Stripe.Checkout.Session, m: Record<string, string>) {
   console.log('SMS credits top-up for company:', m.company_id, 'credits:', m.credits)
@@ -151,11 +67,6 @@ async function handleSmsCreditsTopUp(session: Stripe.Checkout.Session, m: Record
 }
 
 // ── Emails ───────────────────────────────────────────────────────────────────
-
-// Internal ops emails show solar_battery as solar_and_battery
-function emailNiche(niche: string | null | undefined): string {
-  return niche === 'solar_battery' ? 'solar_and_battery' : (niche || '')
-}
 
 async function sendInternalEmail(subject: string, body: string) {
   await fetch('https://api.resend.com/emails', {
