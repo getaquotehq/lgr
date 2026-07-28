@@ -309,7 +309,7 @@ async function handleUpdateLead(
   const validationError = validateLeadFields(body);
   if (validationError) return json({ error: validationError }, 400);
 
-  // Block clearing the postcode on a PPL lead
+  // Block clearing the postcode on a delivered lead - it is billing evidence
   if ("postcode" in updates && !updates.postcode) {
     const { data: existing } = await db
       .from("leads")
@@ -318,7 +318,7 @@ async function handleUpdateLead(
       .eq("company_id", companyId)
       .single();
     if (existing?.is_ppl) {
-      return json({ error: "Postcode cannot be removed from a PPL lead" }, 422);
+      return json({ error: "Postcode cannot be removed from a delivered lead" }, 422);
     }
   }
 

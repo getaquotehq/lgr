@@ -254,130 +254,6 @@ Deno.serve(async (req) => {
       return json({ session: otpData.session });
     }
 
-    // ── action: list_disputes ─────────────────────────────────────────────────
-    // Returns all lead disputes across every company (admin view).
-    // All reads happen via the service-role client - RLS is bypassed server-side
-    // and no sensitive keys are ever returned to the browser.
-    if (action === "list_disputes") {
-      const { data: disputes, error: disputeErr } = await adminClient
-        .from("lead_disputes")
-        .select(`
-          id,
-          reason,
-          status,
-          auto_check_result,
-          manual_review_notes,
-          scrub_cap_pct,
-          scrub_used_pct,
-          resolution_notes,
-          resolved_at,
-          created_at,
-          updated_at,
-          lead_id,
-          company_id,
-          raised_by,
-          resolved_by
-        `)
-        .order("created_at", { ascending: false })
-        .limit(500);
-
-      if (disputeErr) {
-        console.error("list_disputes error:", disputeErr.message);
-        return json({ error: "Failed to load disputes" }, 500);
-      }
-
-      if (!disputes?.length) return json({ disputes: [] });
-
-      // Batch-fetch related records to avoid N+1 queries
-      const leadIds     = [...new Set(disputes.map((d: { lead_id: string }) => d.lead_id))];
-      const companyIds  = [...new Set(disputes.map((d: { company_id: string }) => d.company_id))];
-      const userIds     = [...new Set([
-        ...disputes.map((d: { raised_by: string | null }) => d.raised_by).filter(Boolean),
-        ...disputes.map((d: { resolved_by: string | null }) => d.resolved_by).filter(Boolean),
-      ])] as string[];
-
-      const [{ data: leads }, { data: companies }, { data: profiles }] = await Promise.all([
-        adminClient.from("leads").select("id, first_name, last_name, phone, postcode, email").in("id", leadIds),
-        adminClient.from("companies").select("id, name").in("id", companyIds),
-        adminClient.from("profiles").select("id, full_name").in("id", userIds),
-      ]);
-
-      const leadMap    = Object.fromEntries((leads    || []).map((r: { id: string }) => [r.id, r]));
-      const companyMap = Object.fromEntries((companies|| []).map((r: { id: string }) => [r.id, r]));
-      const profileMap = Object.fromEntries((profiles || []).map((r: { id: string }) => [r.id, r]));
-
-      const enriched = disputes.map((d: {
-        id: string; reason: string; status: string; auto_check_result: unknown;
-        manual_review_notes: string | null; scrub_cap_pct: number | null;
-        scrub_used_pct: number | null; resolution_notes: string | null;
-        resolved_at: string | null; created_at: string; updated_at: string;
-        lead_id: string; company_id: string; raised_by: string | null; resolved_by: string | null;
-      }) => ({
-        ...d,
-        lead:          leadMap[d.lead_id]    ?? null,
-        company:       companyMap[d.company_id] ?? null,
-        raised_by_profile:   profileMap[d.raised_by ?? ""] ?? null,
-        resolved_by_profile: profileMap[d.resolved_by ?? ""] ?? null,
-      }));
-
-      return json({ disputes: enriched });
-    }
-
-    // ── action: resolve_dispute ───────────────────────────────────────────────
-    // Allows an admin to manually approve or reject a dispute.
-    if (action === "resolve_dispute") {
-      const { dispute_id, resolution, notes } = body as {
-        dispute_id?: string;
-        resolution?: string;
-        notes?: string;
-      };
-
-      const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-      if (!dispute_id || typeof dispute_id !== "string" || !UUID_RE.test(dispute_id)) {
-        return json({ error: "dispute_id must be a valid UUID" }, 400);
-      }
-      if (!resolution || !["manual_approved", "manual_rejected"].includes(resolution)) {
-        return json({ error: "resolution must be 'manual_approved' or 'manual_rejected'" }, 400);
-      }
-      if (notes !== undefined && typeof notes === "string" && notes.length > 2000) {
-        return json({ error: "notes must be 2000 characters or fewer" }, 400);
-      }
-
-      // Fetch dispute to confirm it exists and is in a resolvable state
-      const { data: dispute, error: fetchErr } = await adminClient
-        .from("lead_disputes")
-        .select("id, status, lead_id, company_id")
-        .eq("id", dispute_id)
-        .maybeSingle();
-
-      if (fetchErr || !dispute) {
-        return json({ error: "Dispute not found" }, 404);
-      }
-
-      const resolvableStatuses = ["pending", "auto_approved", "auto_rejected", "pending_manual_review"];
-      if (!resolvableStatuses.includes(dispute.status)) {
-        return json({ error: `Dispute is already resolved (status: ${dispute.status})` }, 409);
-      }
-
-      const { error: updateErr } = await adminClient
-        .from("lead_disputes")
-        .update({
-          status:           resolution,
-          resolved_at:      new Date().toISOString(),
-          resolved_by:      caller.id,
-          resolution_notes: notes?.trim() || null,
-        })
-        .eq("id", dispute_id);
-
-      if (updateErr) {
-        console.error("resolve_dispute update error:", updateErr.message);
-        return json({ error: "Failed to resolve dispute" }, 500);
-      }
-
-
-      return json({ dispute_id, status: resolution });
-    }
-
     // ── action: list_companies ────────────────────────────────────────────────
     // Returns id, name, plan, email for every company, sorted alphabetically.
     if (action === "list_companies") {
@@ -394,24 +270,6 @@ Deno.serve(async (req) => {
       return json({ companies: companies || [] });
     }
 
-    // ── action: list_custom_links ─────────────────────────────────────────────
-    // Recent admin-generated custom PPL payment links, newest first.
-    if (action === "list_custom_links") {
-      const { data: links, error: linksErr } = await adminClient
-        .from("ppl_lead_orders")
-        .select("id, company_id, niche, sub_niche, area_city, quantity, price_per_lead, total_amount, status, checkout_url, created_at")
-        .eq("custom_link", true)
-        .order("created_at", { ascending: false })
-        .limit(20);
-
-      if (linksErr) {
-        console.error("list_custom_links error:", linksErr.message);
-        return json({ error: "Failed to load custom links" }, 500);
-      }
-
-      return json({ links: links || [] });
-    }
-
     // ── action: update_company ────────────────────────────────────────────────
     // Updates plan (and optionally name/email) for a company.
     if (action === "update_company") {
@@ -426,6 +284,7 @@ Deno.serve(async (req) => {
       if (!company_id || !UUID_RE.test(company_id)) {
         return json({ error: "company_id must be a valid UUID" }, 400);
       }
+      // "ppl" is the stored plan key for an asset-rental client.
       const VALID_PLANS = ["free", "managed", "ppl", "ppl_managed"];
       if (plan !== undefined && !VALID_PLANS.includes(plan)) {
         return json({ error: "plan must be 'free', 'managed' or 'ppl'" }, 400);
@@ -452,7 +311,7 @@ Deno.serve(async (req) => {
     }
 
     // ── action: get_user_details ──────────────────────────────────────────────
-    // Returns full profile + company + twilio numbers + ppl orders + sms credits
+    // Returns full profile + company + twilio numbers + rentals + sms credits
     // for a single user. Used by the admin Edit User modal.
     if (action === "get_user_details") {
       const { user_id } = body as { user_id?: string };
@@ -472,12 +331,12 @@ Deno.serve(async (req) => {
 
       let company = null,
         twilioNumbers: unknown[] = [],
-        pplOrders: unknown[] = [],
+        rentals: unknown[] = [],
         smsCredits = null,
         leadCount = 0;
 
       if (companyId) {
-        const [compRes, twilioRes, pplRes, smsRes, leadRes] = await Promise.all([
+        const [compRes, twilioRes, rentalRes, smsRes, leadRes] = await Promise.all([
           adminClient
             .from("companies")
             .select("*")
@@ -489,10 +348,10 @@ Deno.serve(async (req) => {
             .eq("company_id", companyId)
             .order("created_at"),
           adminClient
-            .from("ppl_orders")
-            .select("id, total_leads, delivered_leads, status, purchased_at, notes")
-            .eq("company_id", companyId)
-            .order("purchased_at", { ascending: false }),
+            .from("rentals")
+            .select("id, monthly_price_aud, floor_leads, started_at, ended_at, assets(brand_name, tier, niches(name), regions(name, state))")
+            .is("ended_at", null)
+            .order("started_at", { ascending: false }),
           adminClient
             .from("sms_credits")
             .select("balance, lifetime_used, monthly_free_sms, next_reset_at")
@@ -506,7 +365,7 @@ Deno.serve(async (req) => {
 
         company       = compRes.data;
         twilioNumbers = twilioRes.data || [];
-        pplOrders     = pplRes.data   || [];
+        rentals       = rentalRes.data || [];
         smsCredits    = smsRes.data;
         leadCount     = leadRes.count ?? 0;
       }
@@ -515,110 +374,10 @@ Deno.serve(async (req) => {
         user:           profile,
         company,
         twilio_numbers: twilioNumbers,
-        ppl_orders:     pplOrders,
+        rentals:        rentals,
         sms_credits:    smsCredits,
         lead_count:     leadCount,
       });
-    }
-
-    // ── action: update_ppl_order ─────────────────────────────────────────────
-    // Admin: manually set delivered_leads / total_leads / notes on a ppl_order.
-    if (action === "update_ppl_order") {
-      const { order_id, delivered_leads, total_leads, notes } = body as {
-        order_id?: string;
-        delivered_leads?: number;
-        total_leads?: number;
-        notes?: string;
-      };
-      const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-      if (!order_id || !UUID_RE.test(order_id)) {
-        return json({ error: "order_id must be a valid UUID" }, 400);
-      }
-      const upd: Record<string, unknown> = { updated_at: new Date().toISOString() };
-      if (delivered_leads !== undefined) upd.delivered_leads = Math.max(0, Math.floor(Number(delivered_leads)));
-      if (total_leads     !== undefined) upd.total_leads     = Math.max(1, Math.floor(Number(total_leads)));
-      if (notes           !== undefined) upd.notes           = notes ?? null;
-      // Auto-set status based on counts if both are present
-      if (upd.delivered_leads !== undefined && upd.total_leads !== undefined) {
-        upd.status = (upd.delivered_leads as number) >= (upd.total_leads as number) ? "completed" : "active";
-      } else if (upd.delivered_leads !== undefined) {
-        // Fetch current total to decide status
-        const { data: cur } = await adminClient.from("ppl_orders").select("total_leads").eq("id", order_id).maybeSingle();
-        if (cur) upd.status = (upd.delivered_leads as number) >= cur.total_leads ? "completed" : "active";
-      }
-      const { error: upErr } = await adminClient.from("ppl_orders").update(upd).eq("id", order_id);
-      if (upErr) return json({ error: "Failed to update: " + upErr.message }, 500);
-      return json({ success: true });
-    }
-
-    // ── action: update_ppl_service_areas ─────────────────────────────────────
-    // Admin: update postcodes and/or lock state for a company.
-    if (action === "update_ppl_service_areas") {
-      const { company_id, postcodes, locked } = body as {
-        company_id?: string;
-        postcodes?: string[];
-        locked?: boolean;
-      };
-      const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-      if (!company_id || !UUID_RE.test(company_id)) {
-        return json({ error: "company_id must be a valid UUID" }, 400);
-      }
-      const update: Record<string, unknown> = {};
-      if (Array.isArray(postcodes)) update.ppl_agreed_postcodes = postcodes.map((p) => p.trim().toUpperCase()).filter(Boolean);
-      if (locked !== undefined) update.ppl_area_locked = !!locked;
-      if (!Object.keys(update).length) return json({ success: true });
-      const { error: upErr } = await adminClient.from("companies").update(update).eq("id", company_id);
-      if (upErr) return json({ error: "Failed to update: " + upErr.message }, 500);
-      return json({ success: true });
-    }
-
-    // ── action: list_ppl_unlock_requests ─────────────────────────────────────
-    // Admin: list all pending PPL area change requests.
-    if (action === "list_ppl_unlock_requests") {
-      const { data: requests, error: reqErr } = await adminClient
-        .from("ppl_area_change_requests")
-        .select("*, company:companies(id, name)")
-        .order("created_at", { ascending: false })
-        .limit(200);
-      if (reqErr) return json({ error: "Failed to load requests: " + reqErr.message }, 500);
-      return json({ requests: requests ?? [] });
-    }
-
-    // ── action: resolve_ppl_unlock_request ────────────────────────────────────
-    // Admin: approve or reject a PPL area change request.
-    // Approving sets ppl_area_locked = false on the company so the user can edit.
-    if (action === "resolve_ppl_unlock_request") {
-      const { request_id, resolution, admin_notes } = body as {
-        request_id?: string;
-        resolution?: "approved" | "rejected";
-        admin_notes?: string;
-      };
-      const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-      if (!request_id || !UUID_RE.test(request_id)) {
-        return json({ error: "request_id must be a valid UUID" }, 400);
-      }
-      if (resolution !== "approved" && resolution !== "rejected") {
-        return json({ error: "resolution must be 'approved' or 'rejected'" }, 400);
-      }
-      // Fetch request to get company_id
-      const { data: req } = await adminClient
-        .from("ppl_area_change_requests")
-        .select("id, company_id")
-        .eq("id", request_id)
-        .maybeSingle();
-      if (!req) return json({ error: "Request not found" }, 404);
-
-      const { error: upErr } = await adminClient
-        .from("ppl_area_change_requests")
-        .update({ status: resolution, admin_notes: admin_notes || null, resolved_at: new Date().toISOString() })
-        .eq("id", request_id);
-      if (upErr) return json({ error: "Failed to update request: " + upErr.message }, 500);
-
-      // Unlock the company when approved
-      if (resolution === "approved") {
-        await adminClient.from("companies").update({ ppl_area_locked: false }).eq("id", req.company_id);
-      }
-      return json({ success: true });
     }
 
     // ── action: list_twilio_numbers ───────────────────────────────────────────
@@ -831,111 +590,6 @@ Deno.serve(async (req) => {
       return json({ success: true, twilio_released: twilioReleased, twilio_error: twilioError });
     }
 
-    // ── action: list_ppl_orders ───────────────────────────────────────────────
-    // Returns all PPL orders across all companies, enriched with company name.
-    if (action === "list_ppl_orders") {
-      const { data: orders, error: ordersErr } = await adminClient
-        .from("ppl_orders")
-        .select("*")
-        .order("purchased_at", { ascending: false })
-        .limit(500);
-
-      if (ordersErr) {
-        console.error("list_ppl_orders error:", ordersErr.message);
-        return json({ error: "Failed to load PPL orders" }, 500);
-      }
-
-      if (!orders?.length) return json({ orders: [] });
-
-      const companyIds = [...new Set(orders.map((o: { company_id: string }) => o.company_id))];
-      const { data: companies } = await adminClient
-        .from("companies")
-        .select("id, name")
-        .in("id", companyIds);
-
-      const companyMap = Object.fromEntries(
-        (companies || []).map((c: { id: string; name: string }) => [c.id, c]),
-      );
-
-      const enriched = orders.map((o: { company_id: string }) => ({
-        ...o,
-        company: companyMap[o.company_id] ?? null,
-      }));
-
-      return json({ orders: enriched });
-    }
-
-    // ── action: create_ppl_order ──────────────────────────────────────────────
-    // Creates a PPL order for any company on behalf of the super-admin.
-    if (action === "create_ppl_order") {
-      const { company_id, total_leads, due_date, notes } = body as {
-        company_id?: string;
-        total_leads?: number;
-        due_date?: string;
-        notes?: string | null;
-      };
-
-      const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-      if (!company_id || typeof company_id !== "string" || !UUID_RE.test(company_id)) {
-        return json({ error: "company_id must be a valid UUID" }, 400);
-      }
-      if (
-        total_leads === undefined || typeof total_leads !== "number" ||
-        !Number.isInteger(total_leads) || total_leads < 1
-      ) {
-        return json({ error: "total_leads must be a positive integer" }, 400);
-      }
-      if (!due_date || typeof due_date !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(due_date)) {
-        return json({ error: "due_date must be a date in YYYY-MM-DD format" }, 400);
-      }
-      if (notes !== undefined && notes !== null && typeof notes === "string" && notes.length > 2000) {
-        return json({ error: "notes must be 2000 characters or fewer" }, 400);
-      }
-
-      const { data: company, error: companyCheckErr } = await adminClient
-        .from("companies")
-        .select("id, name")
-        .eq("id", company_id)
-        .maybeSingle();
-
-      if (companyCheckErr || !company) {
-        return json({ error: "Company not found" }, 404);
-      }
-
-      const { data: order, error: insertErr } = await adminClient
-        .from("ppl_orders")
-        .insert({
-          company_id,
-          total_leads,
-          due_date,
-          notes: (typeof notes === "string" && notes.trim()) ? notes.trim() : null,
-        })
-        .select()
-        .single();
-
-      if (insertErr) {
-        console.error("create_ppl_order error:", insertErr.message);
-        return json({ error: "Failed to create PPL order" }, 500);
-      }
-
-      return json({ order: { ...order, company } });
-    }
-
-    // ── action: list_ppl_orders ───────────────────────────────────────────────
-    // Returns all ppl_orders across all companies (admin only, bypasses RLS).
-    if (action === "list_ppl_orders") {
-      const { data: orders, error: ordersErr } = await adminClient
-        .from("ppl_orders")
-        .select("*, company:companies(id, name)")
-        .order("purchased_at", { ascending: false })
-        .limit(500);
-      if (ordersErr) {
-        console.error("list_ppl_orders error:", ordersErr.message);
-        return json({ error: "Failed to load PPL orders" }, 500);
-      }
-      return json({ orders: orders ?? [] });
-    }
-
     // ── action: update_user ───────────────────────────────────────────────────
     // Updates email (auth.users) and/or full_name/is_admin (profiles) for any user.
     if (action === 'update_user') {
@@ -1018,7 +672,7 @@ Deno.serve(async (req) => {
 
     // ── action: delete_company ────────────────────────────────────────────────
     // Permanently delete a company and ALL its data. Deleting the company row
-    // cascades every company-scoped table (profiles, ppl orders, va assignments,
+    // cascades every company-scoped table (profiles, va assignments,
     // notes, etc.); we then remove the company's auth users so none are orphaned.
     // Already gated to super-admins (is_admin check at the top of this function).
     if (action === "delete_company") {

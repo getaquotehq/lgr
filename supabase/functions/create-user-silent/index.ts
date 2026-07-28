@@ -256,9 +256,6 @@ Deno.serve(async (req) => {
       role?: unknown;
       twilio_number_id?: unknown;
       twilio_phone_number?: unknown;
-      ppl_total_leads?: unknown;
-      ppl_due_date?: unknown;
-      ppl_notes?: unknown;
     };
 
     const {
@@ -266,7 +263,6 @@ Deno.serve(async (req) => {
       company_name, company_phone, company_email,
       plan, website_url, service_area, niche, user_phone, role,
       twilio_number_id, twilio_phone_number,
-      ppl_total_leads, ppl_due_date, ppl_notes,
     } = body;
 
     if (!email || typeof email !== "string") {
@@ -284,35 +280,6 @@ Deno.serve(async (req) => {
     const sanitizedEmail = email.trim().toLowerCase();
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(sanitizedEmail)) {
       return json({ error: "Invalid email address" }, 400);
-    }
-
-    // ── Validate optional PPL order fields up-front ───────────────────────────
-    // Rejected before the auth user is created so a typo can't produce an
-    // account with a silently-missing order.
-    const wantsPplOrder = ppl_total_leads !== undefined || ppl_due_date !== undefined;
-    let pplNotesClean: string | null = null;
-    if (wantsPplOrder) {
-      if (
-        typeof ppl_total_leads !== "number" ||
-        !Number.isInteger(ppl_total_leads) || ppl_total_leads < 1
-      ) {
-        return json({ error: "ppl_total_leads must be a positive integer" }, 400);
-      }
-      if (
-        typeof ppl_due_date !== "string" ||
-        !/^\d{4}-\d{2}-\d{2}$/.test(ppl_due_date)
-      ) {
-        return json({ error: "ppl_due_date must be a date in YYYY-MM-DD format" }, 400);
-      }
-      if (
-        ppl_notes !== undefined && ppl_notes !== null &&
-        (typeof ppl_notes !== "string" || ppl_notes.length > 2000)
-      ) {
-        return json({ error: "ppl_notes must be a string of 2000 characters or fewer" }, 400);
-      }
-      pplNotesClean = (typeof ppl_notes === "string" && ppl_notes.trim())
-        ? ppl_notes.trim()
-        : null;
     }
 
     // ── Create the user WITHOUT a password ────────────────────────────────────
@@ -351,8 +318,6 @@ Deno.serve(async (req) => {
       }
     }
 
-    let pplOrderCreated = false;
-    let pplOrderError: string | null = null;
 
     if (companyId) {
       const effectiveCompanyName = (typeof company_name === "string" && company_name.trim())
@@ -371,6 +336,7 @@ Deno.serve(async (req) => {
         const ce = company_email.trim().toLowerCase();
         if (/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(ce)) companyPatch.email = ce;
       }
+      // "ppl" is the stored plan key for an asset-rental client.
       if (plan === "managed" || plan === "ppl") {
         companyPatch.plan = plan as string;
       }
@@ -389,25 +355,6 @@ Deno.serve(async (req) => {
         if (compErr) console.warn("Company patch failed (non-fatal):", compErr.message);
       }
 
-      // Create the initial PPL order when requested. Fields were validated
-      // up-front; an insert failure is reported back so the admin can add the
-      // order manually from the PPL Orders panel.
-      if (wantsPplOrder) {
-        const { error: pplErr } = await adminClient
-          .from("ppl_orders")
-          .insert({
-            company_id: companyId,
-            total_leads: ppl_total_leads as number,
-            due_date: ppl_due_date as string,
-            notes: pplNotesClean,
-          });
-        if (pplErr) {
-          pplOrderError = pplErr.message;
-          console.warn("PPL order insert failed (non-fatal):", pplErr.message);
-        } else {
-          pplOrderCreated = true;
-        }
-      }
 
       const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
       let assignedTwilioPhone: string | null = null;
@@ -524,11 +471,6 @@ Deno.serve(async (req) => {
       email_error: emailError,
     };
     if (wantsPplOrder) {
-      if (!companyId && !pplOrderError) {
-        pplOrderError = "Company row was not found after account creation";
-      }
-      responsePayload.ppl_order_created = pplOrderCreated;
-      responsePayload.ppl_order_error = pplOrderError;
     }
     return json(responsePayload);
   } catch (err) {
