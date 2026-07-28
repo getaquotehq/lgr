@@ -44,7 +44,8 @@ body::after{content:'';position:fixed;inset:0;background-image:radial-gradient(c
 /* ═══ LOGIN ═══ */
 #login-screen{position:fixed;inset:0;z-index:1000;display:flex;align-items:center;justify-content:center;padding:24px;background:var(--bg)}
 .login-box{width:100%;max-width:340px;background:var(--s1);border:1px solid var(--bd2);border-radius:var(--r3);padding:32px;box-shadow:0 40px 80px rgba(0,0,0,.5)}
-.login-mark{width:44px;height:44px;background:var(--acc);border-radius:12px;display:flex;align-items:center;justify-content:center;font-family:var(--display);font-weight:800;color:#1a1205;font-size:15px;margin-bottom:18px;box-shadow:0 0 24px var(--acc-glow)}
+.login-mark{height:44px;width:auto;display:block;flex-shrink:0;content:url("../LeadGen-Rentals-Logo-White.png")}
+[data-theme="light"] .login-mark{content:url("../LeadGen-Rentals-Logo.png")}
 .login-box h1{font-family:var(--display);font-size:20px;font-weight:700;letter-spacing:-.4px}
 .login-box>p{font-size:12px;color:var(--ink3);margin-top:3px;margin-bottom:22px}
 .lf{margin-bottom:13px}
@@ -59,7 +60,8 @@ body::after{content:'';position:fixed;inset:0;background-image:radial-gradient(c
 #app{display:none;height:100vh;flex-direction:column}
 #app.visible{display:flex}
 .topbar{height:var(--th);background:var(--s1);border-bottom:1px solid var(--bd);display:flex;align-items:center;padding:0 14px;gap:9px;flex-shrink:0;z-index:20}
-.tb-mark{width:24px;height:24px;background:var(--acc);border-radius:6px;display:flex;align-items:center;justify-content:center;font-family:var(--display);font-size:8px;font-weight:800;color:#1a1205;flex-shrink:0;box-shadow:0 0 12px var(--acc-glow)}
+.tb-mark{height:24px;width:auto;display:block;flex-shrink:0;content:url("../LeadGen-Rentals-Logo-White.png")}
+[data-theme="light"] .tb-mark{content:url("../LeadGen-Rentals-Logo.png")}
 .tb-name{font-family:var(--display);font-size:12.5px;font-weight:700;letter-spacing:-.2px}
 .tb-sep{width:1px;height:14px;background:var(--bd2)}.tb-sp{flex:1}
 .live-pill{display:flex;align-items:center;gap:5px;padding:3px 9px;border-radius:3px;background:var(--acc-dim);border:1px solid var(--acc-glow);font-family:var(--mono);font-size:9.5px;color:var(--acc);font-weight:500;letter-spacing:.05em}
@@ -75,7 +77,8 @@ body::after{content:'';position:fixed;inset:0;background-image:radial-gradient(c
 .sidebar{width:var(--sw);background:var(--s1);border-right:1px solid var(--bd);display:flex;flex-direction:column;flex-shrink:0;overflow-y:auto}
 .sb-header{padding:16px;border-bottom:1px solid var(--bd)}
 .sb-logo-row{display:flex;align-items:center;gap:9px;margin-bottom:13px}
-.sb-logo{width:30px;height:30px;background:var(--acc);border-radius:8px;display:flex;align-items:center;justify-content:center;font-family:var(--display);font-size:11px;font-weight:800;color:#1a1205;box-shadow:0 0 16px var(--acc-glow);flex-shrink:0}
+.sb-logo{height:30px;width:auto;display:block;flex-shrink:0;content:url("../LeadGen-Rentals-Logo-White.png")}
+[data-theme="light"] .sb-logo{content:url("../LeadGen-Rentals-Logo.png")}
 .sb-brand{font-family:var(--display);font-size:13px;font-weight:700;letter-spacing:-.2px;line-height:1.1}
 .sb-brand-sub{font-family:var(--mono);font-size:8px;color:var(--ink3);letter-spacing:.08em;text-transform:uppercase}
 .sb-status{display:flex;align-items:center;gap:5px;background:var(--acc-dim);border:1px solid var(--acc-glow);border-radius:4px;padding:5px 9px;font-family:var(--mono);font-size:9px;color:var(--acc);letter-spacing:.06em}
@@ -237,8 +240,8 @@ td.mono{font-family:var(--mono);font-size:12px}
 <!-- ═══ LOGIN ═══ -->
 <div id="login-screen">
   <div class="login-box">
-    <div class="login-mark">LGR</div>
-    <h1>LGR Mission Control</h1>
+    <img class="login-mark" src="../LeadGen-Rentals-Logo-White.png" alt="Lead Gen Rentals">
+    <h1>Mission Control</h1>
     <p>Lead Gen Rentals · admin</p>
     <div class="lf"><label>Email</label><input type="email" id="login-email" placeholder="you@example.com" autocomplete="email"></div>
     <div class="lf"><label>Password</label><input type="password" id="login-password" placeholder="••••••••" autocomplete="current-password"></div>
@@ -250,7 +253,7 @@ td.mono{font-family:var(--mono);font-size:12px}
 <!-- ═══ APP ═══ -->
 <div id="app">
   <div class="topbar">
-    <div class="tb-mark">LGR</div>
+    <img class="tb-mark" src="../LeadGen-Rentals-Logo-White.png" alt="Lead Gen Rentals">
     <span class="tb-name">Mission Control</span>
     <div class="tb-sep"></div>
     <div class="tb-sp"></div>
@@ -267,9 +270,8 @@ td.mono{font-family:var(--mono);font-size:12px}
     <div class="sidebar">
       <div class="sb-header">
         <div class="sb-logo-row">
-          <div class="sb-logo">LGR</div>
+          <img class="sb-logo" src="../LeadGen-Rentals-Logo-White.png" alt="Lead Gen Rentals">
           <div>
-            <div class="sb-brand">Lead Gen Rentals</div>
             <div class="sb-brand-sub">Mission Control</div>
           </div>
         </div>
