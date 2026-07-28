@@ -470,8 +470,6 @@ Deno.serve(async (req) => {
       email_sent: emailSent,
       email_error: emailError,
     };
-    if (wantsPplOrder) {
-    }
     return json(responsePayload);
   } catch (err) {
     console.error("create-user-silent unhandled error:", err);
