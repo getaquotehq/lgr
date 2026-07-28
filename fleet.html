@@ -483,18 +483,134 @@ function previewLabel(item){
   return slug ? d + '/' + slug : d;
 }
 
-/* Per-brand accent colours for the coded-in preview (match each live LP). */
-/* Each brand's real personality, so the preview matches the live site:
-   au = bold Outfit/Lora green-gold, premium = Fraunces serif cream editorial,
-   clear = Outfit + Fraunces-italic accent, airy blue. */
+/* Per-brand landing-page previews.
+   The three solar brands no longer share a template - each has its own type
+   pairing, palette and layout - so each gets its own preview document rather
+   than one skeleton with the accent colour swapped:
+     au      = Space Grotesk/Inter, white, hard 1px rules, 4px corners, eucalypt
+     premium = Fraunces/Jost, cream, hairlines, centred column, no cards
+     clear   = Manrope, dark hero, gradient card head, 18px radii, blue/cyan
+   Keep these in step with the live sites when a brand is restyled. */
 const PREVIEW_CFG = {
-  'clearsolarquotes.com.au':   {a1:'#2563eb',a2:'#22d3ee',bg:'#eef4fc',ink:'#101725',serifHead:false,accSerif:true,rad:22,centered:false,
-    eyebrow:'Now matching homeowners with local installers', h1:'Clear solar quotes from <span class="hl">one trusted local installer</span>.'},
-  'ausolarquotes.com.au':      {a1:'#0e9f6e',a2:'#f5c400',bg:'#f6f7fb',ink:'#101725',serifHead:false,accSerif:false,rad:20,centered:true,
-    eyebrow:'Matched to installers Australia-wide', h1:'Solar quotes for <span class="hl">every Aussie postcode</span>.'},
-  'premiumsolarquotes.com.au': {a1:'#b8912e',a2:'#16324a',bg:'#f7f3ea',ink:'#15304a',serifHead:true, accSerif:true, rad:12,centered:false,
-    eyebrow:'By vetted, accredited installers', h1:'Premium solar, <span class="hl">quoted properly</span>.'},
+  'ausolarquotes.com.au': {
+    kind:'au', a1:'#0d6e4f',
+    eyebrow:'Matched to installers Australia-wide',
+    h1:'Solar quotes for <span class="hl">every Aussie postcode</span>.'},
+  'premiumsolarquotes.com.au': {
+    kind:'premium', a1:'#8a6a2f',
+    eyebrow:'By vetted, accredited installers',
+    h1:'Premium solar, <span class="hl">quoted properly</span>.'},
+  'clearsolarquotes.com.au': {
+    kind:'clear', a1:'#2563eb',
+    eyebrow:'Now matching homeowners with local installers',
+    h1:'Clear solar quotes from <span class="hl">a trusted local installer</span>.'},
 };
+
+const PREVIEW_FONTS = {
+  au:"https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap",
+  premium:"https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Jost:wght@300;400;500;600&display=swap",
+  clear:"https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap",
+};
+
+/* Per-brand CSS for the preview document. Each block is a trimmed version of
+   that brand's real stylesheet - enough to read as the live page at thumbnail
+   size, without pulling the whole sheet in. */
+const PREVIEW_CSS = {
+au:`
+body{font-family:'Inter',system-ui,sans-serif;color:#0b1f19;background:#fff;line-height:1.6}
+h1,.q,.t,.brand{font-family:'Space Grotesk',system-ui,sans-serif;letter-spacing:-.02em}
+.top{display:flex;align-items:center;justify-content:space-between;height:54px;padding:0 20px;background:#fff;border-bottom:1px solid #d9e0dc}
+.brand{display:flex;align-items:center;gap:9px;font-weight:700;font-size:1rem}
+.spark{width:27px;height:27px;border-radius:4px;background:#0d6e4f;display:grid;place-items:center}
+.navcta{background:#0d6e4f;color:#fff;border-radius:4px;padding:9px 16px;font-weight:600;font-size:.78rem}
+.wrap{padding:26px 20px 32px}
+.eyebrow{display:inline-flex;align-items:center;gap:7px;border:1px solid #d9e0dc;color:#3a4a44;font-weight:600;font-size:.71rem;padding:6px 12px;border-radius:100px;margin-bottom:16px}
+.eyebrow .d{width:6px;height:6px;border-radius:50%;background:#0f7a4a}
+h1{font-size:1.95rem;line-height:1.08;font-weight:700;margin-bottom:13px}
+h1 .hl{color:#0d6e4f;box-shadow:inset 0 -.16em 0 rgba(224,163,46,.42)}
+.sub{font-size:.92rem;color:#3a4a44;margin-bottom:17px}
+.tick{display:flex;align-items:center;gap:9px;font-weight:500;font-size:.84rem;color:#3a4a44;margin-bottom:8px}
+.tick i{color:#0f7a4a;font-style:normal;font-weight:800}
+.rail{display:flex;border:1px solid #d9e0dc;border-radius:4px;margin-top:18px;background:#f3f6f4}
+.rail div{flex:1;padding:12px 14px;border-left:1px solid #d9e0dc}
+.rail div:first-child{border-left:none}
+.rail b{display:block;font-family:'Space Grotesk',sans-serif;font-size:1.15rem;color:#0d6e4f;line-height:1}
+.rail span{font-size:.7rem;color:#66756e}
+.card{margin-top:20px;background:#fff;border:1.5px solid #0b1f19;border-radius:4px;overflow:hidden;box-shadow:6px 6px 0 #f3f6f4}
+.card-head{padding:16px 20px;background:#0d6e4f;color:#fff}
+.card-head .t{font-weight:700;font-size:1rem}
+.card-head .s{font-size:.78rem;opacity:.9;margin-top:2px}
+.prog{padding:13px 20px 0}
+.pbar{height:4px;border-radius:2px;background:#d9e0dc;overflow:hidden}
+.ptext{font-size:.67rem;color:#66756e;margin-top:7px;font-weight:600;letter-spacing:.06em;text-transform:uppercase}
+.body{padding:17px 20px 21px}
+.q{font-weight:700;font-size:1.08rem;margin-bottom:4px}
+.qs{font-size:.81rem;color:#66756e;margin-bottom:15px}
+.opt{display:flex;align-items:center;justify-content:space-between;border:1.5px solid #c3cec8;border-radius:4px;padding:13px 15px;font-size:.9rem;font-weight:500;margin-bottom:9px}
+.opt span{color:#93a09a}
+.opt.sel{border-color:#0d6e4f;background:#f3f6f4;box-shadow:inset 3px 0 0 #0d6e4f}
+`,
+premium:`
+body{font-family:'Jost',system-ui,sans-serif;font-weight:400;color:#1c2b3a;background:#fbf8f2;line-height:1.7}
+h1,.q,.t{font-family:'Fraunces',Georgia,serif;letter-spacing:-.015em}
+.top{display:flex;align-items:center;justify-content:space-between;height:58px;padding:0 20px;background:#fbf8f2;border-bottom:1px solid #e2dbcd}
+.brand{display:flex;align-items:center;gap:9px;font-family:'Fraunces',Georgia,serif;font-weight:600;font-size:1.04rem}
+.spark{width:8px;height:8px;border-radius:50%;background:#8a6a2f}
+.navcta{border:1px solid #1c2b3a;color:#1c2b3a;padding:8px 15px;font-size:.71rem;letter-spacing:.06em;text-transform:uppercase;font-weight:500}
+.wrap{padding:32px 20px 34px;max-width:520px;margin:0 auto;text-align:center}
+.eyebrow{display:inline-flex;align-items:center;gap:8px;font-size:.68rem;letter-spacing:.2em;text-transform:uppercase;color:#6d7f90;margin-bottom:18px}
+.eyebrow .d{width:5px;height:5px;border-radius:50%;background:#3f7d4e}
+h1{font-size:2.05rem;line-height:1.14;font-weight:500;margin-bottom:15px}
+h1 .hl{font-style:italic;color:#8a6a2f;font-weight:400}
+.sub{font-size:.92rem;color:#44576b;margin-bottom:20px;font-weight:300}
+.rule{width:54px;height:1px;background:#cfc5b2;margin:0 auto 20px}
+.tick{display:flex;align-items:center;gap:9px;font-size:.85rem;color:#44576b;margin-bottom:8px;font-weight:300;justify-content:center}
+.tick i{color:#3f7d4e;font-style:normal;font-weight:700}
+.card{margin-top:24px;background:#fff;border:1px solid #e2dbcd;text-align:left}
+.card-head{padding:20px;border-bottom:1px solid #e2dbcd;text-align:center}
+.card-head .t{font-weight:600;font-size:1.16rem}
+.card-head .s{font-size:.7rem;color:#6d7f90;margin-top:3px;letter-spacing:.1em;text-transform:uppercase}
+.prog{padding:17px 22px 0}
+.pbar{height:1px;background:#cfc5b2;overflow:hidden}
+.ptext{font-size:.66rem;color:#9aa8b4;margin-top:8px;letter-spacing:.16em;text-transform:uppercase}
+.body{padding:18px 22px 24px}
+.q{font-weight:600;font-size:1.14rem;margin-bottom:4px;line-height:1.25}
+.qs{font-size:.82rem;color:#6d7f90;margin-bottom:17px;font-weight:300}
+.opt{display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #e2dbcd;padding:13px 2px;font-size:.93rem}
+.opt:first-of-type{border-top:1px solid #e2dbcd}
+.opt span{color:#9aa8b4}
+.opt.sel{color:#8a6a2f;border-bottom-color:#8a6a2f;padding-left:11px}
+`,
+clear:`
+body{font-family:'Manrope',system-ui,sans-serif;color:#0f172a;background:#f7f9fc;line-height:1.6}
+h1,.q,.t,.brand{font-weight:800;letter-spacing:-.035em}
+.dark{background:#0a1020;background-image:radial-gradient(600px 260px at 80% -10%,rgba(56,189,248,.20),transparent 62%),radial-gradient(420px 240px at 6% 6%,rgba(37,99,235,.22),transparent 60%);padding-bottom:34px}
+.top{display:flex;align-items:center;justify-content:space-between;height:54px;padding:0 20px;border-bottom:1px solid rgba(255,255,255,.08)}
+.brand{display:flex;align-items:center;gap:9px;font-size:1rem;color:#fff}
+.spark{width:27px;height:27px;border-radius:8px;background:linear-gradient(135deg,#38bdf8,#2563eb);display:grid;place-items:center}
+.navcta{background:#fff;color:#0a1020;border-radius:100px;padding:8px 16px;font-weight:700;font-size:.78rem}
+.wrap{padding:24px 20px 0}
+.eyebrow{display:inline-flex;align-items:center;gap:7px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.14);color:#cbd8ea;font-weight:600;font-size:.71rem;padding:6px 13px;border-radius:100px;margin-bottom:16px}
+.eyebrow .d{width:6px;height:6px;border-radius:50%;background:#10b981}
+h1{font-size:1.9rem;line-height:1.1;margin-bottom:13px;color:#fff}
+h1 .hl{background:linear-gradient(100deg,#38bdf8,#a5b4fc);-webkit-background-clip:text;background-clip:text;color:transparent}
+.sub{font-size:.92rem;color:#a9b7cd;margin-bottom:17px}
+.tick{display:flex;align-items:center;gap:9px;font-weight:500;font-size:.84rem;color:#c2cee0;margin-bottom:8px}
+.tick i{color:#10b981;font-style:normal;font-weight:800}
+.card{margin:18px 20px 0;background:#fff;border:1px solid #e4e9f2;border-radius:18px;overflow:hidden;box-shadow:0 26px 60px -28px rgba(4,10,25,.65)}
+.card-head{padding:17px 20px;background:linear-gradient(120deg,#2563eb,#38bdf8);color:#fff}
+.card-head .t{font-size:1.02rem}
+.card-head .s{font-size:.78rem;opacity:.94;margin-top:2px;font-weight:500}
+.prog{padding:14px 20px 0}
+.pbar{height:7px;border-radius:100px;background:#e4e9f2;overflow:hidden}
+.ptext{font-size:.7rem;color:#69788c;margin-top:7px;font-weight:700}
+.body{padding:17px 20px 21px}
+.q{font-size:1.08rem;margin-bottom:4px}
+.qs{font-size:.82rem;color:#69788c;margin-bottom:15px}
+.opt{display:flex;align-items:center;justify-content:space-between;background:#f7f9fc;border:1.5px solid transparent;border-radius:12px;padding:13px 15px;font-size:.9rem;font-weight:600;margin-bottom:9px}
+.opt span{color:#94a3b8}
+.opt.sel{border-color:#2563eb;background:rgba(37,99,235,.07)}
+`};
 
 /* Build the landing-page preview as a self-contained HTML document, coded in
    here (no hosted file) and fed to the iframe via srcdoc. It mirrors the real
@@ -504,63 +620,19 @@ function buildPreviewDoc(item){
   const domain = (item.brand_domain || '').trim().toLowerCase();
   const brand  = item.brand_name || 'Solar Quotes';
   const c = PREVIEW_CFG[domain] || PREVIEW_CFG['ausolarquotes.com.au'];
-  const a1 = c.a1, a2 = c.a2, bg = c.bg, ink = c.ink, rad = c.rad;
-  const headFont = c.serifHead ? "'Fraunces',Georgia,serif" : "'Outfit',system-ui,-apple-system,sans-serif";
-  const headWt   = c.serifHead ? 600 : 900;
-  const accFont  = c.accSerif ? "'Fraunces',Georgia,serif" : "'Lora',Georgia,serif";
   const e = s => (s==null?'':String(s)).replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
-  return `<!doctype html><html lang="en"><head><meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800;900&family=Lora:ital,wght@1,600&family=Fraunces:ital,opsz,wght@0,9..144,600;1,9..144,600&display=swap" rel="stylesheet">
-<style>
-*{box-sizing:border-box;margin:0;padding:0}
-body{font-family:'Outfit',system-ui,-apple-system,sans-serif;color:${ink};-webkit-font-smoothing:antialiased;
-  background:${bg}}
-.top{position:sticky;top:0;display:flex;align-items:center;justify-content:space-between;height:56px;padding:0 20px;background:rgba(246,247,251,.82);backdrop-filter:blur(12px);border-bottom:1px solid #e7e9f0}
-.brand{display:flex;align-items:center;gap:9px;font-weight:800;font-size:1.02rem;letter-spacing:-.03em}
-.spark{width:28px;height:28px;border-radius:8px;background:${a1};display:grid;place-items:center}
-.spark svg{fill:#fff}
-.navcta{background:${a1};color:#fff;border-radius:100px;padding:8px 16px;font-weight:700;font-size:.78rem}
-.wrap{padding:28px 20px 36px}
-.eyebrow{display:inline-flex;align-items:center;gap:7px;background:#fff;border:1px solid #e7e9f0;color:#3d4757;font-weight:600;font-size:.72rem;padding:6px 12px;border-radius:100px;margin-bottom:16px;box-shadow:0 2px 8px rgba(16,24,40,.04)}
-.eyebrow .d{width:7px;height:7px;border-radius:50%;background:#16a34a}
-h1{font-family:${headFont};font-size:2rem;line-height:1.05;letter-spacing:-.03em;font-weight:${headWt};margin-bottom:14px}
-h1 .hl{font-family:${accFont};font-style:italic;font-weight:600;color:${a1}}
-.sub{font-size:.94rem;color:#3d4757;margin-bottom:18px}
-.tick{display:flex;align-items:center;gap:9px;font-weight:600;font-size:.85rem;color:#3d4757;margin-bottom:9px}
-.wrap.center{max-width:540px;margin:0 auto;text-align:center}
-.wrap.center .tick{justify-content:center}
-.wrap.center .card{text-align:left}
-.tick i{color:#16a34a;font-style:normal;font-weight:800}
-.card{margin-top:22px;background:#fff;border:1px solid #e7e9f0;border-radius:${rad}px;overflow:hidden;box-shadow:0 1px 2px rgba(16,24,40,.05),0 20px 44px -26px rgba(16,24,40,.20)}
-.card-head{padding:18px 20px;background:${a1};color:#fff}
-.card-head .t{font-family:${headFont};font-weight:${headWt};font-size:1.05rem;letter-spacing:-.02em}
-.card-head .s{font-size:.8rem;opacity:.92;margin-top:2px}
-.prog{padding:14px 20px 0}
-.pbar{height:6px;border-radius:100px;background:#e7e9f0;overflow:hidden}
-.pbar i{display:block;height:100%;width:0;border-radius:100px;background:${a1}}
-.ptext{font-size:.7rem;color:#6b7686;margin-top:7px;font-weight:600}
-.body{padding:18px 20px 22px}
-.q{font-weight:800;font-size:1.12rem;letter-spacing:-.03em;margin-bottom:4px}
-.qs{font-size:.82rem;color:#6b7686;margin-bottom:16px}
-.opt{display:flex;align-items:center;justify-content:space-between;border:1.5px solid #dfe2ec;border-radius:14px;padding:15px 16px;font-size:.92rem;font-weight:600;margin-bottom:10px}
-.opt span{color:#9aa4b2}
-.opt.sel{border-color:${a1};background:color-mix(in srgb,${a1} 7%,#fff);box-shadow:0 0 0 3px color-mix(in srgb,${a1} 15%,transparent)}
-</style></head><body>
-<div class="top">
-  <div class="brand"><span class="spark"><svg width="15" height="15" viewBox="0 0 24 24"><path d="M13 2 4 14h6l-1 8 9-12h-6z"/></svg></span> ${e(brand)}</div>
-  <div class="navcta">Get Quote</div>
-</div>
-<div class="wrap${c.centered?' center':''}">
-  <span class="eyebrow"><span class="d"></span> ${c.eyebrow}</span>
-  <h1>${c.h1}</h1>
-  <p class="sub">Answer four quick questions and ${e(brand)} matches you with a single accredited installer covering your postcode.</p>
-  <div class="tick"><i>&#10003;</i> One installer, matched to your postcode</div>
+
+  const head = `<div class="top">
+  <div class="brand"><span class="spark">${c.kind==='premium'?'':'<svg width="14" height="14" viewBox="0 0 24 24" fill="#fff"><path d="M13 2 4 14h6l-1 8 9-12h-6z"/></svg>'}</span> ${e(brand)}</div>
+  <div class="navcta">${c.kind==='premium'?'Request a quote':'Get my quote'}</div>
+</div>`;
+
+  const ticks = `<div class="tick"><i>&#10003;</i> One installer, matched to your postcode</div>
   <div class="tick"><i>&#10003;</i> Qualified electricians &amp; accredited installers only</div>
-  <div class="tick"><i>&#10003;</i> 100% free &amp; obligation-free</div>
-  <div class="card">
-    <div class="card-head"><div class="t">Get your free solar quote</div><div class="s">Takes under a minute · matched to your area</div></div>
+  <div class="tick"><i>&#10003;</i> 100% free &amp; obligation-free</div>`;
+
+  const card = `<div class="card">
+    <div class="card-head"><div class="t">${c.kind==='premium'?'Request your quote':'Get your free solar quote'}</div><div class="s">${c.kind==='premium'?'Under a minute':'Under a minute - matched to your area'}</div></div>
     <div class="prog"><div class="pbar"><i></i></div><div class="ptext">Step 1 of 5</div></div>
     <div class="body">
       <div class="q">Do you own your home?</div>
@@ -568,8 +640,36 @@ h1 .hl{font-family:${accFont};font-style:italic;font-weight:600;color:${a1}}
       <div class="opt sel">Yes, I own it <span>&#8594;</span></div>
       <div class="opt">No, I'm renting <span>&#8594;</span></div>
     </div>
-  </div>
-</div>
+  </div>`;
+
+  const hero = `<span class="eyebrow"><span class="d"></span> ${c.eyebrow}</span>
+  <h1>${c.h1}</h1>
+  <p class="sub">Answer four quick questions and ${e(brand)} matches you with a single accredited installer covering your postcode.</p>`;
+
+  /* Each brand arranges the same pieces differently, matching its live page:
+     au keeps a stat rail under the hero, premium centres everything behind a
+     hairline rule, clear runs the hero on a dark ground with the card below. */
+  let bodyHtml;
+  if(c.kind === 'au'){
+    bodyHtml = `${head}<div class="wrap">${hero}${ticks}
+  <div class="rail"><div><b>1</b><span>installer per postcode</span></div><div><b>4</b><span>questions</span></div><div><b>$0</b><span>cost to you</span></div></div>
+  ${card}</div>`;
+  } else if(c.kind === 'premium'){
+    bodyHtml = `${head}<div class="wrap">${hero}<div class="rule"></div>${ticks}${card}</div>`;
+  } else {
+    bodyHtml = `<div class="dark">${head}<div class="wrap">${hero}${ticks}</div></div>${card}`;
+  }
+
+  return `<!doctype html><html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="${PREVIEW_FONTS[c.kind]}" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+.pbar i{display:block;height:100%;width:0}
+${PREVIEW_CSS[c.kind]}
+</style></head><body>
+${bodyHtml}
 </body></html>`;
 }
 
