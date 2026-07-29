@@ -513,7 +513,7 @@ function previewLabel(item){
    is actually renting - brisbane shows the Brisbane hero, not the homepage. */
 const PREVIEW_CFG = {
   'ausolarquotes.com.au': {
-    kind:'au', a1:'#0d6e4f',
+    kind:'au', a1:'#0d6e4f', logo:'https://ausolarquotes.com.au/au-solar-quotes-logo.png',
     home:{eyebrow:'Matched to installers Australia-wide',
       h1:'Solar quotes for <span class="hl">every Aussie postcode</span>.',
       sub:'Australia-wide solar, matched to your local accredited installer.'},
@@ -524,7 +524,7 @@ const PREVIEW_CFG = {
       h1:(a?'<span class="hl">'+a+'</span> battery':'Battery')+' retrofit, done properly.',
       sub:'Already have solar? Add a battery, matched to '+(a?'a local':'your local')+' accredited installer who actually covers your postcode.'})},
   'premiumsolarquotes.com.au': {
-    kind:'premium', a1:'#8a6a2f',
+    kind:'premium', a1:'#8a6a2f', logo:'https://premiumsolarquotes.com.au/premium-solar-quotes-logo.png',
     home:{eyebrow:'By vetted, accredited installers',
       h1:'Premium solar, <span class="hl">quoted properly</span>.',
       sub:'Premium panels, premium installers, premium service.'},
@@ -535,7 +535,7 @@ const PREVIEW_CFG = {
       h1:'Premium battery retrofit'+(a?' for <span class="hl">'+a+'</span>':', <span class="hl">quoted properly</span>')+'.',
       sub:'Already have solar? Vetted installers adding battery storage'+(a?' to '+a+' homes':'')+', quoted properly.'})},
   'clearsolarquotes.com.au': {
-    kind:'clear', a1:'#2563eb',
+    kind:'clear', a1:'#2563eb', logo:'https://clearsolarquotes.com.au/clear-solar-quotes-logo.png',
     home:{eyebrow:'Now matching homeowners with local installers',
       h1:'Clear solar quotes from <span class="hl">a trusted local installer</span>.',
       sub:'Clear, honest solar pricing from a trusted local installer.'},
@@ -563,7 +563,7 @@ body{font-family:'Inter',system-ui,sans-serif;color:#0b1f19;background:#fff;line
 h1,.q,.t,.brand{font-family:'Space Grotesk',system-ui,sans-serif;letter-spacing:-.02em}
 .top{display:flex;align-items:center;justify-content:space-between;height:54px;padding:0 20px;background:#fff;border-bottom:1px solid #d9e0dc}
 .brand{display:flex;align-items:center;gap:9px;font-weight:700;font-size:1rem}
-.spark{width:27px;height:27px;border-radius:4px;background:#0d6e4f;display:grid;place-items:center}
+.brand img{height:22px;width:auto;display:block}
 .navcta{background:#0d6e4f;color:#fff;border-radius:4px;padding:9px 16px;font-weight:600;font-size:.78rem}
 .wrap{padding:26px 20px 32px}
 .eyebrow{display:inline-flex;align-items:center;gap:7px;border:1px solid #d9e0dc;color:#3a4a44;font-weight:600;font-size:.71rem;padding:6px 12px;border-radius:100px;margin-bottom:16px}
@@ -597,7 +597,7 @@ body{font-family:'Jost',system-ui,sans-serif;font-weight:400;color:#1c2b3a;backg
 h1,.q,.t{font-family:'Fraunces',Georgia,serif;letter-spacing:-.015em}
 .top{display:flex;align-items:center;justify-content:space-between;height:58px;padding:0 20px;background:#fbf8f2;border-bottom:1px solid #e2dbcd}
 .brand{display:flex;align-items:center;gap:9px;font-family:'Fraunces',Georgia,serif;font-weight:600;font-size:1.04rem}
-.spark{width:8px;height:8px;border-radius:50%;background:#8a6a2f}
+.brand img{height:23px;width:auto;display:block}
 .navcta{border:1px solid #1c2b3a;color:#1c2b3a;padding:8px 15px;font-size:.71rem;letter-spacing:.06em;text-transform:uppercase;font-weight:500}
 .wrap{padding:32px 20px 34px;max-width:520px;margin:0 auto;text-align:center}
 .eyebrow{display:inline-flex;align-items:center;gap:8px;font-size:.68rem;letter-spacing:.2em;text-transform:uppercase;color:#6d7f90;margin-bottom:18px}
@@ -629,7 +629,7 @@ h1,.q,.t,.brand{font-weight:800;letter-spacing:-.035em}
 .dark{background:#0a1020;background-image:radial-gradient(600px 260px at 80% -10%,rgba(56,189,248,.20),transparent 62%),radial-gradient(420px 240px at 6% 6%,rgba(37,99,235,.22),transparent 60%);padding-bottom:34px}
 .top{display:flex;align-items:center;justify-content:space-between;height:54px;padding:0 20px;border-bottom:1px solid rgba(255,255,255,.08)}
 .brand{display:flex;align-items:center;gap:9px;font-size:1rem;color:#fff}
-.spark{width:27px;height:27px;border-radius:8px;background:linear-gradient(135deg,#38bdf8,#2563eb);display:grid;place-items:center}
+.brand img{height:22px;width:auto;display:block}
 .navcta{background:#fff;color:#0a1020;border-radius:100px;padding:8px 16px;font-weight:700;font-size:.78rem}
 .wrap{padding:24px 20px 0}
 .eyebrow{display:inline-flex;align-items:center;gap:7px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.14);color:#cbd8ea;font-weight:600;font-size:.71rem;padding:6px 13px;border-radius:100px;margin-bottom:16px}
@@ -674,7 +674,7 @@ function buildPreviewDoc(item){
   const copy = TRADE === 'battery' ? c.battery(e(area)) : (area ? c.area(e(area)) : c.home);
 
   const head = `<div class="top">
-  <div class="brand"><span class="spark">${c.kind==='premium'?'':'<svg width="14" height="14" viewBox="0 0 24 24" fill="#fff"><path d="M13 2 4 14h6l-1 8 9-12h-6z"/></svg>'}</span> ${e(brand)}</div>
+  <div class="brand"><img src="${c.logo}" alt="${e(brand)}"></div>
   <div class="navcta">${c.kind==='premium'?'Request a quote':'Get my quote'}</div>
 </div>`;
 
