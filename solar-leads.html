@@ -415,9 +415,8 @@
           <div class="cf">
             <label for="trade">Trade</label>
             <select id="trade">
-              <option>All Residential Solar</option>
-              <option>Residential Solar</option>
-              <option>Battery Retrofit</option>
+              <option value="solar">Solar + Battery</option>
+              <option value="battery">Battery Retrofit</option>
             </select>
           </div>
           <div class="cf">
@@ -836,7 +835,14 @@
   const errRow = msg =>
     `<div class="res"><span class="res-v" style="color:var(--muted);font-weight:450">${esc(msg)}</span></div>`;
 
-  function renderCounter(region, typed, assets){
+  // The trade selector has no matching column in the assets table - every
+  // solar asset serves both general solar and battery-retrofit enquiries,
+  // there is no separately-filterable pool. Rather than fake a filter against
+  // data that doesn't exist, the selection is threaded through as context:
+  // it relabels what's shown and tags the claim link, so an installer who
+  // came in for battery-retrofit sees that reflected end to end.
+  const TRADE_LABEL = { solar: 'Solar + Battery', battery: 'Battery Retrofit' };
+  function renderCounter(region, typed, assets, trade){
     const areaName = region ? region.name : (typed || 'Coming Soon');
     const avail = assets.filter(a=>a.status==='available');
     const count = avail.length;
@@ -848,7 +854,10 @@
         : count > 0
           ? `<span class="pill open">${count} of ${total} available</span>`
           : `<span class="pill taken">Fully booked</span>`;
-    const claimHref = region ? `/fleet.html?region=${encodeURIComponent(region.slug)}` : '/fleet.html';
+    const tradeParam = `trade=${encodeURIComponent(trade)}`;
+    const claimHref = region
+      ? `/fleet.html?region=${encodeURIComponent(region.slug)}&${tradeParam}`
+      : `/fleet.html?${tradeParam}`;
     let classRow;
     if(count > 0){
       const cheapest = avail.slice().sort((a,b)=>a.monthly_price_aud-b.monthly_price_aud)[0];
@@ -872,7 +881,7 @@
     out.innerHTML = `
       <div class="res">
         <span class="res-k">Area</span>
-        <span class="res-v">${esc(areaName)}<small>Residential Solar</small></span>
+        <span class="res-v">${esc(areaName)}<small>${esc(TRADE_LABEL[trade] || TRADE_LABEL.solar)}</small></span>
         <span class="res-r">${pill}</span>
       </div>
       ${classRow}`;
@@ -880,11 +889,12 @@
 
   async function checkAvailability(){
     const typed = document.getElementById('area').value.trim();
+    const trade = document.getElementById('trade').value || 'solar';
     out.classList.add('on');
     if(!sb){ out.innerHTML = errRow('Availability data temporarily unavailable.'); return; }
     out.innerHTML = loadingRow();
     const region = matchRegion(typed);
-    if(!region){ renderCounter(null, typed, []); return; }
+    if(!region){ renderCounter(null, typed, [], trade); return; }
     try{
       let q = sb.from('assets')
         .select('tier,monthly_price_aud,floor_leads,typical_min,typical_max,status,regions!inner(slug,name),niches!inner(slug)')
@@ -892,7 +902,7 @@
       if(region) q = q.eq('regions.slug', region.slug);
       const { data, error } = await q;
       if(error) throw error;
-      renderCounter(region, typed, data || []);
+      renderCounter(region, typed, data || [], trade);
     }catch(e){
       console.error('availability check failed', e);
       out.innerHTML = errRow('Availability data temporarily unavailable. Please try again shortly.');
