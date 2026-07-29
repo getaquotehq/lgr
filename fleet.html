@@ -427,6 +427,11 @@ const NICHE_CFG = {
   renovations: { label:'Home Renovations',  noun:'renovation',           quote:'Get your free renovation quote', page:'/renovations-leads', back:'← Renovation leads',  fields:['Postcode','Project type','Approx budget'] },
 };
 const NICHE = (new URLSearchParams(location.search).get('niche') || 'solar').toLowerCase();
+// Battery retrofit isn't a separate niche - it's served by the same solar
+// assets and landing pages, selected via the Trade dropdown on solar-leads
+// (?trade=battery on the Claim/View fleet link). This just changes which
+// hero copy the preview shows for the page load, not which assets are queried.
+const TRADE = (new URLSearchParams(location.search).get('trade') || '').toLowerCase();
 const NC = NICHE_CFG[NICHE] || NICHE_CFG.solar;
 
 let INVENTORY = [];                 // mapped asset rows
@@ -514,7 +519,10 @@ const PREVIEW_CFG = {
       sub:'Australia-wide solar, matched to your local accredited installer.'},
     area:a=>({eyebrow:'Matched to accredited '+a+' installers',
       h1:'<span class="hl">'+a+'</span> solar quotes, done properly.',
-      sub:a+' solar, matched to a local accredited installer who actually covers your postcode.'})},
+      sub:a+' solar, matched to a local accredited installer who actually covers your postcode.'}),
+    battery:a=>({eyebrow:'Matched to accredited '+(a?a+' ':'')+'battery installers',
+      h1:(a?'<span class="hl">'+a+'</span> battery':'Battery')+' retrofit, done properly.',
+      sub:'Already have solar? Add a battery, matched to '+(a?'a local':'your local')+' accredited installer who actually covers your postcode.'})},
   'premiumsolarquotes.com.au': {
     kind:'premium', a1:'#8a6a2f',
     home:{eyebrow:'By vetted, accredited installers',
@@ -522,7 +530,10 @@ const PREVIEW_CFG = {
       sub:'Premium panels, premium installers, premium service.'},
     area:a=>({eyebrow:'Vetted installers serving '+a,
       h1:'Premium solar quotes for <span class="hl">'+a+'</span>.',
-      sub:'Premium panels and vetted installers for '+a+' homes, quoted properly.'})},
+      sub:'Premium panels and vetted installers for '+a+' homes, quoted properly.'}),
+    battery:a=>({eyebrow:'By vetted, accredited battery installers',
+      h1:'Premium battery retrofit'+(a?' for <span class="hl">'+a+'</span>':', <span class="hl">quoted properly</span>')+'.',
+      sub:'Already have solar? Vetted installers adding battery storage'+(a?' to '+a+' homes':'')+', quoted properly.'})},
   'clearsolarquotes.com.au': {
     kind:'clear', a1:'#2563eb',
     home:{eyebrow:'Now matching homeowners with local installers',
@@ -530,7 +541,11 @@ const PREVIEW_CFG = {
       sub:'Clear, honest solar pricing from a trusted local installer.'},
     area:a=>({eyebrow:'Now matching '+a+' homeowners',
       h1:'Solar quotes in <span class="hl">'+a+'</span>, matched to a local installer.',
-      sub:'Clear, honest solar pricing for '+a+' homes, from one trusted local installer.'})},
+      sub:'Clear, honest solar pricing for '+a+' homes, from one trusted local installer.'}),
+    battery:a=>({eyebrow:'Now matching homeowners adding a battery',
+      h1:a?'Battery retrofit in <span class="hl">'+a+'</span>, matched to a local installer.'
+          :'Clear battery retrofit quotes from <span class="hl">a trusted local installer</span>.',
+      sub:'Already have solar? Clear, honest battery retrofit pricing'+(a?' for '+a+' homes':'')+', from one trusted local installer.'})},
 };
 
 const PREVIEW_FONTS = {
@@ -651,9 +666,12 @@ function buildPreviewDoc(item){
 
   /* Show the area page this asset actually covers. Fall back to the homepage
      hero only when the asset has no region attached. Area names come from the
-     joined regions row, so they are escaped before going into the copy. */
+     joined regions row, so they are escaped before going into the copy.
+     TRADE==='battery' means the installer arrived via the Battery Retrofit
+     option on solar-leads (?trade=battery) - same solar assets, same brand,
+     just the battery-flavoured hero instead of the general one. */
   const area = (item.area || item.region || '').trim();
-  const copy = area ? c.area(e(area)) : c.home;
+  const copy = TRADE === 'battery' ? c.battery(e(area)) : (area ? c.area(e(area)) : c.home);
 
   const head = `<div class="top">
   <div class="brand"><span class="spark">${c.kind==='premium'?'':'<svg width="14" height="14" viewBox="0 0 24 24" fill="#fff"><path d="M13 2 4 14h6l-1 8 9-12h-6z"/></svg>'}</span> ${e(brand)}</div>
