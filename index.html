@@ -88,14 +88,31 @@
   .btn-sm{padding:8px 14px;font-size:.85rem}
   .btn[aria-disabled="true"]{opacity:.55;cursor:default;pointer-events:none}
 
-  /* hero */
-  .hero{padding:96px 24px 24px;text-align:left;position:relative;overflow:hidden;
+  /* hero - outer spans full width so the background photo can bleed edge to
+     edge under the header; .hero-in holds the actual centered content at the
+     same max-width/padding the single .hero element used to carry itself */
+  .hero{position:relative;overflow:hidden}
+  .hero-in{padding:96px 24px 24px;text-align:left;position:relative;
     max-width:1120px;margin:0 auto}
-  .hero::before{content:"";position:absolute;inset:0;z-index:-1;
+  .hero-in::before{content:"";position:absolute;inset:0;z-index:-1;
     background-image:linear-gradient(var(--line-2) 1px,transparent 1px),linear-gradient(90deg,var(--line-2) 1px,transparent 1px);
     background-size:56px 56px;
     mask-image:radial-gradient(ellipse 70% 60% at 0% 0%,#000,transparent 70%);
     -webkit-mask-image:radial-gradient(ellipse 70% 60% at 0% 0%,#000,transparent 70%);opacity:.55}
+  /* photo layer - quite transparent, fades in from the top edge (under the
+     header) and fades back out at the bottom into the page background. The
+     fade is a mask on the photo itself, so it reveals whatever --bg already
+     is - no separate light/dark image needed. */
+  .hero::after{content:"";position:absolute;inset:0;z-index:-2;
+    background-image:url(lead-gen-rentals-bg-image.png);
+    background-size:cover;background-position:center;
+    opacity:.16;
+    mask-image:linear-gradient(to bottom,transparent 0%,#000 20%,#000 78%,transparent 100%);
+    -webkit-mask-image:linear-gradient(to bottom,transparent 0%,#000 20%,#000 78%,transparent 100%)}
+  :root[data-theme="dark"] .hero::after{opacity:.22}
+  @media(max-width:700px){
+    .hero::after{background-position:left center}
+  }
   .eyebrow{font-family:var(--mono);font-size:.72rem;letter-spacing:.02em;
     color:var(--muted);display:inline-flex;align-items:center;gap:9px;margin-bottom:32px;
     text-transform:uppercase;font-weight:500}
@@ -206,7 +223,7 @@
     .metabar-in{grid-template-columns:1fr 1fr}
     .mb-cell{padding:18px 20px}
     section{padding:60px 0}
-    .hero{padding:48px 24px 40px}
+    .hero-in{padding:48px 24px 40px}
     /* mobile-menu CTA was inheriting nav-link styles (block display, 4px padding,
        border-bottom) which beat .btn on specificity - reset explicitly */
     .mobile-menu a.btn{
@@ -298,6 +315,7 @@
 
   <!-- HERO + TRADE PICKER -->
   <div class="hero">
+    <div class="hero-in">
     <span class="eyebrow">Lead Gen Rentals</span>
     <h1>Australia's <span style="color:var(--blue)">exclusive</span> lead rental engine</h1>
     <p>Rent a lead engine built for your trade. We run the ads and carry the spend. You get every lead it makes - never shared, never resold.</p>
@@ -308,6 +326,7 @@
       <div class="trade trade-sk" aria-hidden="true"><div class="trade-top"><span class="sk-bar" style="width:40%;height:16px"></span><span class="sk-bar" style="width:52px"></span></div><span class="sk-bar" style="width:90%;margin:6px 0"></span><span class="sk-bar" style="width:70%;margin-bottom:22px"></span><span class="sk-bar" style="width:100%;height:38px;border-radius:7px"></span></div>
       <div class="trade trade-sk" aria-hidden="true"><div class="trade-top"><span class="sk-bar" style="width:50%;height:16px"></span><span class="sk-bar" style="width:52px"></span></div><span class="sk-bar" style="width:90%;margin:6px 0"></span><span class="sk-bar" style="width:70%;margin-bottom:22px"></span><span class="sk-bar" style="width:100%;height:38px;border-radius:7px"></span></div>
       <div class="trade trade-sk" aria-hidden="true"><div class="trade-top"><span class="sk-bar" style="width:42%;height:16px"></span><span class="sk-bar" style="width:52px"></span></div><span class="sk-bar" style="width:90%;margin:6px 0"></span><span class="sk-bar" style="width:70%;margin-bottom:22px"></span><span class="sk-bar" style="width:100%;height:38px;border-radius:7px"></span></div>
+    </div>
     </div>
   </div>
 
