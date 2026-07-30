@@ -150,7 +150,6 @@ footer{background:var(--ink);border-top:1px solid var(--ink);padding:56px 0 40px
         <div class="field"><label for="cb-business">Business name</label><input id="cb-business" type="text"></div>
       </div>
       <div class="field"><label for="cb-message">What are you after?</label><textarea id="cb-message" rows="3"></textarea></div>
-      <input type="text" id="cb-website" name="website" tabindex="-1" autocomplete="off" aria-hidden="true" style="position:absolute;left:-9999px;top:-9999px;width:1px;height:1px;opacity:0">
       <button class="btn btn-primary" type="submit" id="cb-submit">Request a callback</button>
       <div id="cb-status" style="margin-top:10px;font-size:.88rem"></div>
     </form>
@@ -190,7 +189,6 @@ m.querySelectorAll('a').forEach(a=>a.addEventListener('click',()=>t(false)));
 const CALLBACK_WEBHOOK_URL='https://hook.eu2.make.com/q9r8133q5kwr793yoihsjvlnb66b38zc';
 async function submitCallback(e){
   e.preventDefault();
-  if(document.getElementById('cb-website').value.trim()) return false; // honeypot
   const btn=document.getElementById('cb-submit'),status=document.getElementById('cb-status');
   const payload={
     name:document.getElementById('cb-name').value.trim(),
