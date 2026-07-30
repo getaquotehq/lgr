@@ -306,6 +306,9 @@ td.mono{font-family:var(--mono);font-size:12px}
           <button class="navbtn" data-panel="pending" onclick="nav('pending',this)">
             <span class="ni"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></span>Pending<span class="navbadge" id="nav-pending-badge" style="display:none"></span>
           </button>
+          <button class="navbtn" data-panel="pipeline" onclick="nav('pipeline',this)">
+            <span class="ni"><svg viewBox="0 0 24 24"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg></span>Sales Pipeline
+          </button>
         </div>
         <div class="sb-divider"></div>
         <div class="sb-group">
@@ -494,6 +497,41 @@ td.mono{font-family:var(--mono);font-size:12px}
               <th>Brand</th><th>Niche</th><th>Reason</th><th>Status</th><th>Actions</th>
             </tr></thead>
             <tbody id="pd-tbody"><tr><td colspan="10" class="empty">Loading…</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ═══ SALES PIPELINE ═══ -->
+      <div class="panel" id="panel-pipeline">
+        <div class="ph">
+          <div class="ph-left"><h1>Sales Pipeline</h1><p>LGR's own B2B leads — installers inquiring about renting assets</p></div>
+          <div class="ph-right">
+            <select class="fs" id="sp-stage" onchange="loadPipeline()" style="width:auto">
+              <option value="">All stages</option>
+              <option value="new_lead">New Lead</option>
+              <option value="follow_up">Follow Up</option>
+              <option value="quote_in_progress">Quote In Progress</option>
+              <option value="quoted">Quoted</option>
+              <option value="closed_won">Closed Won</option>
+              <option value="closed_lost">Closed Lost</option>
+            </select>
+            <button class="btn btn-sm" onclick="loadPipeline()">↻ Refresh</button>
+          </div>
+        </div>
+        <div class="kg c5 mb4">
+          <div class="kpi"><div class="klabel">Total</div><div class="kval blu" id="sp-total">-</div></div>
+          <div class="kpi"><div class="klabel">New</div><div class="kval" id="sp-new">-</div></div>
+          <div class="kpi"><div class="klabel">In progress</div><div class="kval" id="sp-progress" style="color:var(--amb)">-</div><div class="ksub">follow up · quoting · quoted</div></div>
+          <div class="kpi"><div class="klabel">Closed won</div><div class="kval grn" id="sp-won">-</div></div>
+          <div class="kpi"><div class="klabel">Closed lost</div><div class="kval red" id="sp-lost">-</div></div>
+        </div>
+        <div class="twrap">
+          <table>
+            <thead><tr>
+              <th>Received</th><th>Name</th><th>Phone</th><th>Email</th><th>Company</th>
+              <th>Source</th><th>Notes</th><th>Stage</th>
+            </tr></thead>
+            <tbody id="sp-tbody"><tr><td colspan="8" class="empty">Loading…</td></tr></tbody>
           </table>
         </div>
       </div>
@@ -778,6 +816,7 @@ function nav(panel, el){
   if(panel==='installers') loadInstallers();
   if(panel==='leads') loadLeads(true);
   if(panel==='pending') loadPending();
+  if(panel==='pipeline') loadPipeline();
   if(panel==='niches') loadNiches();
   if(panel==='regions') loadRegions();
 }
@@ -1463,6 +1502,54 @@ function exportLeadsCsv(){
   const a=document.createElement('a'); a.href=url; a.download=`lgr-leads-${new Date().toISOString().slice(0,10)}.csv`;
   a.click(); URL.revokeObjectURL(url);
   toast(`Exported ${_leadsView.length} leads ✓`);
+}
+
+/* ════════════════════════════════════════════════════════════════════════
+   SALES PIPELINE (LGR's own B2B leads — company_id scoped by RLS to the
+   internal company, since that's the only company this admin belongs to)
+   ════════════════════════════════════════════════════════════════════════ */
+const PIPELINE_STAGE_LABEL = { new_lead:'New Lead', follow_up:'Follow Up', quote_in_progress:'Quote In Progress', quoted:'Quoted', closed_won:'Closed Won', closed_lost:'Closed Lost' };
+
+async function loadPipeline(){
+  $('sp-tbody').innerHTML='<tr><td colspan="8" class="empty">Loading…</td></tr>';
+  const stage = $('sp-stage').value;
+  let q = db.from('leads').select('*').order('created_at',{ascending:false});
+  if(stage) q = q.eq('pipeline_stage', stage);
+  const { data, error } = await q;
+  if(error){
+    $('sp-tbody').innerHTML = `<tr><td colspan="8" class="empty" style="color:var(--red)">${esc(error.message)}</td></tr>`;
+    return;
+  }
+  const rows = data||[];
+
+  setText('sp-total', rows.length);
+  setText('sp-new', rows.filter(l=>l.pipeline_stage==='new_lead').length);
+  setText('sp-progress', rows.filter(l=>['follow_up','quote_in_progress','quoted'].includes(l.pipeline_stage)).length);
+  setText('sp-won', rows.filter(l=>l.pipeline_stage==='closed_won').length);
+  setText('sp-lost', rows.filter(l=>l.pipeline_stage==='closed_lost').length);
+
+  $('sp-tbody').innerHTML = rows.length ? rows.map(l=>`<tr>
+      <td class="mono dim" style="white-space:nowrap">${fmtDateTime(l.created_at)}</td>
+      <td><strong>${esc(l.name||[l.first_name,l.last_name].filter(Boolean).join(' '))}</strong></td>
+      <td class="mono">${esc(l.phone||'-')}</td>
+      <td class="mono dim">${esc(l.email||'-')}</td>
+      <td>${esc(l.company||'-')}</td>
+      <td class="dim">${esc(l.source||'-')}</td>
+      <td class="dim" style="max-width:220px;white-space:normal;font-size:11px">${esc(l.notes||'-')}</td>
+      <td class="acts">
+        <select class="fs" style="font-size:10.5px;padding:3px 6px;width:auto" onchange="updatePipelineStage('${l.id}',this.value,this)">
+          ${Object.entries(PIPELINE_STAGE_LABEL).map(([v,label])=>`<option value="${v}" ${l.pipeline_stage===v?'selected':''}>${label}</option>`).join('')}
+        </select>
+      </td>
+    </tr>`).join('') : '<tr><td colspan="8" class="empty">No leads yet.</td></tr>';
+}
+
+async function updatePipelineStage(id, stage, sel){
+  sel.disabled=true;
+  const { error } = await db.from('leads').update({ pipeline_stage: stage }).eq('id',id);
+  sel.disabled=false;
+  if(error){ toast('Update failed: '+error.message, true); return; }
+  toast(`Moved to ${PIPELINE_STAGE_LABEL[stage]||stage} ✓`); loadPipeline();
 }
 
 /* ════════════════════════════════════════════════════════════════════════
