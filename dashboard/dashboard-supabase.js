@@ -1353,26 +1353,50 @@ async function loadActiveOrdersDash() {
   if (!panel || !body || !currentCompanyId) return;
 
   // Assets rent at a flat monthly rate with a guaranteed lead floor, so the
-  // useful figure is what you hold and what it is contracted to deliver.
+  // useful figures are what you hold, what it's contracted to deliver, and
+  // what's actually landed so far this cycle.
+  const { data: insts } = await sb
+    .from("installers").select("id").eq("company_id", currentCompanyId);
+  const instIds = (insts || []).map((i) => i.id);
+  if (!instIds.length) { panel.style.display = "none"; return; }
+
   const { data: rentals } = await sb
     .from("rentals")
-    .select("*, assets(tier, niches(name), regions(name, state))")
+    .select("*, assets(id, tier, rented_until, niches(name), regions(name, state))")
+    .in("installer_id", instIds)
     .is("ended_at", null)
     .order("started_at", { ascending: false });
 
   if (!rentals?.length) { panel.style.display = "none"; return; }
   panel.style.display = "";
 
-  body.innerHTML = rentals.map((r) => {
+  // Current cycle = the 30 days ending on the asset's next renewal date.
+  const counts = await Promise.all(rentals.map((r) => {
     const a = r.assets || {};
+    if (!a.id || !a.rented_until) return Promise.resolve(0);
+    const cycleStart = new Date(a.rented_until);
+    cycleStart.setDate(cycleStart.getDate() - 30);
+    return sb.from("asset_leads")
+      .select("id", { count: "exact", head: true })
+      .eq("installer_id", r.installer_id)
+      .eq("asset_id", a.id)
+      .gte("captured_at", cycleStart.toISOString())
+      .then(({ count }) => count || 0);
+  }));
+
+  body.innerHTML = rentals.map((r, i) => {
+    const a = r.assets || {};
+    const delivered = counts[i];
+    const floor = r.floor_leads ?? null;
+    const short = floor != null && delivered < floor;
     return `<div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 0;border-bottom:1px solid var(--border)">
       <div>
         <div style="font-weight:500">${escapeHtml(a.regions?.name || "Asset")}</div>
         <div style="font-size:12px;color:var(--muted)">${escapeHtml(a.niches?.name || "")}</div>
       </div>
       <div style="text-align:right">
-        <div style="font-weight:600">${r.floor_leads ?? "-"} leads/mo</div>
-        <div style="font-size:12px;color:var(--muted)">guaranteed floor</div>
+        <div style="font-weight:600">${delivered} of ${floor ?? "-"} leads<span style="color:${short ? "var(--muted)" : "#0f8a4d"}">${short ? "" : " ✓"}</span></div>
+        <div style="font-size:12px;color:var(--muted)">this cycle · ${floor ?? "-"} guaranteed</div>
       </div>
     </div>`;
   }).join("");
@@ -5724,20 +5748,20 @@ async function loadMyRentals() {
   const count   = document.getElementById('rentMineCount');
 
   try {
-    const { data: company } = await sb
-      .from('companies').select('name').eq('id', currentCompanyId).maybeSingle();
+    // Rentals hang off installers, linked to this dashboard account via
+    // installers.company_id (set when the rental is paid for). One company
+    // can hold more than one installer row if they rented before an account
+    // existed and again after, so pull every rental across all of them.
+    const { data: insts } = await sb
+      .from('installers').select('id').eq('company_id', currentCompanyId);
 
-    // Rentals hang off installers, which are keyed by the business name used at
-    // checkout rather than by company_id, so match on that.
-    const { data: inst } = await sb
-      .from('installers').select('id').eq('business_name', company?.name || '').maybeSingle();
-
-    if (!inst) { _rentMine = []; }
+    const instIds = (insts || []).map((i) => i.id);
+    if (!instIds.length) { _rentMine = []; }
     else {
       const { data } = await sb
         .from('rentals')
         .select('*, assets(brand_name, brand_domain, tier, niches(name), regions(name, state, slug))')
-        .eq('installer_id', inst.id)
+        .in('installer_id', instIds)
         .order('created_at', { ascending: false });
       _rentMine = data || [];
     }

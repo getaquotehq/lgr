@@ -28,6 +28,7 @@ const supabase = createClient(
   Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
 )
 const STRIPE_WEBHOOK_SECRET = Deno.env.get('STRIPE_WEBHOOK_SECRET')!
+const SITE = 'https://leadgenrentals.com.au'
 
 serve(async (req) => {
   const sig = req.headers.get('stripe-signature')
@@ -45,7 +46,12 @@ serve(async (req) => {
     if (event.type === 'checkout.session.completed') {
       const session = event.data.object as Stripe.Checkout.Session
       const m = session.metadata || {}
-      if (m.type === 'asset_rental') {
+      // asset_trial (the 5-lead trial) activates the exact same way as a
+      // normal rental - it's still a subscription, just with a locked-price
+      // trial invoice riding along and a trial_period_days delay before the
+      // recurring price starts. Without this branch a trial checkout never
+      // marks the asset rented and never opens an installer/rentals row.
+      if (m.type === 'asset_rental' || m.type === 'asset_trial') {
         await activateRental(session, m)
       }
     } else if (event.type === 'customer.subscription.deleted') {
@@ -94,8 +100,24 @@ async function activateRental(session: Stripe.Checkout.Session, m: Record<string
   console.log('Rental activated:', JSON.stringify(data))
 
   const to = m.email || session.customer_details?.email || ''
+  const installerId = (data as { installer_id?: string } | null)?.installer_id
+
+  // Link this rental to a dashboard (HQ) login - new account if the email is
+  // new, otherwise attach to the existing one. Best-effort: a failure here
+  // never undoes the (already active) rental.
+  let magicLink: string | null = null
+  if (installerId && to) {
+    magicLink = await provisionDashboardAccount(
+      installerId, to, m.business_name || '', m.contact_name || null,
+      m.phone || null, customerId, session.id,
+    ).catch(err => {
+      console.error('provisionDashboardAccount failed (non-fatal):', err)
+      return null
+    })
+  }
+
   if (to) {
-    await sendConfirmationEmail(to, m).catch(err =>
+    await sendConfirmationEmail(to, m, magicLink).catch(err =>
       console.error('confirmation email failed (non-fatal):', err))
   }
 
@@ -103,8 +125,104 @@ async function activateRental(session: Stripe.Checkout.Session, m: Record<string
     console.error('rental-paid notice failed (non-fatal):', err))
 }
 
+// Link (or create) the dashboard account that owns this installer, then hand
+// back a one-click login link for the renter. Same self-service model as the
+// rest of LGR: no admin step required.
+//
+//   - installer already linked (company_id set)      -> just refresh the link
+//   - a companies row already exists for this email   -> attach to it
+//   - neither exists                                  -> create a new account
+//     (handle_new_user() trigger creates companies + profiles synchronously
+//     off auth.users metadata - same mechanism create-user-silent uses)
+//
+// The link is also stashed in pending_magic_links (keyed by the Stripe
+// checkout session id) so fleet.html's post-checkout banner can poll
+// get-magic-link and offer a "go to your dashboard" button without emailing
+// being the only path in.
+async function provisionDashboardAccount(
+  installerId: string,
+  email: string,
+  businessName: string,
+  contactName: string | null,
+  phone: string | null,
+  stripeCustomerId: string | null,
+  sessionId: string,
+): Promise<string | null> {
+  const normalisedEmail = email.trim().toLowerCase()
+
+  const { data: installer, error: instErr } = await supabase
+    .from('installers')
+    .select('company_id')
+    .eq('id', installerId)
+    .maybeSingle()
+  if (instErr) throw instErr
+
+  let companyId = (installer?.company_id as string | null) || null
+
+  if (!companyId) {
+    const { data: existingCompany } = await supabase
+      .from('companies')
+      .select('id')
+      .eq('email', normalisedEmail)
+      .maybeSingle()
+
+    if (existingCompany) {
+      companyId = existingCompany.id as string
+    } else {
+      const { data: newUser, error: createErr } = await supabase.auth.admin.createUser({
+        email: normalisedEmail,
+        email_confirm: true,
+        user_metadata: {
+          full_name: contactName || businessName,
+          user_type: 'external',
+          company_name: businessName,
+        },
+      })
+      if (createErr || !newUser?.user) throw createErr || new Error('createUser returned no user')
+
+      // handle_new_user() runs synchronously on the auth.users insert, but poll
+      // briefly for replication safety (same pattern as create-user-silent).
+      for (let attempt = 0; attempt < 8 && !companyId; attempt++) {
+        if (attempt > 0) await new Promise((r) => setTimeout(r, 200))
+        const { data: profileRow } = await supabase
+          .from('profiles')
+          .select('company_id')
+          .eq('id', newUser.user.id)
+          .maybeSingle()
+        if (profileRow?.company_id) companyId = profileRow.company_id as string
+      }
+      if (!companyId) throw new Error('company_id never appeared after createUser')
+    }
+
+    await supabase.from('companies').update({
+      email: normalisedEmail,
+      ...(phone ? { phone } : {}),
+      ...(stripeCustomerId ? { stripe_customer_id: stripeCustomerId } : {}),
+    }).eq('id', companyId)
+
+    await supabase.from('installers').update({ company_id: companyId }).eq('id', installerId)
+  }
+
+  // One-click login, regardless of new vs existing account.
+  const { data: linkData, error: linkErr } = await supabase.auth.admin.generateLink({
+    type: 'magiclink',
+    email: normalisedEmail,
+    options: { redirectTo: `${SITE}/dashboard/index.html` },
+  })
+  if (linkErr || !linkData?.properties?.action_link) {
+    throw linkErr || new Error('generateLink returned no action_link')
+  }
+
+  await supabase.from('pending_magic_links').upsert({
+    stripe_session_id: sessionId,
+    magic_link: linkData.properties.action_link,
+  })
+
+  return linkData.properties.action_link
+}
+
 // Confirmation email to the renter (Resend, best-effort).
-async function sendConfirmationEmail(to: string, m: Record<string, string>) {
+async function sendConfirmationEmail(to: string, m: Record<string, string>, magicLink: string | null) {
   const apiKey = Deno.env.get('RESEND_API_KEY')
   const fromEmail = Deno.env.get('RESEND_FROM_EMAIL')
   if (!apiKey || !fromEmail) {
@@ -148,6 +266,16 @@ async function sendConfirmationEmail(to: string, m: Record<string, string>) {
       nothing to set up. The moment a homeowner submits, our AI texts them in your name within ~60 seconds, and the lead
       lands with you. First leads typically arrive within a few days.
     </p>
+    ${magicLink ? `
+    <p style="margin:22px 0 0">
+      <a href="${esc(magicLink)}" style="display:inline-block;background:#0D1117;color:#ffffff;text-decoration:none;padding:12px 22px;border-radius:8px;font-size:14px;font-weight:600">
+        Go to your dashboard &rarr;
+      </a>
+    </p>
+    <p style="font-size:12px;line-height:1.5;color:#98A0A8;margin:10px 0 0">
+      This is where your leads, conversations and account live. The link above logs you straight in and expires after
+      one use - if it's already expired, use "Forgot password" at leadgenrentals.com.au/dashboard.
+    </p>` : ''}
     <p style="font-size:13px;line-height:1.55;color:#656D76;margin:18px 0 0">
       Billed month to month in advance - cancel any time before your next cycle from your Stripe receipt, no lock-in.
       Questions? Just reply to this email.

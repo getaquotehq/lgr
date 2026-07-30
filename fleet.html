@@ -450,10 +450,39 @@ const _back = $('#backLink'); if(_back){ _back.textContent = NC.back; _back.href
   const el = $('#checkoutBanner'); if(!el || !state) return;
   if(state === 'success'){
     el.innerHTML = `<div class="banner ok"><span>✓</span><span><b>Payment received - your asset is now yours.</b> We'll email a welcome note shortly and your engine goes live within days. Every lead it makes is delivered to you alone.</span></div>`;
+    const sessionId = q.get('session_id');
+    if(sessionId) pollForDashboardLink(sessionId, el);
   } else if(state === 'cancelled'){
     el.innerHTML = `<div class="banner info"><span>↩</span><span><b>Checkout cancelled - no charge was made.</b> The asset is still open. Pick it below whenever you're ready.</span></div>`;
   }
 })();
+
+// The webhook that provisions/links the dashboard account fires async after
+// Stripe redirects back here, so poll get-magic-link for a few seconds rather
+// than assume it's ready. If it never lands, the confirmation email carries
+// the same one-click link, so this is a convenience, not the only way in.
+async function pollForDashboardLink(sessionId, bannerEl){
+  const cfg = window.LGR_SUPABASE || {};
+  if(!cfg.url || !cfg.anonKey) return;
+  const url = `${cfg.url}/functions/v1/get-magic-link?session_id=${encodeURIComponent(sessionId)}`;
+  for(let attempt = 0; attempt < 8; attempt++){
+    await new Promise(r => setTimeout(r, 2500));
+    try{
+      const res = await fetch(url, { headers: { apikey: cfg.anonKey, Authorization: `Bearer ${cfg.anonKey}` } });
+      if(res.status === 202) continue; // webhook hasn't finished yet
+      if(!res.ok) return;
+      const data = await res.json();
+      if(data.url){
+        const cta = document.createElement('div');
+        cta.className = 'banner ok';
+        cta.style.marginTop = '10px';
+        cta.innerHTML = `<span>→</span><span><b>Your dashboard is ready.</b> <a href="${esc(data.url)}" style="color:inherit;text-decoration:underline;font-weight:600">Go to your dashboard</a> to watch leads land in real time.</span>`;
+        bannerEl.appendChild(cta);
+      }
+      return;
+    }catch(e){ return; } // best-effort - the confirmation email is the fallback
+  }
+}
 
 /* the "vehicle photo": a landing page in browser chrome (brand slots = DB row) */
 function shot(item, big){

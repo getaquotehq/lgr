@@ -464,10 +464,43 @@ function clearSay(){ $('#msg').className = 'msg'; }
 
 /* checkout return banner */
 (function(){
-  var st = new URLSearchParams(location.search).get('checkout');
-  if(st === 'success') say("You're in. Check your email for the receipt - your engine is being switched on now.", true);
+  var q = new URLSearchParams(location.search);
+  var st = q.get('checkout');
+  if(st === 'success'){
+    say("You're in. Check your email for the receipt - your engine is being switched on now.", true);
+    var sessionId = q.get('session_id');
+    if(sessionId) pollForDashboardLink(sessionId);
+  }
   else if(st === 'cancelled') say('Checkout cancelled - nothing was charged. Your trial spot is still here.', false);
 })();
+
+// The webhook that provisions/links the dashboard account fires async after
+// Stripe redirects back here, so poll get-magic-link for a few seconds rather
+// than assume it's ready. If it never lands, the confirmation email carries
+// the same one-click link, so this is a convenience, not the only way in.
+async function pollForDashboardLink(sessionId){
+  if(!cfg.url || !cfg.anonKey) return;
+  var url = cfg.url + '/functions/v1/get-magic-link?session_id=' + encodeURIComponent(sessionId);
+  for(var attempt = 0; attempt < 8; attempt++){
+    await new Promise(function(r){ setTimeout(r, 2500); });
+    try{
+      var res = await fetch(url, { headers: { apikey: cfg.anonKey, Authorization: 'Bearer ' + cfg.anonKey } });
+      if(res.status === 202) continue; // webhook hasn't finished yet
+      if(!res.ok) return;
+      var data = await res.json();
+      if(data.url){
+        var m = $('#msg');
+        var a = document.createElement('a');
+        a.href = data.url;
+        a.textContent = 'Go to your dashboard →';
+        a.style.cssText = 'display:inline-block;margin-top:10px;font-weight:600;color:inherit;text-decoration:underline';
+        m.appendChild(document.createElement('br'));
+        m.appendChild(a);
+      }
+      return;
+    }catch(e){ return; } // best-effort - the confirmation email is the fallback
+  }
+}
 
 /* Load available assets: only 'available' ones can be trialled. */
 async function boot(){

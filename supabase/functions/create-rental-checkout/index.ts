@@ -217,9 +217,12 @@ serve(async (req) => {
         },
         ...(isTrial ? { trial_period_days: TRIAL_DAYS } : {}),
       },
+      // session_id lets the landing page poll get-magic-link for a one-click
+      // way into the dashboard once the webhook has provisioned the account -
+      // {CHECKOUT_SESSION_ID} is a Stripe template string it fills in itself.
       success_url: isTrial
-        ? `${SITE}/trial.html?checkout=success&asset=${encodeURIComponent(asset_id)}`
-        : `${SITE}/fleet.html?checkout=success&asset=${encodeURIComponent(asset_id)}`,
+        ? `${SITE}/trial.html?checkout=success&asset=${encodeURIComponent(asset_id)}&session_id={CHECKOUT_SESSION_ID}`
+        : `${SITE}/fleet.html?checkout=success&asset=${encodeURIComponent(asset_id)}&session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: isTrial
         ? `${SITE}/trial.html?checkout=cancelled`
         : `${SITE}/fleet.html?checkout=cancelled`,
