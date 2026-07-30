@@ -86,6 +86,7 @@ async function activateRental(session: Stripe.Checkout.Session, m: Record<string
     p_stripe_customer_id: customerId,
     p_stripe_subscription_id: subscriptionId,
     p_stripe_session_id: session.id,
+    p_is_trial: m.type === 'asset_trial',
   })
   if (error) throw new Error(`activate_rental: ${error.message}`)
 
