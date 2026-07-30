@@ -55,6 +55,11 @@ main section{padding:24px 0 40px}
 .card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-lg);padding:26px;box-shadow:var(--sh-sm)}
 .grid2{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-top:8px}
 .legal-foot{margin-top:30px;padding-top:18px;border-top:1px solid var(--line);font-size:.9rem;color:var(--muted)}
+.field{margin-bottom:14px}
+.field label{display:block;font-size:.82rem;font-weight:550;color:var(--ink-2);margin-bottom:6px}
+.field input,.field textarea{width:100%;font-family:var(--sans);font-size:.95rem;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:var(--r);padding:10px 12px;outline:none}
+.field input:focus,.field textarea:focus{border-color:var(--blue);box-shadow:0 0 0 3px var(--blue-tint)}
+.field textarea{resize:vertical;min-height:80px}
 footer{background:var(--ink);border-top:1px solid var(--ink);padding:56px 0 40px;margin-top:40px}
 .foot-top{display:flex;justify-content:space-between;align-items:center;padding-bottom:32px;margin-bottom:32px;border-bottom:1px solid rgba(255,255,255,.1);gap:24px;flex-wrap:wrap}
 .foot-top .brand-logo{height:50px}
@@ -131,6 +136,25 @@ footer{background:var(--ink);border-top:1px solid var(--ink);padding:56px 0 40px
   <div class="card"><h3 style="margin-top:0">Email</h3>
     <p style="margin-bottom:16px"><a href="mailto:contact@leadgenrentals.com.au" style="font-size:1.1rem;font-weight:600">contact@leadgenrentals.com.au</a></p>
     <a href="mailto:contact@leadgenrentals.com.au" class="btn btn-primary">Send us an email</a></div>
+
+  <div class="card" style="margin-top:20px">
+    <h3 style="margin-top:0">Request a callback</h3>
+    <p style="margin-bottom:16px">Leave your details and we will call you back, usually within one business day.</p>
+    <form id="callbackForm" onsubmit="return submitCallback(event)">
+      <div class="grid2">
+        <div class="field"><label for="cb-name">Name</label><input id="cb-name" type="text" required></div>
+        <div class="field"><label for="cb-phone">Phone</label><input id="cb-phone" type="tel" required></div>
+      </div>
+      <div class="grid2">
+        <div class="field"><label for="cb-email">Email</label><input id="cb-email" type="email"></div>
+        <div class="field"><label for="cb-business">Business name</label><input id="cb-business" type="text"></div>
+      </div>
+      <div class="field"><label for="cb-message">What are you after?</label><textarea id="cb-message" rows="3"></textarea></div>
+      <input type="text" id="cb-website" name="website" tabindex="-1" autocomplete="off" aria-hidden="true" style="position:absolute;left:-9999px;top:-9999px;width:1px;height:1px;opacity:0">
+      <button class="btn btn-primary" type="submit" id="cb-submit">Request a callback</button>
+      <div id="cb-status" style="margin-top:10px;font-size:.88rem"></div>
+    </form>
+  </div>
   <div class="grid2" style="margin-top:20px">
     <div class="card"><h3 style="margin-top:0">New service businesses</h3><p style="margin-bottom:10px">Want to see what is available for your trade and area? Browse open assets and check live availability.</p><p style="margin-bottom:0"><a href="/#trades">Browse trades</a></p></div>
     <div class="card"><h3 style="margin-top:0">Existing renters</h3><p style="margin-bottom:0">Questions about your leads, billing or cancelling a rental? Email us and reference your business name.</p></div>
@@ -162,6 +186,33 @@ const b=document.getElementById('burger'),m=document.getElementById('mobileMenu'
 const t=o=>{b.classList.toggle('on',o);m.classList.toggle('on',o);document.body.classList.toggle('menu-open',o);b.setAttribute('aria-expanded',o)};
 b.addEventListener('click',()=>t(!b.classList.contains('on')));
 m.querySelectorAll('a').forEach(a=>a.addEventListener('click',()=>t(false)));
+
+const CALLBACK_WEBHOOK_URL='https://hook.eu2.make.com/q9r8133q5kwr793yoihsjvlnb66b38zc';
+async function submitCallback(e){
+  e.preventDefault();
+  if(document.getElementById('cb-website').value.trim()) return false; // honeypot
+  const btn=document.getElementById('cb-submit'),status=document.getElementById('cb-status');
+  const payload={
+    name:document.getElementById('cb-name').value.trim(),
+    phone:document.getElementById('cb-phone').value.trim(),
+    email:document.getElementById('cb-email').value.trim(),
+    business:document.getElementById('cb-business').value.trim(),
+    message:document.getElementById('cb-message').value.trim(),
+    page:location.href,
+  };
+  btn.disabled=true; btn.textContent='Sending…'; status.textContent=''; status.style.color='';
+  try{
+    const res=await fetch(CALLBACK_WEBHOOK_URL,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+    if(!res.ok) throw new Error('Request failed');
+    document.getElementById('callbackForm').reset();
+    status.textContent='Thanks — we\'ll be in touch soon.'; status.style.color='var(--green)';
+  }catch(err){
+    status.textContent='Something went wrong. Please email us instead.'; status.style.color='#c0392b';
+  }finally{
+    btn.disabled=false; btn.textContent='Request a callback';
+  }
+  return false;
+}
 </script>
 </body>
 </html>
