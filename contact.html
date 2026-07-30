@@ -203,7 +203,7 @@ async function submitCallback(e){
     const res=await fetch(CALLBACK_WEBHOOK_URL,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
     if(!res.ok) throw new Error('Request failed');
     document.getElementById('callbackForm').reset();
-    status.textContent='Thanks — we\'ll be in touch soon.'; status.style.color='var(--green)';
+    status.textContent='Thanks, we\'ll be in touch soon.'; status.style.color='var(--green)';
   }catch(err){
     status.textContent='Something went wrong. Please email us instead.'; status.style.color='#c0392b';
   }finally{

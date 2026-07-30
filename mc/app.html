@@ -504,7 +504,7 @@ td.mono{font-family:var(--mono);font-size:12px}
       <!-- ═══ SALES PIPELINE ═══ -->
       <div class="panel" id="panel-pipeline">
         <div class="ph">
-          <div class="ph-left"><h1>Sales Pipeline</h1><p>LGR's own B2B leads — installers inquiring about renting assets</p></div>
+          <div class="ph-left"><h1>Sales Pipeline</h1><p>LGR's own B2B leads: installers inquiring about renting assets</p></div>
           <div class="ph-right">
             <select class="fs" id="sp-stage" onchange="loadPipeline()" style="width:auto">
               <option value="">All stages</option>
@@ -1505,7 +1505,7 @@ function exportLeadsCsv(){
 }
 
 /* ════════════════════════════════════════════════════════════════════════
-   SALES PIPELINE (LGR's own B2B leads — company_id scoped by RLS to the
+   SALES PIPELINE (LGR's own B2B leads, company_id scoped by RLS to the
    internal company, since that's the only company this admin belongs to)
    ════════════════════════════════════════════════════════════════════════ */
 const PIPELINE_STAGE_LABEL = { new_lead:'New Lead', follow_up:'Follow Up', quote_in_progress:'Quote In Progress', quoted:'Quoted', closed_won:'Closed Won', closed_lost:'Closed Lost' };
