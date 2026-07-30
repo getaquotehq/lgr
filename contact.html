@@ -180,13 +180,14 @@ footer{background:var(--ink);border-top:1px solid var(--ink);padding:56px 0 40px
     <div class="foot"><p class="fine">© 2026 Lead Gen Rentals. Lead Gen Rentals runs paid advertising on its own accounts and delivers the resulting leads to a single service business per asset. A lead means a form submission containing a name and an Australian mobile number, captured with named consent to be contacted by that service business. Every lead is delivered to one service business only. Each class carries a guaranteed floor of leads per 30-day period. Where the floor is not met within the period, Lead Gen Rentals will at the service business's election either continue running the campaign at its own cost until the floor is reached, or refund the shortfall pro-rata at the floor rate (period fee ÷ floor). Volume above the floor is typical and varies with market conditions and season; it is not guaranteed. Lead Gen Rentals does not guarantee that any lead will answer, quote or convert. Where a service business holds multiple assets in one area, Lead Gen Rentals maps audiences and creative to minimise overlap and bears any resulting increase in its own advertising costs. Billed month to month in advance - cancel any time before your next cycle begins, no lock-in and no exit fee.</p></div>
   </div>
 </footer>
+<script src="supabase-config.js"></script>
 <script>
 const b=document.getElementById('burger'),m=document.getElementById('mobileMenu');
 const t=o=>{b.classList.toggle('on',o);m.classList.toggle('on',o);document.body.classList.toggle('menu-open',o);b.setAttribute('aria-expanded',o)};
 b.addEventListener('click',()=>t(!b.classList.contains('on')));
 m.querySelectorAll('a').forEach(a=>a.addEventListener('click',()=>t(false)));
 
-const CALLBACK_WEBHOOK_URL='https://hook.eu2.make.com/q9r8133q5kwr793yoihsjvlnb66b38zc';
+const cfg=window.LGR_SUPABASE||{};
 async function submitCallback(e){
   e.preventDefault();
   const btn=document.getElementById('cb-submit'),status=document.getElementById('cb-status');
@@ -196,11 +197,10 @@ async function submitCallback(e){
     email:document.getElementById('cb-email').value.trim(),
     business:document.getElementById('cb-business').value.trim(),
     message:document.getElementById('cb-message').value.trim(),
-    page:location.href,
   };
   btn.disabled=true; btn.textContent='Sending…'; status.textContent=''; status.style.color='';
   try{
-    const res=await fetch(CALLBACK_WEBHOOK_URL,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+    const res=await fetch(cfg.url+'/functions/v1/contact-callback-request',{method:'POST',headers:{'Content-Type':'application/json',apikey:cfg.anonKey,Authorization:'Bearer '+cfg.anonKey},body:JSON.stringify(payload)});
     if(!res.ok) throw new Error('Request failed');
     document.getElementById('callbackForm').reset();
     status.textContent='Thanks, we\'ll be in touch soon.'; status.style.color='var(--green)';

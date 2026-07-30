@@ -46,11 +46,12 @@ serve(async (req) => {
     if (event.type === 'checkout.session.completed') {
       const session = event.data.object as Stripe.Checkout.Session
       const m = session.metadata || {}
-      // asset_trial (the 5-lead trial) activates the exact same way as a
-      // normal rental - it's still a subscription, just with a locked-price
-      // trial invoice riding along and a trial_period_days delay before the
-      // recurring price starts. Without this branch a trial checkout never
-      // marks the asset rented and never opens an installer/rentals row.
+      // asset_trial (the 5-lead trial) activates the same way as a normal
+      // rental, reserving the asset and opening an installer/rentals row -
+      // but it's a one-off `payment` mode session, not a subscription, so
+      // session.subscription is null here and activate_rental stores a null
+      // stripe_subscription_id. Nothing bills again automatically; continuing
+      // past the trial is a separate checkout the renter starts themselves.
       if (m.type === 'asset_rental' || m.type === 'asset_trial') {
         await activateRental(session, m)
       }

@@ -5,13 +5,18 @@
 // the installer isn't a Supabase user yet - they become one (well, an
 // `installers` row) only once the Stripe payment completes, via stripe-webhook.
 //
-// LGR rentals are billed month-to-month in advance, so this creates a Stripe
-// Checkout Session in `subscription` mode with an inline recurring monthly
-// price. The price and floor are read from the DB - the client is never
-// trusted with the amount.
+// LGR rentals are billed month-to-month in advance, so a normal rental creates
+// a Stripe Checkout Session in `subscription` mode with an inline recurring
+// monthly price. The price and floor are read from the DB - the client is
+// never trusted with the amount.
+//
+// The 5-lead trial (trial: true) is a completely separate, one-off `payment`
+// mode session - no subscription, no recurring price, nothing scheduled to
+// bill later. Continuing past the trial is a separate checkout the renter
+// starts themselves.
 //
 // Request (JSON):
-//   { asset_id, business_name, contact_name, email, phone }
+//   { asset_id, business_name, contact_name, email, phone, trial? }
 // Response: { url }  → the browser redirects to Stripe.
 //
 // GST is added by Stripe Tax via automatic_tax below (uses the account's tax
@@ -77,7 +82,7 @@ async function notifyCheckoutStarted(d: {
       ${row('Phone', esc(d.phone) || '-')}
       ${row('Asset', esc(d.brand_name))}
       ${row('Trade', esc(d.niche) + (d.region ? ' - ' + esc(d.region) : '') + ' (' + esc(d.tier) + ')')}
-      ${d.is_trial ? row('Trial', '5 leads @ $78 = $390 + GST, then monthly after 14 days') : ''}
+      ${d.is_trial ? row('Trial', '5 leads @ $78 = $390 + GST, one-off charge, no subscription') : ''}
       ${row('Rental', money(d.price) + ' + GST / 30 days')}
       ${row('Floor', d.floor + ' leads')}
       ${row('Stripe session', `<code>${esc(d.session_id)}</code>`)}
@@ -140,7 +145,32 @@ serve(async (req) => {
     const existing = await stripe.customers.list({ email: String(email).trim(), limit: 1 })
     if (existing.data.length) customerId = existing.data[0].id
 
-    const lineItem: Stripe.Checkout.SessionCreateParams.LineItem = {
+    // ── 5-lead trial (public /trial offer) ────────────────────────────────────
+    // A pure one-off payment - mode 'payment', not 'subscription'. No recurring
+    // price, no subscription_data, no trial_period_days. Nothing about the
+    // ongoing monthly rental is created or scheduled here; if the renter wants
+    // to continue after the trial, that's a separate, deliberate checkout.
+    const TRIAL_LEADS = 5
+    const TRIAL_RATE  = 78                                      // $/lead, locked
+    const TRIAL_TOTAL = Math.round(TRIAL_LEADS * TRIAL_RATE * 100)  // cents
+
+    const trialLineItem: Stripe.Checkout.SessionCreateParams.LineItem = {
+      price_data: {
+        currency: 'aud',
+        unit_amount: TRIAL_TOTAL,
+        tax_behavior: 'exclusive',
+        product_data: {
+          name: `${asset.brand_name} - ${TRIAL_LEADS}-lead trial`,
+          description:
+            `${TRIAL_LEADS} exclusive ${nicheName} leads${regionName ? ' - ' + regionName : ''}, ` +
+            `guaranteed and delivered over 7-14 days, at a locked $${TRIAL_RATE} per lead. ` +
+            `Yours alone, never shared or resold. One-off charge, not a subscription.`,
+        },
+      },
+      quantity: 1,
+    }
+
+    const rentalLineItem: Stripe.Checkout.SessionCreateParams.LineItem = {
       price_data: {
         currency: 'aud',
         unit_amount: price * 100,
@@ -153,44 +183,14 @@ serve(async (req) => {
       quantity: 1,
     }
 
-    // ── 5-lead trial (unlisted /trial offer) ─────────────────────────────────
-    // Charged up-front as a one-off invoice item on the same Checkout Session:
-    // 5 guaranteed leads at the locked TRIAL_RATE, delivered over 7-14 days.
-    // The ongoing rental is created with a matching trial_period_days, so the
-    // monthly plan auto-starts (auto checkout) when the trial window closes -
-    // cancellable any time before then.
-    const TRIAL_LEADS = 5
-    const TRIAL_RATE  = 78                                      // $/lead, locked
-    const TRIAL_TOTAL = Math.round(TRIAL_LEADS * TRIAL_RATE * 100)  // cents
-    const TRIAL_DAYS  = 14
-
     const session = await stripe.checkout.sessions.create({
-      mode: 'subscription',
+      mode: isTrial ? 'payment' : 'subscription',
       payment_method_types: ['card'],
       ...(customerId ? { customer: customerId } : { customer_email: String(email).trim() }),
       // Uses the account's Stripe Tax settings (GST) - required to make tax
       // apply to an API-created Checkout Session.
       automatic_tax: { enabled: true },
-      line_items: [lineItem],
-      ...(isTrial
-        ? {
-          add_invoice_items: [{
-            price_data: {
-              currency: 'aud',
-              unit_amount: TRIAL_TOTAL,
-              tax_behavior: 'exclusive',
-              product_data: {
-                name: `${asset.brand_name} - ${TRIAL_LEADS}-lead trial`,
-                description:
-                  `${TRIAL_LEADS} exclusive ${nicheName} leads${regionName ? ' - ' + regionName : ''}, ` +
-                  `guaranteed and delivered over 7-14 days, at a locked $${TRIAL_RATE} per lead. ` +
-                  `Yours alone, never shared or resold.`,
-              },
-            },
-            quantity: 1,
-          }],
-        }
-        : {}),
+      line_items: [isTrial ? trialLineItem : rentalLineItem],
       metadata: {
         type: isTrial ? 'asset_trial' : 'asset_rental',
         asset_id: String(asset_id),
@@ -205,26 +205,22 @@ serve(async (req) => {
             trial_leads: String(TRIAL_LEADS),
             trial_rate_aud: String(TRIAL_RATE),
             trial_total_aud: String((TRIAL_TOTAL / 100).toFixed(2)),
-            trial_days: String(TRIAL_DAYS),
           }
           : {}),
       },
-      subscription_data: {
-        metadata: {
-          type: isTrial ? 'asset_trial' : 'asset_rental',
-          asset_id: String(asset_id),
-          ...(isTrial ? { trial_leads: String(TRIAL_LEADS) } : {}),
+      ...(isTrial ? {} : {
+        subscription_data: {
+          metadata: { type: 'asset_rental', asset_id: String(asset_id) },
         },
-        ...(isTrial ? { trial_period_days: TRIAL_DAYS } : {}),
-      },
+      }),
       // session_id lets the landing page poll get-magic-link for a one-click
       // way into the dashboard once the webhook has provisioned the account -
       // {CHECKOUT_SESSION_ID} is a Stripe template string it fills in itself.
       success_url: isTrial
-        ? `${SITE}/trial.html?checkout=success&asset=${encodeURIComponent(asset_id)}&session_id={CHECKOUT_SESSION_ID}`
+        ? `${SITE}/solar-trial.html?checkout=success&asset=${encodeURIComponent(asset_id)}&session_id={CHECKOUT_SESSION_ID}`
         : `${SITE}/fleet.html?checkout=success&asset=${encodeURIComponent(asset_id)}&session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: isTrial
-        ? `${SITE}/trial.html?checkout=cancelled`
+        ? `${SITE}/solar-trial.html?checkout=cancelled`
         : `${SITE}/fleet.html?checkout=cancelled`,
     })
 
