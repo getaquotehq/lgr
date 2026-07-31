@@ -69,7 +69,12 @@ async function notifyCheckoutStarted(d: {
     console.warn('checkout-started notice skipped: RESEND_* not configured')
     return
   }
-  const esc = (s: string) => String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+  const esc = (s: string) => String(s ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;')
   const money = (n: number) => '$' + Number(n).toLocaleString('en-AU')
   const row = (k: string, v: string) =>
     `<tr><td style="padding:4px 14px 4px 0;color:#656D76">${k}</td><td><strong>${v}</strong></td></tr>`

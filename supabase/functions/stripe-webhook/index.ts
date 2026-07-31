@@ -259,7 +259,12 @@ async function sendConfirmationEmail(to: string, m: Record<string, string>, magi
   const tmax = (asset as any)?.typical_max
   const range = tmin && tmax ? `typically ${tmin}-${tmax} leads` : ''
   const money = (n: number) => '$' + Number(n).toLocaleString('en-AU')
-  const esc = (s: string) => String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+  const esc = (s: string) => String(s ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;')
   const firstName = (m.contact_name || '').trim().split(/\s+/)[0] || 'there'
   const isTrial = m.type === 'asset_trial'
   const rushDelivery = isTrue(m.rush_delivery)
@@ -361,7 +366,12 @@ async function notifyRentalPaid(m: Record<string, string>, renterEmail: string, 
     .eq('id', m.asset_id)
     .maybeSingle()
 
-  const esc = (s: string) => String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+  const esc = (s: string) => String(s ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;')
   const money = (n: number) => '$' + Number(n).toLocaleString('en-AU')
   const brandName = (asset as any)?.brand_name || m.asset_id
   const nicheName = (asset as any)?.niches?.name || ''
