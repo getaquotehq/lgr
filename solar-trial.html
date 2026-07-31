@@ -14,23 +14,8 @@
   gtag('config', 'G-8X8ZEQ2V8Y');
 </script>
 <!-- @end-ga4 -->
-<!-- @meta-pixel -->
-<script>
-!function(f,b,e,v,n,t,s)
-{if(f.fbq)return;n=f.fbq=function(){n.callMethod?
-n.callMethod.apply(n,arguments):n.queue.push(arguments)};
-if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
-n.queue=[];t=b.createElement(e);t.async=!0;
-t.src=v;s=b.getElementsByTagName(e)[0];
-s.parentNode.insertBefore(t,s)}(window, document,'script',
-'https://connect.facebook.net/en_US/fbevents.js');
-fbq('init', '1264556364606702');
-fbq('track', 'PageView');
-</script>
-<noscript><img height="1" width="1" style="display:none"
-src="https://www.facebook.com/tr?id=1264556364606702&ev=PageView&noscript=1"
-/></noscript>
-<!-- @end-meta-pixel -->
+<script src="/meta-pixel.js"></script>
+<noscript><img height="1" width="1" style="display:none" src="https://www.facebook.com/tr?id=1264556364606702&ev=PageView&noscript=1" /></noscript>
 <meta name="color-scheme" content="light dark">
 <title>5-Lead Solar Trial | Lead Gen Rentals</title>
 <meta name="description" content="5 exclusive, carrier-verified solar homeowner enquiries for $78 each. One-off $390 trial, no subscription, delivered in 7-14 days.">
@@ -543,7 +528,7 @@ function clearSay(){ $('#msg').className = 'msg'; }
   var st = q.get('checkout');
   if(st === 'success'){
     say("You're in. Check your email for the receipt - your engine is being switched on now.", true);
-    if(typeof fbq==='function') fbq('track','Purchase',{value:390,currency:'AUD'});
+    if(window.lgrMetaTrackPurchase) window.lgrMetaTrackPurchase({value:390,currency:'AUD'});
     var sessionId = q.get('session_id');
     if(sessionId) pollForDashboardLink(sessionId);
   }
@@ -636,6 +621,7 @@ async function quickCapture(){
       }),
     });
     if(!res.ok) throw new Error();
+    if(window.lgrMetaTrackLead) window.lgrMetaTrackLead({content_name:'Solar trial quick capture'});
     msg.textContent = "Got it, we'll be in touch."; msg.style.color = 'var(--green)';
     btn.textContent = 'Saved ✓';
   }catch(e){
@@ -669,6 +655,7 @@ async function startTrial(){
     });
     var data = await res.json().catch(function(){ return {}; });
     if(!res.ok || !data.url) throw new Error(data.error || 'We could not start checkout. Please try again.');
+    if(window.lgrMetaTrackLead) window.lgrMetaTrackLead({content_name:'Solar trial checkout'});
     window.location.href = data.url;
   }catch(e){
     say(e.message || 'We could not start checkout. Please try again.', false);

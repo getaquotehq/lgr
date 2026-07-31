@@ -68,7 +68,7 @@ serve(async (req) => {
         company_id: profile.company_id,
         credits:    String(chosen.credits),
       },
-      success_url: 'https://leadgenrentals.com.au/dashboard/?sms_credits_success=true',
+      success_url: `https://leadgenrentals.com.au/dashboard/?sms_credits_success=true&value=${encodeURIComponent((chosen.cents / 100).toFixed(2))}&currency=AUD`,
       cancel_url:  'https://leadgenrentals.com.au/dashboard/',
     })
 

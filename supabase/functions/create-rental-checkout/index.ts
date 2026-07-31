@@ -217,8 +217,8 @@ serve(async (req) => {
       // way into the dashboard once the webhook has provisioned the account -
       // {CHECKOUT_SESSION_ID} is a Stripe template string it fills in itself.
       success_url: isTrial
-        ? `${SITE}/solar-trial.html?checkout=success&asset=${encodeURIComponent(asset_id)}&session_id={CHECKOUT_SESSION_ID}`
-        : `${SITE}/fleet.html?checkout=success&asset=${encodeURIComponent(asset_id)}&session_id={CHECKOUT_SESSION_ID}`,
+        ? `${SITE}/solar-trial.html?checkout=success&asset=${encodeURIComponent(asset_id)}&session_id={CHECKOUT_SESSION_ID}&value=${encodeURIComponent((TRIAL_TOTAL / 100).toFixed(2))}&currency=AUD`
+        : `${SITE}/fleet.html?checkout=success&asset=${encodeURIComponent(asset_id)}&session_id={CHECKOUT_SESSION_ID}&value=${encodeURIComponent(String(price))}&currency=AUD`,
       cancel_url: isTrial
         ? `${SITE}/solar-trial.html?checkout=cancelled`
         : `${SITE}/fleet.html?checkout=cancelled`,
