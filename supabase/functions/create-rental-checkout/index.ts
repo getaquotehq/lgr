@@ -61,7 +61,7 @@ async function notifyCheckoutStarted(d: {
   business_name: string; contact_name: string; email: string; phone: string
   brand_name: string; niche: string; region: string; tier: string
   price: number; floor: number; session_id: string; is_trial: boolean
-  rush_delivery: boolean; trial_total_aud: number
+  rush_delivery: boolean; trial_total_aud: number; service_type: string
 }) {
   const apiKey = Deno.env.get('RESEND_API_KEY')
   const fromEmail = Deno.env.get('RESEND_FROM_EMAIL')
@@ -88,6 +88,7 @@ async function notifyCheckoutStarted(d: {
       ${row('Phone', esc(d.phone) || '-')}
       ${row('Asset', esc(d.brand_name))}
       ${row('Trade', esc(d.niche) + (d.region ? ' - ' + esc(d.region) : '') + ' (' + esc(d.tier) + ')')}
+      ${d.is_trial ? row('Service type', esc(d.service_type === 'battery_retrofit' ? 'Battery Retrofit' : 'Residential Solar + Battery')) : ''}
       ${d.is_trial ? row('Trial', '5 leads @ $78 = $390 + GST, one-off charge, no subscription') : ''}
       ${d.is_trial && d.rush_delivery ? row('Rush Delivery', '$97 + GST · all 5 leads in 3-5 days or refund the $97') : ''}
       ${d.is_trial ? row('Charge today', money(d.trial_total_aud) + ' + GST') : ''}
@@ -116,9 +117,10 @@ serve(async (req) => {
   if (req.method !== 'POST') return json({ error: 'method_not_allowed' }, 405)
 
   try {
-    const { asset_id, business_name, contact_name, email, phone, trial, rush_delivery } = await req.json()
+    const { asset_id, business_name, contact_name, email, phone, trial, rush_delivery, service_type } = await req.json()
     const isTrial = trial === true
     const rushDelivery = isTrial && rush_delivery === true
+    const serviceType = String(service_type || 'residential_solar_battery').trim()
 
     if (!asset_id || !business_name || !email) {
       return json({ error: 'Missing required fields (asset_id, business_name, email)' }, 400)
@@ -231,6 +233,7 @@ serve(async (req) => {
         monthly_price_aud: String(price),
         floor_leads: String(asset.floor_leads),
         rush_delivery: rushDelivery ? 'true' : 'false',
+        service_type: serviceType,
         ...(isTrial
           ? {
             trial_leads: String(TRIAL_LEADS),
@@ -267,6 +270,7 @@ serve(async (req) => {
       monthly_price_aud: price,
       floor_leads: asset.floor_leads,
       rush_delivery: rushDelivery,
+      service_type: serviceType,
       stripe_session_id: session.id,
       stripe_customer_id: customerId || null,
       status: 'pending',
@@ -288,6 +292,7 @@ serve(async (req) => {
       is_trial: isTrial,
       rush_delivery: rushDelivery,
       trial_total_aud: trialTotalAud,
+      service_type: serviceType,
     }).catch((e) => console.error('notifyCheckoutStarted failed (non-fatal):', e))
 
     return json({ url: session.url })

@@ -196,6 +196,14 @@
   .addon b{display:block;font-size:.97rem;font-weight:620;letter-spacing:-.015em}
   .addon span{display:block;font-size:.84rem;color:var(--muted);line-height:1.55;margin-top:4px}
   .addon-total{font-size:.78rem;color:var(--muted);margin-top:8px}
+  .stype-group{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  .stype-opt{display:flex;gap:10px;align-items:flex-start;background:var(--bg);border:1px solid var(--line);
+    border-radius:var(--r);padding:13px 14px;cursor:pointer;transition:border-color .12s}
+  .stype-opt:has(input:checked){border-color:var(--blue);background:var(--blue-tint)}
+  .stype-opt input{width:16px;height:16px;margin-top:1px;accent-color:var(--blue);flex:0 0 auto;cursor:pointer}
+  .stype-opt b{display:block;font-size:.93rem;font-weight:620;letter-spacing:-.01em}
+  .stype-opt span{display:block;font-size:.78rem;color:var(--muted);line-height:1.45;margin-top:3px}
+  @media(max-width:480px){.stype-group{grid-template-columns:1fr}}
   .btn{width:100%;font-family:var(--sans);font-weight:650;font-size:1rem;border:none;
     background:var(--blue);color:#fff;padding:15px 20px;border-radius:9px;cursor:pointer;
     letter-spacing:-.01em;box-shadow:0 6px 18px -6px rgba(245,158,11,.6)}
@@ -448,6 +456,26 @@
       </div>
       <div class="frow" style="margin-top:-6px"><div class="fhint" id="t-avail"></div></div>
 
+      <div class="frow">
+        <label class="flabel">What are you looking for?</label>
+        <div class="stype-group">
+          <label class="stype-opt">
+            <input type="radio" name="t-stype" value="residential_solar_battery" checked>
+            <div>
+              <b>Residential Solar + Battery</b>
+              <span>Homeowners enquiring about solar panels, with or without battery storage</span>
+            </div>
+          </label>
+          <label class="stype-opt">
+            <input type="radio" name="t-stype" value="battery_retrofit">
+            <div>
+              <b>Battery Retrofit</b>
+              <span>Existing solar owners looking to add battery storage to their system</span>
+            </div>
+          </label>
+        </div>
+      </div>
+
       <div class="frow" id="t-quickcapture" style="display:none;background:var(--surface-2);border:1px solid var(--line);border-radius:var(--r);padding:12px 14px">
         <div style="font-size:.85rem;color:var(--ink-2);margin-bottom:8px">Not ready to buy right now? Leave your email and we'll follow up - no charge, no commitment.</div>
         <div style="display:flex;gap:8px">
@@ -635,6 +663,11 @@ function updateTrialCta(){
     : 'Buy 5 leads - $390 +GST →';
 }
 
+function getServiceType(){
+  var sel = document.querySelector('input[name="t-stype"]:checked');
+  return sel ? sel.value : 'residential_solar_battery';
+}
+
 async function quickCapture(){
   var email = $('#t-quickemail').value.trim();
   var msg = $('#t-quickmsg');
@@ -650,6 +683,7 @@ async function quickCapture(){
         email: email,
         trade: 'Solar',
         area: CHOSEN && CHOSEN.regions ? CHOSEN.regions.name : $('#t-area').value,
+        service_type: getServiceType(),
       }),
     });
     if(!res.ok) throw new Error();
@@ -682,7 +716,8 @@ async function startTrial(){
       headers:{ 'Content-Type':'application/json', apikey: cfg.anonKey, Authorization: 'Bearer ' + cfg.anonKey },
       body: JSON.stringify({
         asset_id: CHOSEN.id, business_name: business, contact_name: contact,
-        email: email, phone: phone, trial: true, rush_delivery: !!($('#t-rush') && $('#t-rush').checked)
+        email: email, phone: phone, trial: true, rush_delivery: !!($('#t-rush') && $('#t-rush').checked),
+        service_type: getServiceType()
       })
     });
     var data = await res.json().catch(function(){ return {}; });
