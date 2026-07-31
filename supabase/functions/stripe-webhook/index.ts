@@ -29,6 +29,11 @@ const supabase = createClient(
 )
 const STRIPE_WEBHOOK_SECRET = Deno.env.get('STRIPE_WEBHOOK_SECRET')!
 const SITE = 'https://leadgenrentals.com.au'
+const RUSH_DELIVERY_AUD = 97
+
+function isTrue(value: string | undefined) {
+  return value === 'true'
+}
 
 serve(async (req) => {
   const sig = req.headers.get('stripe-signature')
@@ -96,6 +101,13 @@ async function activateRental(session: Stripe.Checkout.Session, m: Record<string
       paid_at: new Date().toISOString(),
       stripe_subscription_id: subscriptionId,
       stripe_customer_id: customerId,
+      rush_delivery: isTrue(m.rush_delivery),
+    })
+    .eq('stripe_session_id', session.id)
+
+  await supabase.from('rentals')
+    .update({
+      rush_delivery: isTrue(m.rush_delivery),
     })
     .eq('stripe_session_id', session.id)
 
@@ -247,10 +259,53 @@ async function sendConfirmationEmail(to: string, m: Record<string, string>, magi
   const tmax = (asset as any)?.typical_max
   const range = tmin && tmax ? `typically ${tmin}-${tmax} leads` : ''
   const money = (n: number) => '$' + Number(n).toLocaleString('en-AU')
-  const esc = (s: string) => String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+  const esc = (s: string) => String(s ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;')
   const firstName = (m.contact_name || '').trim().split(/\s+/)[0] || 'there'
+  const isTrial = m.type === 'asset_trial'
+  const rushDelivery = isTrue(m.rush_delivery)
+  const trialTotal = Number(m.checkout_total_aud || m.trial_total_aud || 0) || 390
 
-  const html = `
+  const html = isTrial ? `
+  <div style="font-family:-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;max-width:560px;margin:0 auto;color:#0D1117">
+    <h2 style="font-size:20px;letter-spacing:-.02em;margin:0 0 6px">You're locked in, ${esc(firstName)}.</h2>
+    <p style="font-size:15px;line-height:1.55;color:#3A424D;margin:0 0 18px">
+      Your 5-lead trial for <strong>${esc(brandName)}</strong>${regionName ? ' in ' + esc(regionName) : ''} is now live.
+      Every ${esc(nicheName)} lead that lands is yours alone, with your business named on the homeowner's consent.
+    </p>
+    <table style="border-collapse:collapse;font-size:14px;width:100%;border:1px solid #E6E8EB;border-radius:10px;overflow:hidden">
+      <tr><td style="padding:11px 14px;color:#656D76;border-bottom:1px solid #F0F2F4">Trial</td><td style="padding:11px 14px;text-align:right;font-weight:600;border-bottom:1px solid #F0F2F4">5 leads · $390 + GST</td></tr>
+      ${rushDelivery ? `<tr><td style="padding:11px 14px;color:#656D76;border-bottom:1px solid #F0F2F4">Rush Delivery</td><td style="padding:11px 14px;text-align:right;font-weight:600;border-bottom:1px solid #F0F2F4">$${RUSH_DELIVERY_AUD} + GST</td></tr>` : ''}
+      <tr><td style="padding:11px 14px;color:#656D76;border-bottom:1px solid #F0F2F4">Charge today</td><td style="padding:11px 14px;text-align:right;font-weight:600;border-bottom:1px solid #F0F2F4">${money(trialTotal)} + GST</td></tr>
+      <tr><td style="padding:11px 14px;color:#656D76">Delivery window</td><td style="padding:11px 14px;text-align:right;font-weight:600">${rushDelivery ? '3-5 days' : '7-14 days'}</td></tr>
+    </table>
+    ${rushDelivery ? `
+    <p style="font-size:15px;line-height:1.55;color:#3A424D;margin:18px 0 0">
+      <strong>Rush Delivery is on:</strong> if we don't deliver all 5 leads within 5 days of your purchase, we refund the $97 rush fee - you keep the leads either way.
+    </p>` : ''}
+    <p style="font-size:15px;line-height:1.55;color:#3A424D;margin:18px 0 0">
+      <strong>What happens next:</strong> we switch your campaigns on from our side and the leads start landing as homeowners submit.
+      You'll get the same one-off trial only - nothing continues automatically after these 5 leads.
+    </p>
+    ${magicLink ? `
+    <p style="margin:22px 0 0">
+      <a href="${esc(magicLink)}" style="display:inline-block;background:#0D1117;color:#ffffff;text-decoration:none;padding:12px 22px;border-radius:8px;font-size:14px;font-weight:600">
+        Go to your dashboard &rarr;
+      </a>
+    </p>
+    <p style="font-size:12px;line-height:1.5;color:#98A0A8;margin:10px 0 0">
+      This is where your leads, conversations and account live. The link above logs you straight in and expires after
+      one use - if it's already expired, use "Forgot password" at leadgenrentals.com.au/dashboard.
+    </p>` : ''}
+    <p style="font-size:13px;line-height:1.55;color:#656D76;margin:18px 0 0">
+      Questions? Just reply to this email.
+    </p>
+    <p style="font-size:12px;color:#98A0A8;margin:22px 0 0">Lead Gen Rentals - leadgenrentals.com.au</p>
+  </div>` : `
   <div style="font-family:-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;max-width:560px;margin:0 auto;color:#0D1117">
     <h2 style="font-size:20px;letter-spacing:-.02em;margin:0 0 6px">You're locked in, ${esc(firstName)}.</h2>
     <p style="font-size:15px;line-height:1.55;color:#3A424D;margin:0 0 18px">
@@ -311,7 +366,12 @@ async function notifyRentalPaid(m: Record<string, string>, renterEmail: string, 
     .eq('id', m.asset_id)
     .maybeSingle()
 
-  const esc = (s: string) => String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+  const esc = (s: string) => String(s ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;')
   const money = (n: number) => '$' + Number(n).toLocaleString('en-AU')
   const brandName = (asset as any)?.brand_name || m.asset_id
   const nicheName = (asset as any)?.niches?.name || ''
@@ -321,9 +381,12 @@ async function notifyRentalPaid(m: Record<string, string>, renterEmail: string, 
   const subId = typeof session.subscription === 'string' ? session.subscription : session.subscription?.id || ''
   const row = (k: string, v: string) =>
     `<tr><td style="padding:4px 14px 4px 0;color:#656D76">${k}</td><td><strong>${v}</strong></td></tr>`
+  const isTrial = m.type === 'asset_trial'
+  const rushDelivery = isTrue(m.rush_delivery)
+  const trialTotal = Number(m.checkout_total_aud || m.trial_total_aud || 0) || 390
 
   const html = `
-    <h2 style="margin:0 0 14px;font-family:Arial,sans-serif">New rental - payment received</h2>
+    <h2 style="margin:0 0 14px;font-family:Arial,sans-serif">New ${isTrial ? 'trial' : 'rental'} - payment received</h2>
     <table style="border-collapse:collapse;font-size:14px;font-family:Arial,sans-serif">
       ${row('Business', esc(m.business_name || ''))}
       ${row('Contact', esc(m.contact_name || '') || '-')}
@@ -331,11 +394,14 @@ async function notifyRentalPaid(m: Record<string, string>, renterEmail: string, 
       ${row('Phone', esc(m.phone || '') || '-')}
       ${row('Asset', esc(brandName))}
       ${row('Trade', esc(nicheName) + (regionName ? ' - ' + esc(regionName) : ''))}
-      ${row('Rental', money(price) + ' + GST / 30 days')}
-      ${row('Floor', floor + ' leads')}
-      ${row('Stripe subscription', `<code>${esc(subId)}</code>`)}
+      ${isTrial ? row('Trial', '5 leads @ $78 = $390 + GST, one-off charge') : row('Rental', money(price) + ' + GST / 30 days')}
+      ${isTrial && rushDelivery ? row('Rush Delivery', '$97 + GST · 3-5 days or refund the $97') : ''}
+      ${isTrial ? row('Charge today', money(trialTotal) + ' + GST') : row('Floor', floor + ' leads')}
+      ${isTrial && rushDelivery ? row('Rush guarantee', 'Refund the $97 if all 5 leads are not delivered within 5 days of purchase') : ''}
+      ${!isTrial ? row('Floor', floor + ' leads') : row('Standard window', '7-14 days')}
+      ${isTrial ? row('Stripe session', `<code>${esc(session.id)}</code>`) : row('Stripe subscription', `<code>${esc(subId)}</code>`)}
     </table>
-    <p style="margin:16px 0 0;font-size:12px;color:#888;font-family:Arial,sans-serif">The asset is now marked rented in Mission Control and the renter has been emailed a confirmation.</p>`
+    <p style="margin:16px 0 0;font-size:12px;color:#888;font-family:Arial,sans-serif">${isTrial && rushDelivery ? 'Rush orders should be paced to a full 5-lead delivery inside 5 days. If that window is missed, refund the $97 rush fee and keep fulfilment running.' : 'The asset is now marked rented in Mission Control and the renter has been emailed a confirmation.'}</p>`
 
   const res = await fetch('https://api.resend.com/emails', {
     method: 'POST',

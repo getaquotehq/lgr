@@ -3177,13 +3177,16 @@ h1{font-size:18px;font-weight:500}
       '<thead><tr style="text-align:left;color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.04em">' +
       '<th style="padding:8px 10px">Installer</th><th style="padding:8px 10px">Asset</th>' +
       '<th style="padding:8px 10px">Tier</th><th style="padding:8px 10px">Monthly</th>' +
-      '<th style="padding:8px 10px">Floor</th><th style="padding:8px 10px">Started</th>' +
+    '<th style="padding:8px 10px">Floor</th><th style="padding:8px 10px">Rush</th><th style="padding:8px 10px">Started</th>' +
       '<th style="padding:8px 10px">Ended</th><th style="padding:8px 10px"></th></tr></thead><tbody>' +
       rows.map(function (r) {
         var a = r.assets || {}, i = r.installers || {};
-        var asset = escapeHtml(a.brand_name || '-') +
-          '<div style="font-size:11px;color:var(--muted)">' +
-          escapeHtml((a.regions && a.regions.name) || '') +
+      var rush = r.rush_delivery
+        ? '<div style="font-weight:600;color:#b45309">Rush Delivery</div><div style="font-size:11px;color:var(--muted)">3-5 day guarantee</div>'
+        : '<span style="color:var(--muted)">-</span>';
+      var asset = escapeHtml(a.brand_name || '-') +
+        '<div style="font-size:11px;color:var(--muted)">' +
+        escapeHtml((a.regions && a.regions.name) || '') +
           ((a.niches && a.niches.name) ? ' · ' + escapeHtml(a.niches.name) : '') + '</div>';
         return '<tr style="border-top:1px solid var(--border)">' +
           '<td style="padding:8px 10px"><div style="font-weight:500">' + escapeHtml(i.business_name || '-') + '</div>' +
@@ -3192,6 +3195,7 @@ h1{font-size:18px;font-weight:500}
           '<td style="padding:8px 10px">' + escapeHtml(lgrTierLabel(a.tier)) + '</td>' +
           '<td style="padding:8px 10px;font-weight:500">' + lgrMoney(r.monthly_price_aud) + '</td>' +
           '<td style="padding:8px 10px">' + (r.floor_leads == null ? '-' : r.floor_leads) + '</td>' +
+          '<td style="padding:8px 10px">' + rush + '</td>' +
           '<td style="padding:8px 10px;color:var(--muted)">' + (r.started_at ? new Date(r.started_at).toLocaleDateString('en-AU') : '-') + '</td>' +
           '<td style="padding:8px 10px;color:var(--muted)">' + (r.ended_at ? new Date(r.ended_at).toLocaleDateString('en-AU') : '-') + '</td>' +
           '<td style="padding:8px 10px;text-align:right">' +

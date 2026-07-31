@@ -190,6 +190,12 @@
   .fi:focus,.fs:focus{border-color:var(--blue);box-shadow:0 0 0 3px var(--blue-tint)}
   .fi.err{border-color:var(--red)}
   .fhint{font-size:.78rem;color:var(--muted);margin-top:6px}
+  .addon{display:flex;gap:12px;align-items:flex-start;background:var(--surface-2);border:1px solid var(--line);
+    border-radius:var(--r-lg);padding:14px 15px}
+  .addon input{width:18px;height:18px;margin-top:2px;accent-color:var(--blue);flex:0 0 auto}
+  .addon b{display:block;font-size:.97rem;font-weight:620;letter-spacing:-.015em}
+  .addon span{display:block;font-size:.84rem;color:var(--muted);line-height:1.55;margin-top:4px}
+  .addon-total{font-size:.78rem;color:var(--muted);margin-top:8px}
   .btn{width:100%;font-family:var(--sans);font-weight:650;font-size:1rem;border:none;
     background:var(--blue);color:#fff;padding:15px 20px;border-radius:9px;cursor:pointer;
     letter-spacing:-.01em;box-shadow:0 6px 18px -6px rgba(245,158,11,.6)}
@@ -469,6 +475,17 @@
         <label class="flabel" for="t-email">Email</label>
         <input class="fi" id="t-email" type="email" placeholder="you@business.com.au" autocomplete="email">
       </div>
+      <div class="frow">
+        <label class="flabel">Optional add-on</label>
+        <label class="addon" for="t-rush">
+          <input id="t-rush" type="checkbox" onchange="updateTrialCta()">
+          <div>
+            <b>Rush my leads — $97</b>
+            <span>Get all 5 leads in 3-5 days instead of the standard 7-14. If we don't deliver all 5 within 5 days, we refund the $97 — you keep the leads either way.</span>
+            <div class="addon-total" id="t-total-note">Order total with Rush Delivery: <b>$487 +GST</b></div>
+          </div>
+        </label>
+      </div>
 
       <button class="btn" id="t-go" onclick="startTrial()">Buy 5 leads - $390 +GST &rarr;</button>
 
@@ -513,6 +530,8 @@ function toggleTheme(){
 var $ = function(s){ return document.querySelector(s); };
 var cfg = window.LGR_SUPABASE || {};
 var sb = null, ASSETS = [], CHOSEN = null;
+var BASE_TRIAL_TOTAL = 390;
+var RUSH_TRIAL_TOTAL = 487;
 
 function say(text, ok){
   var m = $('#msg');
@@ -528,7 +547,8 @@ function clearSay(){ $('#msg').className = 'msg'; }
   var st = q.get('checkout');
   if(st === 'success'){
     say("You're in. Check your email for the receipt - your engine is being switched on now.", true);
-    if(window.lgrMetaTrackPurchase) window.lgrMetaTrackPurchase({value:390,currency:'AUD'});
+    var value = Number(q.get('value') || BASE_TRIAL_TOTAL);
+    if(window.lgrMetaTrackPurchase) window.lgrMetaTrackPurchase({value:value,currency:'AUD'});
     var sessionId = q.get('session_id');
     if(sessionId) pollForDashboardLink(sessionId);
   }
@@ -603,6 +623,18 @@ function pickAsset(){
   $('#t-quickcapture').style.display = CHOSEN ? 'block' : 'none';
 }
 
+function trialTotal(){
+  return $('#t-rush') && $('#t-rush').checked ? RUSH_TRIAL_TOTAL : BASE_TRIAL_TOTAL;
+}
+
+function updateTrialCta(){
+  var btn = $('#t-go');
+  if(!btn) return;
+  btn.textContent = ($('#t-rush') && $('#t-rush').checked)
+    ? 'Buy 5 leads + Rush Delivery - $487 +GST →'
+    : 'Buy 5 leads - $390 +GST →';
+}
+
 async function quickCapture(){
   var email = $('#t-quickemail').value.trim();
   var msg = $('#t-quickmsg');
@@ -650,7 +682,7 @@ async function startTrial(){
       headers:{ 'Content-Type':'application/json', apikey: cfg.anonKey, Authorization: 'Bearer ' + cfg.anonKey },
       body: JSON.stringify({
         asset_id: CHOSEN.id, business_name: business, contact_name: contact,
-        email: email, phone: phone, trial: true
+        email: email, phone: phone, trial: true, rush_delivery: !!($('#t-rush') && $('#t-rush').checked)
       })
     });
     var data = await res.json().catch(function(){ return {}; });
@@ -659,11 +691,12 @@ async function startTrial(){
     window.location.href = data.url;
   }catch(e){
     say(e.message || 'We could not start checkout. Please try again.', false);
-    btn.disabled = false; btn.textContent = 'Buy 5 leads - $390 +GST →';
+    btn.disabled = false; updateTrialCta();
   }
 }
 
 boot();
+updateTrialCta();
 </script>
 </body>
 </html>

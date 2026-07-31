@@ -61,6 +61,7 @@ async function notifyCheckoutStarted(d: {
   business_name: string; contact_name: string; email: string; phone: string
   brand_name: string; niche: string; region: string; tier: string
   price: number; floor: number; session_id: string; is_trial: boolean
+  rush_delivery: boolean; trial_total_aud: number
 }) {
   const apiKey = Deno.env.get('RESEND_API_KEY')
   const fromEmail = Deno.env.get('RESEND_FROM_EMAIL')
@@ -68,7 +69,12 @@ async function notifyCheckoutStarted(d: {
     console.warn('checkout-started notice skipped: RESEND_* not configured')
     return
   }
-  const esc = (s: string) => String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+  const esc = (s: string) => String(s ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;')
   const money = (n: number) => '$' + Number(n).toLocaleString('en-AU')
   const row = (k: string, v: string) =>
     `<tr><td style="padding:4px 14px 4px 0;color:#656D76">${k}</td><td><strong>${v}</strong></td></tr>`
@@ -83,6 +89,8 @@ async function notifyCheckoutStarted(d: {
       ${row('Asset', esc(d.brand_name))}
       ${row('Trade', esc(d.niche) + (d.region ? ' - ' + esc(d.region) : '') + ' (' + esc(d.tier) + ')')}
       ${d.is_trial ? row('Trial', '5 leads @ $78 = $390 + GST, one-off charge, no subscription') : ''}
+      ${d.is_trial && d.rush_delivery ? row('Rush Delivery', '$97 + GST · all 5 leads in 3-5 days or refund the $97') : ''}
+      ${d.is_trial ? row('Charge today', money(d.trial_total_aud) + ' + GST') : ''}
       ${row('Rental', money(d.price) + ' + GST / 30 days')}
       ${row('Floor', d.floor + ' leads')}
       ${row('Stripe session', `<code>${esc(d.session_id)}</code>`)}
@@ -108,8 +116,9 @@ serve(async (req) => {
   if (req.method !== 'POST') return json({ error: 'method_not_allowed' }, 405)
 
   try {
-    const { asset_id, business_name, contact_name, email, phone, trial } = await req.json()
+    const { asset_id, business_name, contact_name, email, phone, trial, rush_delivery } = await req.json()
     const isTrial = trial === true
+    const rushDelivery = isTrial && rush_delivery === true
 
     if (!asset_id || !business_name || !email) {
       return json({ error: 'Missing required fields (asset_id, business_name, email)' }, 400)
@@ -152,6 +161,7 @@ serve(async (req) => {
     // to continue after the trial, that's a separate, deliberate checkout.
     const TRIAL_LEADS = 5
     const TRIAL_RATE  = 78                                      // $/lead, locked
+    const RUSH_DELIVERY_AUD = 97
     const TRIAL_TOTAL = Math.round(TRIAL_LEADS * TRIAL_RATE * 100)  // cents
 
     const trialLineItem: Stripe.Checkout.SessionCreateParams.LineItem = {
@@ -170,6 +180,21 @@ serve(async (req) => {
       quantity: 1,
     }
 
+    const rushDeliveryLineItem: Stripe.Checkout.SessionCreateParams.LineItem = {
+      price_data: {
+        currency: 'aud',
+        unit_amount: RUSH_DELIVERY_AUD * 100,
+        tax_behavior: 'exclusive',
+        product_data: {
+          name: 'Rush Delivery',
+          description:
+            `Get all 5 leads in 3-5 days instead of the standard 7-14. ` +
+            `If we don't deliver all 5 within 5 days, we refund the $97 - you keep the leads either way.`,
+        },
+      },
+      quantity: 1,
+    }
+
     const rentalLineItem: Stripe.Checkout.SessionCreateParams.LineItem = {
       price_data: {
         currency: 'aud',
@@ -183,6 +208,11 @@ serve(async (req) => {
       quantity: 1,
     }
 
+    const lineItems = isTrial
+      ? [trialLineItem, ...(rushDelivery ? [rushDeliveryLineItem] : [])]
+      : [rentalLineItem]
+    const trialTotalAud = TRIAL_TOTAL / 100 + (rushDelivery ? RUSH_DELIVERY_AUD : 0)
+
     const session = await stripe.checkout.sessions.create({
       mode: isTrial ? 'payment' : 'subscription',
       payment_method_types: ['card'],
@@ -190,7 +220,7 @@ serve(async (req) => {
       // Uses the account's Stripe Tax settings (GST) - required to make tax
       // apply to an API-created Checkout Session.
       automatic_tax: { enabled: true },
-      line_items: [isTrial ? trialLineItem : rentalLineItem],
+      line_items: lineItems,
       metadata: {
         type: isTrial ? 'asset_trial' : 'asset_rental',
         asset_id: String(asset_id),
@@ -200,11 +230,14 @@ serve(async (req) => {
         phone: String(phone || '').slice(0, 40),
         monthly_price_aud: String(price),
         floor_leads: String(asset.floor_leads),
+        rush_delivery: rushDelivery ? 'true' : 'false',
         ...(isTrial
           ? {
             trial_leads: String(TRIAL_LEADS),
             trial_rate_aud: String(TRIAL_RATE),
             trial_total_aud: String((TRIAL_TOTAL / 100).toFixed(2)),
+            rush_delivery_price_aud: rushDelivery ? String(RUSH_DELIVERY_AUD) : '0',
+            checkout_total_aud: String(trialTotalAud.toFixed(2)),
           }
           : {}),
       },
@@ -217,7 +250,7 @@ serve(async (req) => {
       // way into the dashboard once the webhook has provisioned the account -
       // {CHECKOUT_SESSION_ID} is a Stripe template string it fills in itself.
       success_url: isTrial
-        ? `${SITE}/solar-trial.html?checkout=success&asset=${encodeURIComponent(asset_id)}&session_id={CHECKOUT_SESSION_ID}&value=${encodeURIComponent((TRIAL_TOTAL / 100).toFixed(2))}&currency=AUD`
+        ? `${SITE}/solar-trial.html?checkout=success&asset=${encodeURIComponent(asset_id)}&session_id={CHECKOUT_SESSION_ID}&value=${encodeURIComponent(trialTotalAud.toFixed(2))}&currency=AUD`
         : `${SITE}/fleet.html?checkout=success&asset=${encodeURIComponent(asset_id)}&session_id={CHECKOUT_SESSION_ID}&value=${encodeURIComponent(String(price))}&currency=AUD`,
       cancel_url: isTrial
         ? `${SITE}/solar-trial.html?checkout=cancelled`
@@ -233,6 +266,7 @@ serve(async (req) => {
       phone: String(phone || '').slice(0, 40) || null,
       monthly_price_aud: price,
       floor_leads: asset.floor_leads,
+      rush_delivery: rushDelivery,
       stripe_session_id: session.id,
       stripe_customer_id: customerId || null,
       status: 'pending',
@@ -252,6 +286,8 @@ serve(async (req) => {
       floor: asset.floor_leads,
       session_id: session.id,
       is_trial: isTrial,
+      rush_delivery: rushDelivery,
+      trial_total_aud: trialTotalAud,
     }).catch((e) => console.error('notifyCheckoutStarted failed (non-fatal):', e))
 
     return json({ url: session.url })

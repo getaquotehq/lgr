@@ -1,17 +1,13 @@
 // ============================================================================
-// trial-upsell-check: the only thing that turns a 5-lead trial into ongoing
-// revenue now that trials don't auto-roll into a subscription. Runs daily
-// via pg_cron (see migration 20260730120000_trial_upsell_scheduling.sql),
-// finds trials in their day 5-9 window that haven't been touched yet, and
-// fires a real, scheduled touchpoint per trial - not something anyone has
-// to remember to do manually:
-//   - an email to the renter, referencing how many of their 5 leads have
-//     actually landed so far
-//   - an SMS nudge to the same effect
-//   - an internal notice to contact@leadgenrentals.com.au so a human
-//     actively calls, rather than just waiting on the renter to reply
-// Idempotent: stamps rentals.trial_upsell_sent_at so a trial is only ever
-// touched once, even if the cron fires more than once in the window.
+// trial-upsell-check: handles both trial follow-up and rush-delivery guarantee
+// checks for the 5-lead trial. Runs daily via pg_cron (see migration
+// 20260730120000_trial_upsell_scheduling.sql), then:
+//   - finds standard trials in their day 5-9 window that haven't been touched
+//     yet and sends the existing upsell email / SMS / internal call prompt
+//   - finds rush-delivery trials at day 5, counts delivered leads from the
+//     purchase timestamp, and flags any shortfall for the $97 refund
+// Idempotent: stamps rentals.trial_upsell_sent_at and
+// rentals.rush_delivery_checked_at so each flow only fires once.
 //
 // Auth: header "x-cron-secret: <TRIAL_UPSELL_CRON_SECRET>" - called only by
 // the pg_cron job, never public.
@@ -31,7 +27,12 @@ function json(data: unknown, status = 200): Response {
 }
 
 function esc(s: string): string {
-  return String(s ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  return String(s ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
 }
 
 async function sendEmail(to: string, subject: string, html: string, replyTo?: string) {
@@ -71,6 +72,18 @@ async function sendSms(to: string, body: string) {
   if (!res.ok) console.error("trial-upsell-check: twilio error:", res.status, (await res.text()).slice(0, 300));
 }
 
+async function getRentalSnapshot(db: ReturnType<typeof createClient>, rental: any) {
+  const [{ data: installer }, { data: asset }, { count: deliveredCount }] = await Promise.all([
+    db.from("installers").select("business_name, contact_name, email, phone").eq("id", rental.installer_id).maybeSingle(),
+    db.from("assets").select("brand_name, niches(name), regions(name)").eq("id", rental.asset_id).maybeSingle(),
+    db.from("asset_leads").select("id", { count: "exact", head: true })
+      .eq("asset_id", rental.asset_id).eq("installer_id", rental.installer_id)
+      .eq("status", "delivered").gte("captured_at", rental.started_at),
+  ]);
+
+  return { installer, asset, delivered: deliveredCount || 0 };
+}
+
 Deno.serve(async (req) => {
   const expectedSecret = Deno.env.get("TRIAL_UPSELL_CRON_SECRET");
   const providedSecret = req.headers.get("x-cron-secret");
@@ -87,6 +100,8 @@ Deno.serve(async (req) => {
     const now = new Date();
     const windowStart = new Date(now.getTime() - 9 * 86400000).toISOString(); // started_at >= 9 days ago
     const windowEnd = new Date(now.getTime() - 5 * 86400000).toISOString();   // started_at <= 5 days ago
+    const rushWindowStart = new Date(now.getTime() - 6 * 86400000).toISOString();
+    const rushWindowEnd = new Date(now.getTime() - 5 * 86400000).toISOString();
 
     const { data: rentals, error: rentalsErr } = await db
       .from("rentals")
@@ -97,25 +112,30 @@ Deno.serve(async (req) => {
       .gte("started_at", windowStart)
       .lte("started_at", windowEnd);
 
+    const { data: rushRentals, error: rushErr } = await db
+      .from("rentals")
+      .select("id, asset_id, installer_id, started_at, floor_leads")
+      .eq("is_trial", true)
+      .eq("rush_delivery", true)
+      .is("ended_at", null)
+      .is("rush_delivery_checked_at", null)
+      .gt("started_at", rushWindowStart)
+      .lte("started_at", rushWindowEnd);
+
     if (rentalsErr) throw rentalsErr;
-    if (!rentals || rentals.length === 0) {
-      return json({ success: true, checked: 0, touched: 0 });
+    if (rushErr) throw rushErr;
+    if ((!rentals || rentals.length === 0) && (!rushRentals || rushRentals.length === 0)) {
+      return json({ success: true, checked: 0, touched: 0, rush_checked: 0, rush_flagged: 0 });
     }
 
     let touched = 0;
+    let rushFlagged = 0;
     for (const rental of rentals) {
       try {
-        const [{ data: installer }, { data: asset }, { count: deliveredCount }] = await Promise.all([
-          db.from("installers").select("business_name, contact_name, email, phone").eq("id", rental.installer_id).maybeSingle(),
-          db.from("assets").select("brand_name, niches(name), regions(name)").eq("id", rental.asset_id).maybeSingle(),
-          db.from("asset_leads").select("id", { count: "exact", head: true })
-            .eq("asset_id", rental.asset_id).eq("installer_id", rental.installer_id)
-            .eq("status", "delivered").gte("captured_at", rental.started_at),
-        ]);
+        const { installer, asset, delivered } = await getRentalSnapshot(db, rental);
 
         if (!installer?.email) continue;
 
-        const delivered = deliveredCount || 0;
         const brandName = (asset as any)?.brand_name || "your lead engine";
         const nicheName = (asset as any)?.niches?.name || "lead";
         const regionName = (asset as any)?.regions?.name || "";
@@ -181,7 +201,56 @@ Deno.serve(async (req) => {
       }
     }
 
-    return json({ success: true, checked: rentals.length, touched });
+    for (const rental of rushRentals || []) {
+      try {
+        const { installer, asset, delivered } = await getRentalSnapshot(db, rental);
+        const brandName = (asset as any)?.brand_name || "your lead engine";
+        const regionName = (asset as any)?.regions?.name || "";
+        const purchasedAt = new Date(rental.started_at).toLocaleString("en-AU", { timeZone: "Australia/Brisbane" });
+
+        const patch: Record<string, string> = {
+          rush_delivery_checked_at: new Date().toISOString(),
+        };
+
+        if (delivered < 5) {
+          patch.rush_delivery_refund_flagged_at = new Date().toISOString();
+          await sendEmail(
+            "contact@leadgenrentals.com.au",
+            `Rush refund due - ${installer?.business_name || brandName}`,
+            `<h2 style="margin:0 0 14px;font-family:Arial,sans-serif">Rush Delivery refund due</h2>
+             <table style="border-collapse:collapse;font-size:14px;font-family:Arial,sans-serif">
+               <tr><td style="padding:4px 14px 4px 0;color:#656D76">Business</td><td><strong>${esc(installer?.business_name || "")}</strong></td></tr>
+               <tr><td style="padding:4px 14px 4px 0;color:#656D76">Contact</td><td><strong>${esc(installer?.contact_name || "-")}</strong></td></tr>
+               <tr><td style="padding:4px 14px 4px 0;color:#656D76">Email</td><td>${installer?.email ? `<a href="mailto:${esc(installer.email)}">${esc(installer.email)}</a>` : "-"}</td></tr>
+               <tr><td style="padding:4px 14px 4px 0;color:#656D76">Phone</td><td><strong>${esc(installer?.phone || "-")}</strong></td></tr>
+               <tr><td style="padding:4px 14px 4px 0;color:#656D76">Asset</td><td><strong>${esc(brandName)}${regionName ? " - " + esc(regionName) : ""}</strong></td></tr>
+               <tr><td style="padding:4px 14px 4px 0;color:#656D76">Purchased</td><td><strong>${esc(purchasedAt)}</strong></td></tr>
+               <tr><td style="padding:4px 14px 4px 0;color:#656D76">Delivered in 5 days</td><td><strong>${delivered} / 5</strong></td></tr>
+               <tr><td style="padding:4px 14px 4px 0;color:#656D76">Refund due</td><td><strong>$97 rush fee</strong></td></tr>
+             </table>
+             <p style="margin:16px 0 0;font-size:12px;color:#888;font-family:Arial,sans-serif">Rush Delivery promised all 5 trial leads within 5 days. Refund the $97 rush fee and keep fulfilment running.</p>`,
+            installer?.email || undefined,
+          ).catch((e) => console.error("trial-upsell-check: rush refund notice failed (non-fatal):", e));
+          rushFlagged++;
+        }
+
+        const { error: rushStampErr } = await db
+          .from("rentals")
+          .update(patch)
+          .eq("id", rental.id);
+        if (rushStampErr) console.error("trial-upsell-check: failed to stamp rush delivery check:", rushStampErr);
+      } catch (e) {
+        console.error("trial-upsell-check: failed rush check for rental", rental.id, e);
+      }
+    }
+
+    return json({
+      success: true,
+      checked: rentals?.length || 0,
+      touched,
+      rush_checked: rushRentals?.length || 0,
+      rush_flagged: rushFlagged,
+    });
   } catch (err) {
     console.error("trial-upsell-check error:", err);
     return json({ success: false, error: err instanceof Error ? err.message : String(err) }, 500);
