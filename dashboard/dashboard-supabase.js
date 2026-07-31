@@ -957,6 +957,11 @@ async function showApp() {
     const urlParams = new URLSearchParams(window.location.search);
     if (urlParams.get('checkout') === 'success') {
       toast('Payment confirmed. Your asset is live and leads will start landing in your pipeline.');
+      if (window.lgrMetaTrackPurchase) {
+        const value = Number(urlParams.get('value'));
+        const currency = urlParams.get('currency') || 'AUD';
+        window.lgrMetaTrackPurchase(Number.isFinite(value) ? { value, currency } : { currency });
+      }
       history.replaceState({}, '', window.location.pathname);
     }
 
@@ -3277,6 +3282,12 @@ async function loadAiSettings() {
     // Show success toast if returning from credits purchase
     if (new URLSearchParams(location.search).get("sms_credits_success")) {
       toast("SMS credits added to your account.");
+      if (window.lgrMetaTrackPurchase) {
+        const searchParams = new URLSearchParams(location.search);
+        const value = Number(searchParams.get("value"));
+        const currency = searchParams.get("currency") || "AUD";
+        window.lgrMetaTrackPurchase(Number.isFinite(value) ? { value, currency } : { currency });
+      }
       history.replaceState({}, "", location.pathname);
     }
 

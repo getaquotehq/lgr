@@ -14,6 +14,8 @@
   gtag('config', 'G-8X8ZEQ2V8Y');
 </script>
 <!-- @end-ga4 -->
+<script src="/meta-pixel.js"></script>
+<noscript><img height="1" width="1" style="display:none" src="https://www.facebook.com/tr?id=1264556364606702&ev=PageView&noscript=1" /></noscript>
 <meta name="color-scheme" content="light dark">
 <title>Contact - Lead Gen Rentals</title>
 <meta name="description" content="Contact Lead Gen Rentals at contact@leadgenrentals.com.au.">
@@ -203,6 +205,7 @@ async function submitCallback(e){
     const res=await fetch(cfg.url+'/functions/v1/contact-callback-request',{method:'POST',headers:{'Content-Type':'application/json',apikey:cfg.anonKey,Authorization:'Bearer '+cfg.anonKey},body:JSON.stringify(payload)});
     if(!res.ok) throw new Error('Request failed');
     document.getElementById('callbackForm').reset();
+    if(window.lgrMetaTrackLead) window.lgrMetaTrackLead({content_name:'Contact callback request'});
     status.textContent='Thanks, we\'ll be in touch soon.'; status.style.color='var(--green)';
   }catch(err){
     status.textContent='Something went wrong. Please email us instead.'; status.style.color='#c0392b';
