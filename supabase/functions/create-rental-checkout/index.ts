@@ -92,8 +92,8 @@ async function notifyCheckoutStarted(d: {
       ${d.is_trial ? row('Trial', '5 leads @ $78 = $390 + GST, one-off charge, no subscription') : ''}
       ${d.is_trial && d.rush_delivery ? row('Rush Delivery', '$97 + GST · all 5 leads in 3-5 days or refund the $97') : ''}
       ${d.is_trial ? row('Charge today', money(d.trial_total_aud) + ' + GST') : ''}
-      ${row('Rental', money(d.price) + ' + GST / 30 days')}
-      ${row('Floor', d.floor + ' leads')}
+      ${!d.is_trial ? row('Rental', money(d.price) + ' + GST / 30 days') : ''}
+      ${!d.is_trial ? row('Floor', d.floor + ' leads') : ''}
       ${row('Stripe session', `<code>${esc(d.session_id)}</code>`)}
     </table>
     <p style="margin:16px 0 0;font-size:12px;color:#888;font-family:Arial,sans-serif">Payment has not been received yet. A confirmation is sent to the renter on completion.</p>`
