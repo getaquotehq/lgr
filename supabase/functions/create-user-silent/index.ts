@@ -359,6 +359,8 @@ Deno.serve(async (req) => {
       const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
       let assignedTwilioPhone: string | null = null;
       if (typeof twilio_number_id === "string" && UUID_RE.test(twilio_number_id)) {
+        // Admin explicitly picked a specific pool row to hand to this company -
+        // a deliberate transfer (e.g. a dedicated, non-shared number).
         const { data: tnRow, error: tnErr } = await adminClient
           .from("twilio_numbers")
           .update({ company_id: companyId })
@@ -370,27 +372,42 @@ Deno.serve(async (req) => {
       } else if (
         typeof twilio_phone_number === "string" && twilio_phone_number.trim()
       ) {
-        // Manual entry: assign the existing pool number if it matches, else
-        // create a new twilio_numbers row owned by the new company.
+        // Manual entry: always create a new pool row for this company rather
+        // than reassigning an existing row that matches the same digits - the
+        // same number can legitimately be shared across many companies (see
+        // provision-twilio), and stealing an existing row here would silently
+        // cut off whichever company already owned it.
         const phone = twilio_phone_number.trim().slice(0, 32);
-        const { data: existingNums } = await adminClient
+        const { error: tnErr } = await adminClient
           .from("twilio_numbers")
-          .select("id")
-          .eq("phone_number", phone)
-          .limit(1);
-        if (existingNums && existingNums.length) {
-          const { error: tnErr } = await adminClient
-            .from("twilio_numbers")
-            .update({ company_id: companyId })
-            .eq("id", existingNums[0].id);
-          if (tnErr) console.warn("Twilio assignment failed (non-fatal):", tnErr.message);
-          else assignedTwilioPhone = phone;
-        } else {
-          const { error: tnErr } = await adminClient
-            .from("twilio_numbers")
-            .insert({ phone_number: phone, company_id: companyId });
-          if (tnErr) console.warn("Twilio insert failed (non-fatal):", tnErr.message);
-          else assignedTwilioPhone = phone;
+          .insert({ phone_number: phone, company_id: companyId });
+        if (tnErr) console.warn("Twilio insert failed (non-fatal):", tnErr.message);
+        else assignedTwilioPhone = phone;
+      } else {
+        // No explicit number given - default to the shared platform number
+        // instead of leaving the account unprovisioned (mirrors the
+        // stripe-webhook rental flow). Admin can still override with
+        // twilio_number_id or twilio_phone_number above for a dedicated number.
+        try {
+          const provisionRes = await fetch(
+            `${Deno.env.get("SUPABASE_URL")}/functions/v1/provision-twilio`,
+            {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")}`,
+              },
+              body: JSON.stringify({ company_id: companyId }),
+            },
+          );
+          const provisionData = await provisionRes.json().catch(() => ({}));
+          if (provisionRes.ok) {
+            assignedTwilioPhone = (provisionData?.phone_number as string) || null;
+          } else {
+            console.warn("provision-twilio failed (non-fatal):", provisionData?.error || provisionRes.status);
+          }
+        } catch (e) {
+          console.warn("provision-twilio threw (non-fatal):", (e as Error).message);
         }
       }
 

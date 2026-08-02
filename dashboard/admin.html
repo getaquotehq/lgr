@@ -386,6 +386,23 @@ h1{font-size:18px;font-weight:500}
       </div>
     </div>
 
+    <!-- Shared SMS Number panel -->
+    <div class="card" style="margin-bottom:20px">
+      <div class="panel-h">
+        <div>
+          <h2>Shared SMS Number</h2>
+          <p>Every company is assigned this same number instead of a dedicated one - inbound replies are routed to the right company by matching the lead's phone number, never by which company "owns" the number.</p>
+        </div>
+      </div>
+      <div class="panel-b">
+        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+          <input type="text" id="sharedTwilioNumberInput" placeholder="+61485016260" style="flex:1;min-width:200px;height:34px;padding:0 10px;border-radius:8px;border:1px solid var(--border);background:var(--bg);font:inherit;font-size:13px">
+          <button class="btn2 btn-sm" id="saveSharedTwilioNumberBtn" type="button">Save</button>
+        </div>
+        <p style="margin-top:8px;font-size:12px;color:var(--muted)">Only affects companies provisioned after this changes. The number itself still needs to be configured in the Twilio console with this webhook.</p>
+      </div>
+    </div>
+
     <!-- Twilio Numbers panel -->
     <div class="card" style="margin-bottom:20px">
       <div class="panel-h">
@@ -1723,6 +1740,9 @@ h1{font-size:18px;font-weight:500}
     // 6c. Load Twilio numbers panel
     await loadTwilioNumbers();
 
+    // 6c2. Load shared SMS number panel
+    await loadSharedTwilioNumber();
+
 
 
     // 8c. Load recent custom payment links
@@ -2572,6 +2592,33 @@ h1{font-size:18px;font-weight:500}
   document.getElementById('cancelTplBtn').addEventListener('click', function () { document.getElementById('tplEditor').classList.add('hidden'); });
   document.getElementById('saveTplBtn').addEventListener('click', saveTemplate);
   document.getElementById('refreshTplBtn').addEventListener('click', loadTemplates);
+
+  // ── Shared SMS Number ─────────────────────────────────────────────────────
+  async function loadSharedTwilioNumber() {
+    var input = document.getElementById('sharedTwilioNumberInput');
+    if (!input) return;
+    try {
+      var result = await callEdge({ action: 'get_platform_settings' });
+      input.value = result.shared_twilio_number || '';
+    } catch (err) {
+      console.error('loadSharedTwilioNumber failed:', err);
+    }
+  }
+
+  document.getElementById('saveSharedTwilioNumberBtn').addEventListener('click', async function () {
+    var btn = this;
+    var input = document.getElementById('sharedTwilioNumberInput');
+    var number = input.value.trim();
+    if (!number) { toast('Enter a phone number.', true); return; }
+    btn.disabled = true; btn.textContent = 'Saving…';
+    try {
+      await callEdge({ action: 'update_platform_settings', shared_twilio_number: number });
+      toast('Shared SMS number updated.');
+    } catch (err) {
+      toast('Failed: ' + err.message, true);
+    }
+    btn.disabled = false; btn.textContent = 'Save';
+  });
 
   // ── Twilio Numbers ────────────────────────────────────────────────────────
   var allTwilioNumbers = [];

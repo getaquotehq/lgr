@@ -6,7 +6,9 @@
 //
 // Flow:
 //  1. Parse Twilio webhook payload (From, To, Body)
-//  2. Look up company by the Twilio number (sms_agent_config.twilio_number)
+//  2. Look up company by the Twilio number - every company can share the
+//     same number (see provision-twilio), so ownership of THIS message is
+//     resolved strictly by which company already has a matching lead
 //  3. Check SMS credits are topped up
 //  4. Check AI settings (auto_reply, out_of_hours_only, callback, onsite, quote drafting)
 //  5. Find or create the lead by phone number
@@ -728,18 +730,70 @@ Deno.serve(async (req) => {
       return twimlResponse(""); // empty TwiML = no auto-reply
     }
 
-    // 2. Look up company by the Twilio number receiving the message
-    const { data: smsConfig, error: configErr } = await db
+    // Candidate phone formats for the lead lookup below. Twilio reports From
+    // in E.164 (+61412345678) but older leads may be stored without the +
+    // or in AU local format (0412345678) - built once here since it's needed
+    // both to resolve which company owns a shared number (below) and later
+    // to thread the reply onto the existing lead.
+    const phoneCandidates = [fromNumber, fromNumber.replace(/^\+/, "")];
+    if (fromNumber.startsWith("+61")) {
+      phoneCandidates.push("0" + fromNumber.slice(3));
+    }
+
+    // 2. Look up the company(ies) whose SMS agent is wired to the receiving
+    // Twilio number. Every LGR company shares the same platform number (see
+    // provision-twilio), so more than one company can match here - never
+    // assume the first row. Ownership of the conversation for THIS message is
+    // resolved strictly by which company already has a matching lead: a lead
+    // must already exist in a company's account for that company to see the
+    // conversation. This is the only thing standing between "shared number"
+    // and leaking one company's texts into another's dashboard, so it must
+    // never fall back to guessing.
+    const { data: candidateConfigs, error: configErr } = await db
       .from("sms_agent_config")
       .select("*, companies:company_id(id, name, settings)")
       .eq("twilio_number", toNumber)
-      .eq("is_active", true)
-      .limit(1)
-      .single();
+      .eq("is_active", true);
 
-    if (configErr || !smsConfig) {
+    if (configErr || !candidateConfigs || candidateConfigs.length === 0) {
       console.error("No SMS config for number:", toNumber, configErr);
       return twimlResponse("");
+    }
+
+    // deno-lint-ignore no-explicit-any
+    let smsConfig: any;
+    // True only when the number is uniquely owned by one company (e.g. a
+    // dedicated, non-shared number) - safe to spawn a brand-new lead for an
+    // unknown sender. On a shared number a brand-new (unmatched) sender can
+    // never be auto-attributed to one of the sharing companies.
+    let allowNewLead = false;
+
+    if (candidateConfigs.length === 1) {
+      smsConfig = candidateConfigs[0];
+      allowNewLead = true;
+    } else {
+      const companyIds = candidateConfigs.map((c) => c.company_id as string);
+      const { data: ownerLeads } = await db
+        .from("leads")
+        .select("company_id")
+        .in("company_id", companyIds)
+        .in("phone", phoneCandidates);
+
+      const owningCompanyIds = [...new Set((ownerLeads || []).map((l) => l.company_id as string))];
+
+      if (owningCompanyIds.length !== 1) {
+        // No existing lead anywhere, or (unusually) more than one company has
+        // a lead with this phone number - can't safely attribute, so don't
+        // deliver or create anything under any of the sharing companies.
+        console.warn(
+          owningCompanyIds.length === 0
+            ? `Inbound SMS to shared number ${toNumber} from ${fromNumber} matched no company's leads - dropping.`
+            : `Inbound SMS to shared number ${toNumber} from ${fromNumber} matched ${owningCompanyIds.length} companies' leads - ambiguous, dropping.`
+        );
+        return twimlResponse("");
+      }
+
+      smsConfig = candidateConfigs.find((c) => c.company_id === owningCompanyIds[0]);
     }
 
     const companyId: string = smsConfig.company_id;
@@ -796,15 +850,8 @@ Deno.serve(async (req) => {
       return twimlResponse(optOut === "stopped" ? "You have been unsubscribed and won't receive further messages. Reply START to opt back in." : "");
     }
 
-    // 5. Find or create lead by phone number in this company.
-    // Twilio reports From in E.164 (+61412345678) but older leads may be
-    // stored without the + or in AU local format (0412345678) - try all three
-    // so replies thread onto the existing lead instead of forking a new one.
-    const phoneCandidates = [fromNumber, fromNumber.replace(/^\+/, "")];
-    if (fromNumber.startsWith("+61")) {
-      phoneCandidates.push("0" + fromNumber.slice(3));
-    }
-
+    // 5. Find or create lead by phone number in this company (phoneCandidates
+    // built above, alongside company resolution).
     // deno-lint-ignore no-explicit-any
     let lead: any = null;
     for (const candidate of phoneCandidates) {
@@ -819,6 +866,14 @@ Deno.serve(async (req) => {
         lead = match;
         break;
       }
+    }
+
+    if (!lead && !allowNewLead) {
+      // Shared number with no matching lead in the owning company - should be
+      // unreachable (owner resolution above already requires a lead match),
+      // but never fabricate a lead here as a fallback. Defense in depth.
+      console.warn(`Shared number ${toNumber}: no existing lead for ${fromNumber} in company ${companyId} - dropping.`);
+      return twimlResponse("");
     }
 
     if (!lead) {

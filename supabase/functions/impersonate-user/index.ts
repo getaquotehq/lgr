@@ -400,6 +400,44 @@ Deno.serve(async (req) => {
       });
     }
 
+    // ── action: get_platform_settings ─────────────────────────────────────────
+    // Returns the shared Twilio number assigned to every company on
+    // signup/rental activation (see provision-twilio). Configurable so it can
+    // be swapped without a code deploy.
+    if (action === "get_platform_settings") {
+      const { data: settings, error: settingsErr } = await adminClient
+        .from("platform_settings")
+        .select("shared_twilio_number")
+        .eq("id", 1)
+        .maybeSingle();
+      if (settingsErr) {
+        console.error("get_platform_settings error:", settingsErr.message);
+        return json({ error: "Failed to load platform settings" }, 500);
+      }
+      return json({ shared_twilio_number: settings?.shared_twilio_number ?? null });
+    }
+
+    // ── action: update_platform_settings ──────────────────────────────────────
+    // Changes the shared Twilio number. Only affects companies provisioned
+    // AFTER the change - existing twilio_numbers/sms_agent_config rows keep
+    // whatever number they were assigned (reassign them individually via the
+    // Twilio Numbers pool below if a full migration is needed).
+    if (action === "update_platform_settings") {
+      const { shared_twilio_number } = body as { shared_twilio_number?: string };
+      const number = (shared_twilio_number || "").trim();
+      if (!/^\+[1-9]\d{6,14}$/.test(number)) {
+        return json({ error: "shared_twilio_number must be a valid E.164 number, e.g. +61485016260" }, 400);
+      }
+      const { error: upsertErr } = await adminClient
+        .from("platform_settings")
+        .upsert({ id: 1, shared_twilio_number: number, updated_at: new Date().toISOString() });
+      if (upsertErr) {
+        console.error("update_platform_settings error:", upsertErr.message);
+        return json({ error: "Failed to update platform settings: " + upsertErr.message }, 500);
+      }
+      return json({ success: true, shared_twilio_number: number });
+    }
+
     // ── action: list_twilio_numbers ───────────────────────────────────────────
     // Returns all Twilio numbers with their assigned company.
     if (action === "list_twilio_numbers") {
@@ -557,11 +595,23 @@ Deno.serve(async (req) => {
         twilio_sid: string | null;
       };
 
+      // Never release a number on Twilio while another company row still
+      // references the same phone_number - it's a shared number and
+      // releasing it would cut off every other company using it, even if
+      // this particular row happens to carry a twilio_sid from before it
+      // was shared.
+      const { count: sharedCount } = await adminClient
+        .from("twilio_numbers")
+        .select("id", { count: "exact", head: true })
+        .eq("phone_number", numberRow.phone_number)
+        .neq("id", number_id);
+      const isShared = (sharedCount ?? 0) > 0;
+
       // Best-effort release the number on Twilio so billing stops. Defaults to
       // true; callers can pass release_on_twilio: false to only drop the record.
       let twilioReleased = false;
       let twilioError: string | null = null;
-      const shouldRelease = release_on_twilio !== false;
+      const shouldRelease = release_on_twilio !== false && !isShared;
       if (shouldRelease && numberRow.twilio_sid) {
         const accountSid = Deno.env.get("TWILIO_ACCOUNT_SID");
         const authToken = Deno.env.get("TWILIO_AUTH_TOKEN");
@@ -589,12 +639,19 @@ Deno.serve(async (req) => {
         }
       }
 
-      // Unwire any agent config still pointing at this number.
-      const { error: cfgErr } = await adminClient
-        .from("sms_agent_config")
-        .update({ twilio_number: null })
-        .eq("twilio_number", numberRow.phone_number);
-      if (cfgErr) console.warn("delete_twilio_number: agent unwire failed:", cfgErr.message);
+      // Unwire the agent config for the company this row belonged to. Scoped
+      // to that one company_id (not just phone_number) because the same
+      // number can be shared across many companies - matching on
+      // phone_number alone would unwire every other company still legitimately
+      // assigned to this number.
+      if (numberRow.company_id) {
+        const { error: cfgErr } = await adminClient
+          .from("sms_agent_config")
+          .update({ twilio_number: null })
+          .eq("company_id", numberRow.company_id)
+          .eq("twilio_number", numberRow.phone_number);
+        if (cfgErr) console.warn("delete_twilio_number: agent unwire failed:", cfgErr.message);
+      }
 
       // Drop the pool record.
       const { error: delErr } = await adminClient

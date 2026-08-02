@@ -35,6 +35,26 @@ function isTrue(value: string | undefined) {
   return value === 'true'
 }
 
+// Every LGR company shares the same Twilio number instead of a dedicated one
+// (see provision-twilio / platform_settings.shared_twilio_number, set from
+// /admin -> Shared SMS Number). provision-twilio is itself idempotent - it
+// no-ops if the company already has a twilio_numbers row - so this is safe
+// to call unconditionally on every rental activation.
+async function provisionTwilio(companyId: string) {
+  const res = await fetch(`${Deno.env.get('SUPABASE_URL')}/functions/v1/provision-twilio`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')}`,
+    },
+    body: JSON.stringify({ company_id: companyId }),
+  })
+  if (!res.ok) {
+    const text = await res.text().catch(() => '')
+    throw new Error(`provision-twilio returned HTTP ${res.status}: ${text}`)
+  }
+}
+
 serve(async (req) => {
   const sig = req.headers.get('stripe-signature')
   const body = await req.text()
@@ -218,6 +238,12 @@ async function provisionDashboardAccount(
 
     await supabase.from('installers').update({ company_id: companyId }).eq('id', installerId)
   }
+
+  // Assign the shared platform SMS number so the AI agent is send-ready
+  // without a manual admin step. Best-effort: never blocks the (already
+  // active) rental or the dashboard login link below.
+  await provisionTwilio(companyId).catch(err =>
+    console.error('provisionTwilio failed (non-fatal):', err))
 
   // One-click login, regardless of new vs existing account.
   const { data: linkData, error: linkErr } = await supabase.auth.admin.generateLink({
