@@ -268,7 +268,7 @@ async function sendConfirmationEmail(to: string, m: Record<string, string>, magi
   const firstName = (m.contact_name || '').trim().split(/\s+/)[0] || 'there'
   const isTrial = m.type === 'asset_trial'
   const rushDelivery = isTrue(m.rush_delivery)
-  const trialTotal = Number(m.checkout_total_aud || m.trial_total_aud || 0) || 390
+  const trialTotal = Number(m.checkout_total_aud || m.trial_total_aud || 0) || 550
 
   const html = isTrial ? `
   <div style="font-family:-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;max-width:560px;margin:0 auto;color:#0D1117">
@@ -278,7 +278,7 @@ async function sendConfirmationEmail(to: string, m: Record<string, string>, magi
       Every ${esc(nicheName)} lead that lands is yours alone, with your business named on the homeowner's consent.
     </p>
     <table style="border-collapse:collapse;font-size:14px;width:100%;border:1px solid #E6E8EB;border-radius:10px;overflow:hidden">
-      <tr><td style="padding:11px 14px;color:#656D76;border-bottom:1px solid #F0F2F4">Trial</td><td style="padding:11px 14px;text-align:right;font-weight:600;border-bottom:1px solid #F0F2F4">5 leads · $390 + GST</td></tr>
+      <tr><td style="padding:11px 14px;color:#656D76;border-bottom:1px solid #F0F2F4">Trial</td><td style="padding:11px 14px;text-align:right;font-weight:600;border-bottom:1px solid #F0F2F4">5 leads · $550 + GST</td></tr>
       ${rushDelivery ? `<tr><td style="padding:11px 14px;color:#656D76;border-bottom:1px solid #F0F2F4">Rush Delivery</td><td style="padding:11px 14px;text-align:right;font-weight:600;border-bottom:1px solid #F0F2F4">$${RUSH_DELIVERY_AUD} + GST</td></tr>` : ''}
       <tr><td style="padding:11px 14px;color:#656D76;border-bottom:1px solid #F0F2F4">Charge today</td><td style="padding:11px 14px;text-align:right;font-weight:600;border-bottom:1px solid #F0F2F4">${money(trialTotal)} + GST</td></tr>
       <tr><td style="padding:11px 14px;color:#656D76">Delivery window</td><td style="padding:11px 14px;text-align:right;font-weight:600">${rushDelivery ? '3-5 days' : '7-14 days'}</td></tr>
@@ -383,7 +383,7 @@ async function notifyRentalPaid(m: Record<string, string>, renterEmail: string, 
     `<tr><td style="padding:4px 14px 4px 0;color:#656D76">${k}</td><td><strong>${v}</strong></td></tr>`
   const isTrial = m.type === 'asset_trial'
   const rushDelivery = isTrue(m.rush_delivery)
-  const trialTotal = Number(m.checkout_total_aud || m.trial_total_aud || 0) || 390
+  const trialTotal = Number(m.checkout_total_aud || m.trial_total_aud || 0) || 550
 
   const html = `
     <h2 style="margin:0 0 14px;font-family:Arial,sans-serif">New ${isTrial ? 'trial' : 'rental'} - payment received</h2>
@@ -394,7 +394,7 @@ async function notifyRentalPaid(m: Record<string, string>, renterEmail: string, 
       ${row('Phone', esc(m.phone || '') || '-')}
       ${row('Asset', esc(brandName))}
       ${row('Trade', esc(nicheName) + (regionName ? ' - ' + esc(regionName) : ''))}
-      ${isTrial ? row('Trial', '5 leads @ $78 = $390 + GST, one-off charge') : row('Rental', money(price) + ' + GST / 30 days')}
+      ${isTrial ? row('Trial', '5 leads @ $110 = $550 + GST, one-off charge') : row('Rental', money(price) + ' + GST / 30 days')}
       ${isTrial && rushDelivery ? row('Rush Delivery', '$97 + GST · 3-5 days or refund the $97') : ''}
       ${isTrial ? row('Charge today', money(trialTotal) + ' + GST') : row('Floor', floor + ' leads')}
       ${isTrial && rushDelivery ? row('Rush guarantee', 'Refund the $97 if all 5 leads are not delivered within 5 days of purchase') : ''}

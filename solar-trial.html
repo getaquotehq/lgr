@@ -18,7 +18,7 @@
 <noscript><img height="1" width="1" style="display:none" src="https://www.facebook.com/tr?id=1264556364606702&ev=PageView&noscript=1" /></noscript>
 <meta name="color-scheme" content="light dark">
 <title>5-Lead Solar Trial | Lead Gen Rentals</title>
-<meta name="description" content="5 exclusive, carrier-verified solar homeowner enquiries for $78 each. One-off $390 trial, no subscription, delivered in 7-14 days.">
+<meta name="description" content="5 exclusive, carrier-verified solar homeowner enquiries for $110 each. One-off $550 trial, no subscription, delivered in 7-14 days.">
 
 <link rel="icon" href="favicon.ico">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -240,16 +240,16 @@
 
   <div class="hero">
     <span class="sec-lab">Solar Trial</span>
-    <h1>5 exclusive solar leads. <span class="hl">$78 each.</span><br>No run-around.</h1>
+    <h1>5 exclusive solar leads. <span class="hl">$110 each.</span><br>No run-around.</h1>
     <p class="lede">Brand new homeowner solar enquiries, carrier-verified, yours alone. Every homeowner is told they're being matched with a local accredited solar installer - that's you. You'll see exactly where they come from and exactly what they filled in. <b>Buy it, put your details in, done.</b></p>
 
     <div class="pricebox">
-      <div class="pb-num">$390<small>+GST</small></div>
-      <div class="pb-sub">5 guaranteed leads at a locked <b>$78 per lead</b>. Below our standard $110 floor rate, held for the whole trial.</div>
+      <div class="pb-num">$550<small>+GST</small></div>
+      <div class="pb-sub">5 guaranteed leads at <b>$110 per lead</b> - our standard floor rate. Subscribe to a monthly engine afterward and your rate can drop below this.</div>
       <div class="pb-split">
         <div class="pb-cell"><span class="pb-k">Leads</span><span class="pb-v">5 guaranteed</span></div>
         <div class="pb-cell"><span class="pb-k">Delivered</span><span class="pb-v">7-14 days</span></div>
-        <div class="pb-cell"><span class="pb-k">Per lead</span><span class="pb-v">$78</span></div>
+        <div class="pb-cell"><span class="pb-k">Per lead</span><span class="pb-v">$110</span></div>
       </div>
     </div>
 
@@ -405,7 +405,7 @@
     <h2 class="sec-h">Before you buy</h2>
     <div class="stack">
       <b>Is this a subscription?</b>
-      <span>No. The $390 is a one-off charge for the 5-lead trial. You're not signed up for anything ongoing and we won't charge your card again without you telling us to.</span>
+      <span>No. The $550 is a one-off charge for the 5-lead trial. You're not signed up for anything ongoing and we won't charge your card again without you telling us to.</span>
     </div>
     <div class="stack" style="margin-top:12px">
       <b>What happens after the trial?</b>
@@ -482,12 +482,12 @@
           <div>
             <b>Rush my leads — $97</b>
             <span>Get all 5 leads in 3-5 days instead of the standard 7-14. If we don't deliver all 5 within 5 days, we refund the $97 — you keep the leads either way.</span>
-            <div class="addon-total" id="t-total-note">Order total with Rush Delivery: <b>$487 +GST</b></div>
+            <div class="addon-total" id="t-total-note">Order total with Rush Delivery: <b>$647 +GST</b></div>
           </div>
         </label>
       </div>
 
-      <button class="btn" id="t-go" onclick="startTrial()">Buy 5 leads - $390 +GST &rarr;</button>
+      <button class="btn" id="t-go" onclick="startTrial()">Buy 5 leads - $550 +GST &rarr;</button>
 
       <div class="trustrow">
         <span><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg> Secured by Stripe</span>
@@ -496,7 +496,7 @@
       </div>
 
       <p class="fineprint">
-        You'll pay <b>$390 +GST</b> today for the 5-lead trial - a one-off charge, not a subscription.
+        You'll pay <b>$550 +GST</b> today for the 5-lead trial - a one-off charge, not a subscription.
         We won't sign you up for anything ongoing and we won't charge your card again. If you want to
         keep the engine running after the trial, that's a separate step you choose to take.
       </p>
@@ -530,8 +530,8 @@ function toggleTheme(){
 var $ = function(s){ return document.querySelector(s); };
 var cfg = window.LGR_SUPABASE || {};
 var sb = null, ASSETS = [], CHOSEN = null;
-var BASE_TRIAL_TOTAL = 390;
-var RUSH_TRIAL_TOTAL = 487;
+var BASE_TRIAL_TOTAL = 550;
+var RUSH_TRIAL_TOTAL = 647;
 
 function say(text, ok){
   var m = $('#msg');
@@ -616,7 +616,7 @@ function pickAsset(){
   }).sort(function(a,b){ return a.monthly_price_aud - b.monthly_price_aud; });
   CHOSEN = pool[0] || null;
   $('#t-avail').textContent = CHOSEN
-    ? '✓ Engine reserved: ' + CHOSEN.brand_name + '. One-off $390 trial charge, no subscription. '
+    ? '✓ Engine reserved: ' + CHOSEN.brand_name + '. One-off $550 trial charge, no subscription. '
       + 'If you choose to continue after, the monthly rental for this engine is $'
       + Number(CHOSEN.monthly_price_aud).toLocaleString('en-AU') + '/mo (floor ' + CHOSEN.floor_leads + ' leads).'
     : 'Nothing open there right now.';
@@ -631,8 +631,8 @@ function updateTrialCta(){
   var btn = $('#t-go');
   if(!btn) return;
   btn.textContent = ($('#t-rush') && $('#t-rush').checked)
-    ? 'Buy 5 leads + Rush Delivery - $487 +GST →'
-    : 'Buy 5 leads - $390 +GST →';
+    ? 'Buy 5 leads + Rush Delivery - $647 +GST →'
+    : 'Buy 5 leads - $550 +GST →';
 }
 
 async function quickCapture(){

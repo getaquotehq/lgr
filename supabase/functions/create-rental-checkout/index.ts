@@ -88,7 +88,7 @@ async function notifyCheckoutStarted(d: {
       ${row('Phone', esc(d.phone) || '-')}
       ${row('Asset', esc(d.brand_name))}
       ${row('Trade', esc(d.niche) + (d.region ? ' - ' + esc(d.region) : '') + ' (' + esc(d.tier) + ')')}
-      ${d.is_trial ? row('Trial', '5 leads @ $78 = $390 + GST, one-off charge, no subscription') : ''}
+      ${d.is_trial ? row('Trial', '5 leads @ $110 = $550 + GST, one-off charge, no subscription') : ''}
       ${d.is_trial && d.rush_delivery ? row('Rush Delivery', '$97 + GST · all 5 leads in 3-5 days or refund the $97') : ''}
       ${d.is_trial ? row('Charge today', money(d.trial_total_aud) + ' + GST') : ''}
       ${row('Rental', money(d.price) + ' + GST / 30 days')}
@@ -160,7 +160,7 @@ serve(async (req) => {
     // ongoing monthly rental is created or scheduled here; if the renter wants
     // to continue after the trial, that's a separate, deliberate checkout.
     const TRIAL_LEADS = 5
-    const TRIAL_RATE  = 78                                      // $/lead, locked
+    const TRIAL_RATE  = 110                                     // $/lead - the floor rate, same as the worst-case ceiling elsewhere on the site. Subscribing is what can bring the rate down, not the trial.
     const RUSH_DELIVERY_AUD = 97
     const TRIAL_TOTAL = Math.round(TRIAL_LEADS * TRIAL_RATE * 100)  // cents
 

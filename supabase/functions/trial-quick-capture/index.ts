@@ -1,7 +1,7 @@
 // ============================================================================
 // trial-quick-capture: public, no-auth endpoint for the low-commitment
 // "leave your email" capture on solar-trial.html - for visitors who check
-// trade/area availability but don't complete the $390 trial checkout.
+// trade/area availability but don't complete the $550 trial checkout.
 //
 // Distinct from intake-sales-lead (which requires a shared secret and is
 // meant for server-to-server callers like Zapier/Make) - this one is safe to
