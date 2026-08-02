@@ -114,8 +114,13 @@
     border-radius:var(--r-lg);padding:14px 16px}
   .src-dot{width:9px;height:9px;border-radius:50%;background:var(--green);flex:0 0 auto;
     box-shadow:0 0 0 3px var(--green-tint)}
+  .src-info{flex:1;min-width:0}
   .src-n{font-weight:600;font-size:.95rem;letter-spacing:-.015em}
   .src-u{font-family:var(--mono);font-size:.74rem;color:var(--muted);display:block;margin-top:2px}
+  .src-open{display:inline-flex;align-items:center;gap:5px;padding:5px 12px;border-radius:6px;
+    border:1px solid var(--line);font-size:.78rem;font-weight:500;color:var(--muted);
+    text-decoration:none;white-space:nowrap;transition:border-color .15s,color .15s}
+  .src-open:hover{border-color:var(--amber);color:var(--amber)}
   .src-note{font-size:.86rem;color:var(--muted);line-height:1.55;margin-top:12px;padding:0 2px}
 
   /* survey mock */
@@ -196,6 +201,14 @@
   .addon b{display:block;font-size:.97rem;font-weight:620;letter-spacing:-.015em}
   .addon span{display:block;font-size:.84rem;color:var(--muted);line-height:1.55;margin-top:4px}
   .addon-total{font-size:.78rem;color:var(--muted);margin-top:8px}
+  .stype-group{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  .stype-opt{display:flex;gap:10px;align-items:flex-start;background:var(--bg);border:1px solid var(--line);
+    border-radius:var(--r);padding:13px 14px;cursor:pointer;transition:border-color .12s}
+  .stype-opt:has(input:checked){border-color:var(--blue);background:var(--blue-tint)}
+  .stype-opt input{width:16px;height:16px;margin-top:1px;accent-color:var(--blue);flex:0 0 auto;cursor:pointer}
+  .stype-opt b{display:block;font-size:.93rem;font-weight:620;letter-spacing:-.01em}
+  .stype-opt span{display:block;font-size:.78rem;color:var(--muted);line-height:1.45;margin-top:3px}
+  @media(max-width:480px){.stype-group{grid-template-columns:1fr}}
   .btn{width:100%;font-family:var(--sans);font-weight:650;font-size:1rem;border:none;
     background:var(--blue);color:#fff;padding:15px 20px;border-radius:9px;cursor:pointer;
     letter-spacing:-.01em;box-shadow:0 6px 18px -6px rgba(245,158,11,.6)}
@@ -268,9 +281,9 @@
     <div class="flow">
       <div>
         <div class="srcs">
-          <div class="src"><span class="src-dot"></span><div><span class="src-n">Clear Solar Quotes</span><span class="src-u">clearsolarquotes.com.au</span></div></div>
-          <div class="src"><span class="src-dot"></span><div><span class="src-n">AU Solar Quotes</span><span class="src-u">ausolarquotes.com.au</span></div></div>
-          <div class="src"><span class="src-dot"></span><div><span class="src-n">Premium Solar Quotes</span><span class="src-u">premiumsolarquotes.com.au</span></div></div>
+          <div class="src"><span class="src-dot"></span><div class="src-info"><span class="src-n">Clear Solar Quotes</span><span class="src-u">clearsolarquotes.com.au</span></div><a class="src-open" href="https://clearsolarquotes.com.au" target="_blank" rel="noopener noreferrer">Open <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg></a></div>
+          <div class="src"><span class="src-dot"></span><div class="src-info"><span class="src-n">AU Solar Quotes</span><span class="src-u">ausolarquotes.com.au</span></div><a class="src-open" href="https://ausolarquotes.com.au" target="_blank" rel="noopener noreferrer">Open <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg></a></div>
+          <div class="src"><span class="src-dot"></span><div class="src-info"><span class="src-n">Premium Solar Quotes</span><span class="src-u">premiumsolarquotes.com.au</span></div><a class="src-open" href="https://premiumsolarquotes.com.au" target="_blank" rel="noopener noreferrer">Open <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg></a></div>
         </div>
         <p class="src-note">Real sites you can open right now. Each one runs its own paid campaigns on our accounts, on our budget, with area pages for every major market in Australia. Your leads come from the engine covering your postcode - nowhere else.</p>
       </div>
@@ -316,7 +329,7 @@
     <div class="steps">
       <div class="st"><div class="st-n">1</div><b>Pick your patch</b><span>Choose your area below. We reserve the solar engine covering your postcodes.</span></div>
       <div class="st"><div class="st-n">2</div><b>Enter your details</b><span>Business name, email, mobile. Pay through Stripe. About 60 seconds.</span></div>
-      <div class="st"><div class="st-n">3</div><b>Leads start landing</b><span>Campaigns switch on. Enquiries come to your phone, texted in your name within 60 seconds.</span></div>
+      <div class="st"><div class="st-n">3</div><b>Leads start landing</b><span>Campaigns switch on. Each enquiry hits your phone via SMS and email, and lands in your Lead Gen Rentals HQ dashboard within 60 seconds.</span></div>
     </div>
   </section>
 
@@ -339,7 +352,7 @@
       </div>
       <div class="g">
         <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6 9 17l-5-5"/></svg>
-        <div><b>Texted in 60 seconds</b><span>The moment they submit, we text them in your name and open the conversation. They're warm when you ring.</span></div>
+        <div><b>Three ways to receive every lead</b><span>SMS to your phone, email to your inbox, and your Lead Gen Rentals HQ dashboard - all within 60 seconds of the homeowner submitting.</span></div>
       </div>
       <div class="g">
         <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6 9 17l-5-5"/></svg>
@@ -424,6 +437,10 @@
       <span>A completed enquiry with a name and Australian mobile, carrier-verified. Duds and fakes are blocked before they ever reach you, so there are no replacements needed and all sales are final.</span>
     </div>
     <div class="stack" style="margin-top:12px">
+      <b>How will I receive the leads?</b>
+      <span>Three ways, simultaneously - <b>SMS to your phone</b>, <b>email to your inbox</b>, and inside your <b>Lead Gen Rentals HQ dashboard</b> where you can see every enquiry in real time from any device. All three fire within 60 seconds of the homeowner submitting.</span>
+    </div>
+    <div class="stack" style="margin-top:12px">
       <b>Can I pick my trade and area?</b>
       <span>Yes, subject to availability - that's exactly what the trade and area selector above does.</span>
     </div>
@@ -448,13 +465,24 @@
       </div>
       <div class="frow" style="margin-top:-6px"><div class="fhint" id="t-avail"></div></div>
 
-      <div class="frow" id="t-quickcapture" style="display:none;background:var(--surface-2);border:1px solid var(--line);border-radius:var(--r);padding:12px 14px">
-        <div style="font-size:.85rem;color:var(--ink-2);margin-bottom:8px">Not ready to buy right now? Leave your email and we'll follow up - no charge, no commitment.</div>
-        <div style="display:flex;gap:8px">
-          <input class="fi" id="t-quickemail" type="email" placeholder="you@business.com.au" style="flex:1 1 auto;width:auto;min-width:0">
-          <button type="button" class="btn" id="t-quickbtn" onclick="quickCapture()" style="flex:0 0 auto;padding:11px 16px;white-space:nowrap">Save my spot</button>
+      <div class="frow">
+        <label class="flabel">What are you looking for?</label>
+        <div class="stype-group">
+          <label class="stype-opt">
+            <input type="radio" name="t-stype" value="residential_solar_battery" checked>
+            <div>
+              <b>Residential Solar + Battery</b>
+              <span>Homeowners enquiring about solar panels, with or without battery storage</span>
+            </div>
+          </label>
+          <label class="stype-opt">
+            <input type="radio" name="t-stype" value="battery_retrofit">
+            <div>
+              <b>Battery Retrofit</b>
+              <span>Existing solar owners looking to add battery storage to their system</span>
+            </div>
+          </label>
         </div>
-        <div id="t-quickmsg" style="font-size:.8rem;margin-top:6px"></div>
       </div>
 
       <div class="frow">
@@ -480,8 +508,8 @@
         <label class="addon" for="t-rush">
           <input id="t-rush" type="checkbox" onchange="updateTrialCta()">
           <div>
-            <b>Rush my leads — $97</b>
-            <span>Get all 5 leads in 3-5 days instead of the standard 7-14. If we don't deliver all 5 within 5 days, we refund the $97 — you keep the leads either way.</span>
+            <b>Rush my leads: $97</b>
+            <span>Get all 5 leads in 3-5 days instead of the standard 7-14. If we don't deliver all 5 within 5 days, we refund the $97. You keep the leads either way.</span>
             <div class="addon-total" id="t-total-note">Order total with Rush Delivery: <b>$647 +GST</b></div>
           </div>
         </label>
@@ -620,7 +648,6 @@ function pickAsset(){
       + 'If you choose to continue after, the monthly rental for this engine is $'
       + Number(CHOSEN.monthly_price_aud).toLocaleString('en-AU') + '/mo (floor ' + CHOSEN.floor_leads + ' leads).'
     : 'Nothing open there right now.';
-  $('#t-quickcapture').style.display = CHOSEN ? 'block' : 'none';
 }
 
 function trialTotal(){
@@ -635,31 +662,9 @@ function updateTrialCta(){
     : 'Buy 5 leads - $550 +GST →';
 }
 
-async function quickCapture(){
-  var email = $('#t-quickemail').value.trim();
-  var msg = $('#t-quickmsg');
-  if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){ msg.textContent='Enter a valid email.'; msg.style.color='var(--red)'; return; }
-  if(!cfg.url || !cfg.anonKey) return;
-  var btn = $('#t-quickbtn');
-  btn.disabled = true; btn.textContent = 'Saving…'; msg.textContent = '';
-  try{
-    var res = await fetch(cfg.url + '/functions/v1/trial-quick-capture', {
-      method:'POST',
-      headers:{ 'Content-Type':'application/json', apikey: cfg.anonKey, Authorization: 'Bearer ' + cfg.anonKey },
-      body: JSON.stringify({
-        email: email,
-        trade: 'Solar',
-        area: CHOSEN && CHOSEN.regions ? CHOSEN.regions.name : $('#t-area').value,
-      }),
-    });
-    if(!res.ok) throw new Error();
-    if(window.lgrMetaTrackLead) window.lgrMetaTrackLead({content_name:'Solar trial quick capture'});
-    msg.textContent = "Got it, we'll be in touch."; msg.style.color = 'var(--green)';
-    btn.textContent = 'Saved ✓';
-  }catch(e){
-    msg.textContent = 'Something went wrong. Please try again.'; msg.style.color = 'var(--red)';
-    btn.disabled = false; btn.textContent = 'Save my spot';
-  }
+function getServiceType(){
+  var sel = document.querySelector('input[name="t-stype"]:checked');
+  return sel ? sel.value : 'residential_solar_battery';
 }
 
 async function startTrial(){
@@ -682,7 +687,8 @@ async function startTrial(){
       headers:{ 'Content-Type':'application/json', apikey: cfg.anonKey, Authorization: 'Bearer ' + cfg.anonKey },
       body: JSON.stringify({
         asset_id: CHOSEN.id, business_name: business, contact_name: contact,
-        email: email, phone: phone, trial: true, rush_delivery: !!($('#t-rush') && $('#t-rush').checked)
+        email: email, phone: phone, trial: true, rush_delivery: !!($('#t-rush') && $('#t-rush').checked),
+        service_type: getServiceType()
       })
     });
     var data = await res.json().catch(function(){ return {}; });

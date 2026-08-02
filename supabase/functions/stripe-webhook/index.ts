@@ -102,12 +102,14 @@ async function activateRental(session: Stripe.Checkout.Session, m: Record<string
       stripe_subscription_id: subscriptionId,
       stripe_customer_id: customerId,
       rush_delivery: isTrue(m.rush_delivery),
+      ...(m.service_type ? { service_type: m.service_type } : {}),
     })
     .eq('stripe_session_id', session.id)
 
   await supabase.from('rentals')
     .update({
       rush_delivery: isTrue(m.rush_delivery),
+      ...(m.service_type ? { service_type: m.service_type } : {}),
     })
     .eq('stripe_session_id', session.id)
 
