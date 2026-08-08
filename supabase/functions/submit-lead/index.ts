@@ -244,7 +244,15 @@ Deno.serve(async (req: Request) => {
     const domain = body.brand_domain
       ? String(body.brand_domain).trim().toLowerCase().replace(/^https?:\/\//, "").replace(/\/.*$/, "")
       : null;
-    if (!assetId && domain) q = q.ilike("brand_domain", domain);
+    // eq, not ilike: brand_domain comes straight off the request body, and in an
+    // ilike pattern '%' and '_' are wildcards (PostgREST also maps '*' to '%').
+    // Posting brand_domain='%' widened the candidate set from "assets on this
+    // brand" to every rented asset in the system, which - paired with a consent
+    // sentence naming a business - let a submitter steer a lead onto a brand it
+    // never came from. Both sides are already normalised lowercase (the value is
+    // lowercased just above; assets.brand_domain is stored lowercase), so exact
+    // match loses nothing that ilike was providing.
+    if (!assetId && domain) q = q.eq("brand_domain", domain);
 
     const nicheSlug = (body.niche || body.lead_type || "").toString().trim().toLowerCase() || null;
     if (!assetId && nicheSlug) {

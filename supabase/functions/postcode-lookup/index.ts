@@ -64,7 +64,12 @@ Deno.serve(async (req: Request) => {
     const domain = brandDomain
       ? brandDomain.trim().toLowerCase().replace(/^https?:\/\//, "").replace(/\/.*$/, "")
       : null;
-    if (domain) q = q.ilike("brand_domain", domain);
+    // eq, not ilike - same reasoning as submit-lead: '%' / '_' / '*' in an ilike
+    // pattern are wildcards, and this value comes from the query string. Both
+    // sides are normalised lowercase, so exact match is equivalent for real
+    // input. Keeping the two in step matters: this decides which installer name
+    // the survey puts in the consent sentence that submit-lead then matches on.
+    if (domain) q = q.eq("brand_domain", domain);
 
     const nicheSlug = niche.trim().toLowerCase();
     if (nicheSlug) {
