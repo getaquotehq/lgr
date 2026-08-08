@@ -352,10 +352,45 @@ Deno.serve(async (req: Request) => {
       return json({ error: "insert_failed", detail: msg }, 400);
     }
 
-    // ── real-time delivery for fresh leads (fire-and-forget) ─────────────────
+    // ── real-time delivery for fresh leads ───────────────────────────────────
+    // Kept alive past the response with waitUntil (same as intake-lead): without
+    // it the edge isolate can be torn down the moment we return and take the
+    // in-flight delivery with it, leaving a lead that reads 'delivered' with
+    // nothing ever sent. Falls back to awaiting inline on runtimes that don't
+    // expose waitUntil (local dev), which costs latency but never drops a lead.
     if (lead && !lead.is_duplicate && lead.status === "delivered") {
-      supabase.functions.invoke("deliver-lead", { body: { lead_id: lead.id } })
-        .catch((e: Error) => console.error("deliver-lead invoke failed:", e.message));
+      const leadId = lead.id as string;
+      const deliveryPromise = (async () => {
+        let failure: string | null = null;
+        try {
+          // invoke() RESOLVES with { error } on a non-2xx instead of throwing, so
+          // a failed delivery has to be read off the result - a bare .catch()
+          // here silently ignores every error deliver-lead actually reports.
+          const { error: invokeErr } = await supabase.functions.invoke(
+            "deliver-lead",
+            { body: { lead_id: leadId } },
+          );
+          if (invokeErr) failure = invokeErr.message || "deliver-lead returned an error";
+        } catch (e) {
+          failure = e instanceof Error ? e.message : String(e);
+        }
+        if (!failure) return;
+        console.error("deliver-lead invoke failed:", failure);
+        // Surface it on the lead so Mission Control shows an undelivered lead
+        // instead of a silent success. Best-effort: deliver-lead writes its own
+        // delivery_error when it runs, so this only fills the gap where it never
+        // ran at all.
+        await supabase
+          .from("asset_leads")
+          .update({ delivery_error: `invoke failed: ${failure}`.slice(0, 500) })
+          .eq("id", leadId);
+      })();
+
+      const runtime = (globalThis as Record<string, unknown>).EdgeRuntime as
+        | { waitUntil?: (p: Promise<unknown>) => void }
+        | undefined;
+      if (runtime?.waitUntil) runtime.waitUntil(deliveryPromise);
+      else await deliveryPromise;
     }
 
     return json({
