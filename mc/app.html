@@ -429,10 +429,17 @@ td.mono{font-family:var(--mono);font-size:12px}
         </div>
         <div class="kg c5 mb4">
           <div class="kpi"><div class="klabel">Total received</div><div class="kval blu" id="ld-total">-</div><div class="ksub" id="ld-total-sub">matching filters</div></div>
-          <div class="kpi"><div class="klabel">Delivered</div><div class="kval grn" id="ld-delivered">-</div></div>
+          <!-- Counts leads actually SENT (delivered_at stamped by deliver-lead),
+               not leads merely matched. A lead is stamped status='delivered' at
+               capture, before anything goes out, so counting the status column
+               here reported failed sends as successes. -->
+          <div class="kpi"><div class="klabel">Sent to installer</div><div class="kval grn" id="ld-delivered">-</div><div class="ksub">email / SMS confirmed away</div></div>
+          <div class="kpi"><div class="klabel">Matched, not sent</div><div class="kval" id="ld-unsent">-</div><div class="ksub">needs Resend</div></div>
           <div class="kpi"><div class="klabel">Duplicate</div><div class="kval" id="ld-duplicate" style="color:var(--amb)">-</div></div>
           <div class="kpi"><div class="klabel">Invalid</div><div class="kval red" id="ld-invalid">-</div></div>
-          <div class="kpi"><div class="klabel">Outstanding to floor</div><div class="kval" id="ld-outstanding" style="color:var(--amb)">-</div><div class="ksub">rented assets · floor − cycle delivered</div></div>
+        </div>
+        <div class="kg c5 mb4">
+          <div class="kpi"><div class="klabel">Outstanding to floor</div><div class="kval" id="ld-outstanding" style="color:var(--amb)">-</div><div class="ksub">rented assets · floor − cycle matched</div></div>
         </div>
 
         <div class="sl" style="cursor:pointer;user-select:none" onclick="toggleLdBreakdown()">
@@ -679,6 +686,21 @@ td.mono{font-family:var(--mono);font-size:12px}
     <div class="frow"><label class="flabel">Extra (JSON)</label><textarea class="fta" id="tl-extra" style="font-family:var(--mono);font-size:11px">{"quarterly_bill": 320, "timeline": "3-6 months"}</textarea><div class="fhint">Niche-specific fields stored on the lead's <code>extra</code> column.</div></div>
     <div id="tl-status" style="display:none;padding:8px 10px;border-radius:6px;font-size:12px;margin-bottom:8px"></div>
     <div class="macts"><button class="btn" onclick="closeModal('m-test-lead')">Cancel</button><button class="btn btn-p" id="tl-btn" onclick="sendTestLead()">Send test lead</button></div>
+  </div>
+</div>
+
+<!-- ═══ RELEASE HELD LEAD MODAL ═══ -->
+<div class="overlay" id="m-release">
+  <div class="modal">
+    <h2>Release held lead</h2>
+    <div class="msub" id="rl-sub">-</div>
+    <div class="frow">
+      <label class="flabel">Deliver to *</label>
+      <select class="fs" id="rl-asset"></select>
+      <div class="fhint">Only installers whose rented area covers this postcode are listed. Releasing runs the same dedup as a funnel capture, then pushes the lead to them.</div>
+    </div>
+    <div id="rl-status" style="display:none;padding:8px 10px;border-radius:6px;font-size:12px;margin-bottom:8px"></div>
+    <div class="macts"><button class="btn" onclick="closeModal('m-release')">Cancel</button><button class="btn btn-p" id="rl-btn" onclick="confirmRelease()">Release &amp; deliver</button></div>
   </div>
 </div>
 
@@ -1317,7 +1339,9 @@ async function loadLeads(reset){
   };
 
   // stats (all matching rows, lightweight) + paged table (with count) + delivery log
-  const statsQ = applyFilters(db.from('asset_leads').select('status,installer_id,captured_at'));
+  // delivered_at is fetched because it - not status - is what proves a lead
+  // actually went out. status is stamped 'delivered' at capture time.
+  const statsQ = applyFilters(db.from('asset_leads').select('status,installer_id,captured_at,delivered_at'));
   const tableQ = applyFilters(db.from('asset_leads').select('*',{count:'exact'}).order('captured_at',{ascending:false}))
                    .range(ldPage*LD_PAGE, (ldPage+1)*LD_PAGE-1);
   const dlogQ = db.from('lead_delivery_log').select('*').order('created_at',{ascending:false}).limit(50);
@@ -1334,7 +1358,17 @@ async function loadLeads(reset){
   // KPI row
   setText('ld-total', all.length);
   setText('ld-total-sub', ldTotal>all.length?`${ldTotal} total (paged)`:'matching filters');
-  setText('ld-delivered', all.filter(l=>l.status==='delivered').length);
+  // "Sent" means deliver-lead confirmed at least one channel away and stamped
+  // delivered_at. A matched lead whose email and SMS both failed is NOT sent -
+  // it shows under "Matched, not sent" so it can be chased with Resend, instead
+  // of silently inflating the delivered figure the way the status column did.
+  const matched = all.filter(l=>l.status==='delivered');
+  const sent    = matched.filter(l=>l.delivered_at);
+  setText('ld-delivered', sent.length);
+  const unsent = matched.length - sent.length;
+  setText('ld-unsent', unsent);
+  const unsentEl = $('ld-unsent');
+  if(unsentEl) unsentEl.style.color = unsent ? 'var(--red)' : 'var(--ink3)';
   setText('ld-duplicate', all.filter(l=>l.status==='duplicate').length);
   setText('ld-invalid', all.filter(l=>l.status==='invalid').length);
   computeOutstanding();
@@ -1406,7 +1440,10 @@ async function renderLdBreakdown(){
   const rows=_installers.map(i=>({i,s:m[i.id]||{delivered:0,duplicate:0,invalid:0}}))
     .filter(r=>r.s.delivered||r.s.duplicate||r.s.invalid);
   $('ld-breakdown').innerHTML = rows.length ? `<div class="twrap"><table style="font-size:12px">
-    <thead><tr><th>Installer</th><th>Delivered</th><th>Duplicate</th><th>Invalid</th><th>Floor (rented)</th></tr></thead>
+    <!-- "Matched", not "Delivered": this counts leads attributed to the installer
+         (what the floor is measured against), which is a different question to
+         whether the email/SMS actually went out. -->
+    <thead><tr><th>Installer</th><th>Matched</th><th>Duplicate</th><th>Invalid</th><th>Floor (rented)</th></tr></thead>
     <tbody>${rows.map(({i,s})=>{
       const floor=_assets.filter(a=>a.rented_by===i.id&&a.status==='rented').reduce((x,a)=>x+(a.floor_leads||0),0);
       const under = floor && s.delivered<floor;
@@ -1598,12 +1635,84 @@ async function loadPending(){
       <td><span class="badge ${rc}">${esc(rl)}</span></td>
       <td><span class="badge ${sc}">${esc(p.status)}</span></td>
       <td class="acts">${p.status==='pending'
-        ? `<button class="btn btn-xs" onclick="discardPending('${p.id}')">Discard</button>`
+        ? `<button class="btn btn-xs btn-p" onclick="releasePending('${p.id}')">Release</button>
+           <button class="btn btn-xs" onclick="discardPending('${p.id}')">Discard</button>`
         : p.status==='discarded'
           ? `<button class="btn btn-xs" onclick="restorePending('${p.id}')">Restore</button>`
           : '-'}</td>
     </tr>`;
   }).join('') : '<tr><td colspan="10" class="empty">No pending leads.</td></tr>';
+}
+
+/* ── Release a held lead ───────────────────────────────────────────────────
+   Deliberately manual: nothing releases a held lead on its own. The admin picks
+   which covering installer gets it, the DB function runs the same attribution
+   and 30-day dedup as a funnel capture, then we push it out via deliver-lead. */
+let _releaseId = null;
+
+function releaseStatus(msg, err){
+  const el=$('rl-status');
+  el.style.cssText = `display:block;padding:8px 10px;border-radius:6px;font-size:12px;margin-bottom:8px;background:${err?'var(--red-dim)':'var(--grn-dim)'};color:${err?'var(--red)':'var(--grn)'}`;
+  el.textContent = msg;
+}
+
+async function releasePending(id){
+  const p = _pendingView.find(x=>x.id===id);
+  _releaseId = id;
+  $('rl-sub').textContent = p
+    ? `${p.full_name||'-'} · ${p.phone||'-'} · postcode ${p.postcode||'-'}`
+    : '';
+  $('rl-status').style.display='none';
+  const sel=$('rl-asset'); sel.innerHTML='<option value="">Loading…</option>';
+  const btn=$('rl-btn'); btn.disabled=true; btn.textContent='Release & deliver';
+  openModal('m-release');
+
+  const { data, error } = await db.rpc('pending_lead_candidates', { p_pending_id: id });
+  if(error){ sel.innerHTML='<option value="">-</option>'; releaseStatus(error.message, true); return; }
+  if(!data || !data.length){
+    sel.innerHTML='<option value="">Nobody covers this postcode yet</option>';
+    releaseStatus('No rented asset currently covers this postcode, so there is nobody to release it to. Rent an area out first, then come back.', true);
+    return;
+  }
+  sel.innerHTML = data.map(c=>
+    `<option value="${esc(c.asset_id)}">${esc(c.business_name)} — ${esc(c.brand_name)}</option>`
+  ).join('');
+  btn.disabled=false;
+}
+
+async function confirmRelease(){
+  const assetId=$('rl-asset').value;
+  if(!_releaseId || !assetId) return;
+  const btn=$('rl-btn'); btn.disabled=true; btn.textContent='Releasing…';
+
+  const { data: lead, error } = await db.rpc('release_pending_lead', {
+    p_pending_id: _releaseId,
+    p_asset_id:   assetId,
+  });
+  if(error){
+    releaseStatus(error.message, true);
+    btn.disabled=false; btn.textContent='Release & deliver';
+    return;
+  }
+
+  // Push it to the installer exactly as a funnel capture would. A duplicate is
+  // recorded but never re-sent - the installer already has this person.
+  if(lead && !lead.is_duplicate){
+    const { error: dErr } = await db.functions.invoke('deliver-lead', { body:{ lead_id: lead.id } });
+    if(dErr){
+      releaseStatus(`Lead created for the installer, but sending it failed: ${dErr.message}. Use Resend on the Lead Distribution tab.`, true);
+      btn.disabled=false; btn.textContent='Release & deliver';
+      loadPending();
+      return;
+    }
+  }
+
+  closeModal('m-release');
+  toast(lead && lead.is_duplicate
+    ? 'Released — that installer already had this person, so it is marked duplicate'
+    : 'Released & delivered ✓');
+  _releaseId=null; btn.disabled=false; btn.textContent='Release & deliver';
+  loadPending();
 }
 
 async function discardPending(id){
