@@ -39,7 +39,7 @@ Edge functions and migrations live with the rest of the project in
 
 1. **Run the migrations.** The platform's 90 migrations live in
    `../supabase/migrations/` (the `2026051*`-`2026072*` set). They create ~50
-   tables: companies, profiles, leads, conversations, ppl_orders,
+   tables: companies, profiles, leads, conversations, area_orders,
    lead_disputes, sms_credits and the rest. None collide with the LGR rental
    tables - the one clash, `leads`, was resolved by renaming LGR's to
    `asset_leads`. (Already applied to the live project.)
