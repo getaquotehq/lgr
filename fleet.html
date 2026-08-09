@@ -1026,6 +1026,7 @@ async function loadInventory(){
     const { data, error } = await sb.from('assets')
       .select('id,tier,brand_name,brand_domain,monthly_price_aud,floor_leads,typical_min,typical_max,status,regions!inner(slug,name,sort_order),niches!inner(slug)')
       .eq('niches.slug', NICHE)
+      .eq('sold_out', false)   // held-back areas are not offered
       .order('sort_order', { referencedTable:'regions', ascending:true })
       .order('tier', { ascending:true });
     if(error) throw error;

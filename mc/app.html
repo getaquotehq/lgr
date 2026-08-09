@@ -371,7 +371,9 @@ td.mono{font-family:var(--mono);font-size:12px}
           <select class="fs" id="af-niche" onchange="renderAssets()" style="width:auto"><option value="">All niches</option></select>
           <select class="fs" id="af-region" onchange="renderAssets()" style="width:auto"><option value="">All regions</option></select>
           <select class="fs" id="af-tier" onchange="renderAssets()" style="width:auto"><option value="">All tiers</option><option value="starter">Starter</option><option value="growth">Growth</option><option value="scale">Scale</option></select>
-          <select class="fs" id="af-status" onchange="renderAssets()" style="width:auto"><option value="">All statuses</option><option value="available">Available</option><option value="rented">Rented</option><option value="maintenance">Maintenance</option></select>
+          <select class="fs" id="af-status" onchange="renderAssets()" style="width:auto"><option value="">All statuses</option><option value="available">Available</option><option value="rented">Rented</option><option value="maintenance">Maintenance</option><option value="__soldout">Sold out (held)</option></select>
+          <button class="btn btn-xs" onclick="bulkAreaSoldOut(true)" title="Mark every asset in the selected area as sold out">Hold area</button>
+          <button class="btn btn-xs" onclick="bulkAreaSoldOut(false)" title="Put every asset in the selected area back on sale">Release area</button>
           <label style="font-size:11px;color:var(--ink3);display:flex;align-items:center;gap:5px"><input type="checkbox" id="af-deleted" onchange="renderAssets()">show deleted</label>
         </div>
         <div class="twrap">
@@ -985,14 +987,17 @@ function renderAssets(){
     if(fn && a.niche_id!==fn) return false;
     if(fr && a.region_id!==fr) return false;
     if(ft && a.tier!==ft) return false;
-    if(fs && a.status!==fs) return false;
+    if(fs==='__soldout'){ if(!a.sold_out) return false; }
+    else if(fs && a.status!==fs) return false;
     if(q && !(`${a.brand_name} ${a.brand_domain||''}`.toLowerCase().includes(q))) return false;
     return true;
   });
   rows.sort((a,b)=>{ const va=assetSortVal(a,assetSort.col), vb=assetSortVal(b,assetSort.col); return (va<vb?-1:va>vb?1:0)*assetSort.dir; });
 
   $('assets-tbody').innerHTML = rows.length ? rows.map(a=>{
-    const badge = a.status==='available'?'bg-grn':a.status==='rented'?'bg-amb':'bg-gray';
+    // sold_out is a manual hold and outranks status in the badge: an asset held
+    // back is not "available" no matter what the rental status says.
+    const badge = a.sold_out?'bg-red':a.status==='available'?'bg-grn':a.status==='rented'?'bg-amb':'bg-gray';
     const del = a.deleted_at ? ' style="opacity:.5"' : '';
     return `<tr${del}>
       <td><strong>${esc(a.brand_name)}</strong>${a.deleted_at?' <span class="badge bg-red">deleted</span>':''}</td>
@@ -1004,11 +1009,12 @@ function renderAssets(){
       <td><span class="tierpill">${esc(a.tier)}</span></td>
       <td class="mono">${fmtAud(a.monthly_price_aud)}</td>
       <td class="mono">${a.floor_leads}</td>
-      <td><span class="badge ${badge}">${esc(a.status)}</span></td>
+      <td><span class="badge ${badge}">${a.sold_out?'sold out':esc(a.status)}</span></td>
       <td class="mono dim">${fmtDate(a.rented_until)}</td>
       <td class="acts">${a.deleted_at
         ? `<button class="btn btn-xs" onclick="restoreAsset('${a.id}')">Restore</button>`
-        : `<button class="btn btn-xs" onclick="openAssetModal('${a.id}')">Edit</button>${assetQuickMenu(a)}`}</td>
+        : `<button class="btn btn-xs" onclick="openAssetModal('${a.id}')">Edit</button>
+           <button class="btn btn-xs" onclick="toggleSoldOut('${a.id}',${a.sold_out?'false':'true'})" title="${a.sold_out?'Put this asset back on sale':'Hold this asset back from sale'}">${a.sold_out?'Unhold':'Hold'}</button>${assetQuickMenu(a)}`}</td>
     </tr>`;
   }).join('') : '<tr><td colspan="10" class="empty">No assets match.</td></tr>';
 }
@@ -1146,6 +1152,35 @@ async function hardDeleteAsset(id){
   if(error){ toast('Error: '+error.message, true); return; }
   toast('Deleted permanently ✓'); loadAssets();
 }
+/* ── Sold out ──────────────────────────────────────────────────────
+   A manual hold, deliberately separate from status. Renting an asset sets
+   status='rented' on its own; sold_out is a human saying "not for sale right
+   now" - an area being held back, or one already promised before the paperwork
+   lands. Nothing ever clears it automatically. */
+async function toggleSoldOut(id, soldOut){
+  const { error } = await db.from('assets').update({ sold_out: soldOut }).eq('id', id);
+  if(error){ toast(error.message, true); return; }
+  toast(soldOut ? 'Held back from sale' : 'Back on sale');
+  loadAssets();
+}
+
+/* Hold or release an entire area in one go. Runs through set_area_sold_out()
+   rather than a client-side loop so it is one atomic statement and is gated on
+   super-admin in the database, not just in this page. */
+async function bulkAreaSoldOut(soldOut){
+  const regionId = $('af-region').value;
+  if(!regionId){ toast('Pick an area in the Area filter first', true); return; }
+  const nicheId = $('af-niche').value || null;
+  const where = regionName(regionId) + (nicheId ? ' \u00b7 ' + nicheName(nicheId) : ' \u00b7 all trades');
+  if(!confirm((soldOut?'Mark SOLD OUT':'Put back on sale')+': every asset in '+where+'?')) return;
+  const { data, error } = await db.rpc('set_area_sold_out', {
+    p_region_id: regionId, p_sold_out: soldOut, p_niche_id: nicheId,
+  });
+  if(error){ toast(error.message, true); return; }
+  toast(`${data||0} asset(s) updated`);
+  loadAssets();
+}
+
 async function restoreAsset(id){
   const { error } = await db.from('assets').update({ deleted_at:null, status:'available' }).eq('id',id);
   if(error){ toast('Error: '+error.message, true); return; }

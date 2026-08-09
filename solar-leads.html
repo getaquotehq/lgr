@@ -911,7 +911,7 @@
   if(hasConfig){
     sb = supabase.createClient(cfg.url, cfg.anonKey);
     // preload the solar regions so we can match a typed suburb/postcode to one
-    sb.from('assets').select('regions!inner(slug,name),niches!inner(slug)').eq('niches.slug','solar')
+    sb.from('assets').select('regions!inner(slug,name),niches!inner(slug)').eq('niches.slug','solar').eq('sold_out', false)
       .then(({ data }) => {
         const seen = new Set();
         (data||[]).forEach(a => { const r = a.regions; if(r && !seen.has(r.slug)){ seen.add(r.slug); SOLAR_REGIONS.push(r); } });
@@ -1020,7 +1020,8 @@
     try{
       let q = sb.from('assets')
         .select('tier,monthly_price_aud,floor_leads,typical_min,typical_max,status,regions!inner(slug,name),niches!inner(slug)')
-        .eq('niches.slug','solar').is('deleted_at', null);
+        .eq('niches.slug','solar').is('deleted_at', null)
+        .eq('sold_out', false);   // held-back areas are not offered
       if(region) q = q.eq('regions.slug', region.slug);
       const { data, error } = await q;
       if(error) throw error;
