@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Indexable marketing pages only. Deliberately excluded:
+    404.html, terms, privacy-policy, rental-terms  - all carry noindex
+    /mc/, /dashboard/                              - application surfaces
+  URLs are extensionless to match how the site links to itself and the
+  canonical tag on each page.
+-->
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url><loc>https://leadgenrentals.com.au/</loc><lastmod>2026-08-09</lastmod></url>
+  <url><loc>https://leadgenrentals.com.au/solar-leads</loc><lastmod>2026-08-09</lastmod></url>
+  <url><loc>https://leadgenrentals.com.au/solar-trial</loc><lastmod>2026-08-09</lastmod></url>
+  <url><loc>https://leadgenrentals.com.au/hvac-leads</loc><lastmod>2026-08-09</lastmod></url>
+  <url><loc>https://leadgenrentals.com.au/roofing-leads</loc><lastmod>2026-08-09</lastmod></url>
+  <url><loc>https://leadgenrentals.com.au/renovations-leads</loc><lastmod>2026-08-09</lastmod></url>
+  <url><loc>https://leadgenrentals.com.au/fleet</loc><lastmod>2026-08-09</lastmod></url>
+  <url><loc>https://leadgenrentals.com.au/about</loc><lastmod>2026-08-09</lastmod></url>
+  <url><loc>https://leadgenrentals.com.au/contact</loc><lastmod>2026-08-09</lastmod></url>
+</urlset>
