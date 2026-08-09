@@ -336,8 +336,8 @@ Deno.serve(async (req) => {
         const ce = company_email.trim().toLowerCase();
         if (/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(ce)) companyPatch.email = ce;
       }
-      // "ppl" is the stored plan key for an asset-rental client.
-      if (plan === "managed" || plan === "ppl") {
+      // "rental" is the stored plan key for an asset-rental client.
+      if (plan === "managed" || plan === "rental") {
         companyPatch.plan = plan as string;
       }
       if (typeof website_url === "string" && website_url.trim()) {

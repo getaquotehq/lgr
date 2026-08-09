@@ -24,7 +24,7 @@
   .empty{padding:28px;text-align:center;color:var(--ink3)}
   .badge{font-size:10px;font-weight:700;padding:2px 8px;border-radius:100px;text-transform:uppercase;letter-spacing:.03em}
   .badge.managed{background:rgba(245,158,11,.14);color:var(--amb);border:1px solid rgba(245,158,11,.3)}
-  .badge.ppl{background:rgba(16,185,129,.14);color:var(--grn);border:1px solid rgba(16,185,129,.3)}
+  .badge.rental{background:rgba(16,185,129,.14);color:var(--grn);border:1px solid rgba(16,185,129,.3)}
   .badge.other{background:rgba(160,160,184,.14);color:var(--ink2);border:1px solid var(--bd)}
   .client-row{display:flex;align-items:center;justify-content:space-between;gap:12px;cursor:pointer}
   .client-row:hover{border-color:var(--accent)}
@@ -164,7 +164,7 @@
       <label class="inv-lbl">Client name<input id="invClientName" type="text"></label>
       <label class="inv-lbl">Client email<input id="invClientEmail" type="text"></label>
       <label class="inv-lbl">Offer type
-        <select id="invOfferType"><option value="managed">Managed Advertising</option><option value="ppl">Asset Rental</option></select>
+        <select id="invOfferType"><option value="managed">Managed Advertising</option><option value="rental">Asset Rental</option></select>
       </label>
       <label class="inv-lbl">Vertical<input id="invVertical" type="text" placeholder="e.g. Solar"></label>
       <label class="inv-lbl">Invoice date<input id="invDate" type="date"></label>
@@ -205,7 +205,7 @@
   const esc = (s) => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
   const fmtMoney = (v) => v != null ? '$' + Number(v).toLocaleString('en-AU', {minimumFractionDigits:0, maximumFractionDigits:2}) : '-';
   const fmtDate = (d) => d ? new Date(d).toLocaleDateString('en-AU', {day:'numeric', month:'short', year:'numeric'}) : '-';
-  const planBadge = (p) => { const k = p === 'managed' ? 'managed' : (p === 'ppl' || p === 'ppl_managed') ? 'ppl' : 'other'; const label = p === 'managed' ? 'Managed' : p === 'ppl' ? 'Rental' : p === 'ppl_managed' ? 'Rental + Managed' : (p || '-'); return `<span class="badge ${k}">${esc(label)}</span>`; };
+  const planBadge = (p) => { const k = p === 'managed' ? 'managed' : (p === 'rental' || p === 'rental_managed') ? 'rental' : 'other'; const label = p === 'managed' ? 'Managed' : p === 'rental' ? 'Rental' : p === 'rental_managed' ? 'Rental + Managed' : (p || '-'); return `<span class="badge ${k}">${esc(label)}</span>`; };
 
   async function vaApi(body) {
     const { data: { session } } = await sb.auth.getSession();
@@ -409,7 +409,7 @@
   // Derive the outstanding tasks for one client from its billing/onboarding state.
   function computeTasks(c) {
     const tasks = [];
-    const managed = c.plan === 'managed' || c.plan === 'ppl_managed';
+    const managed = c.plan === 'managed' || c.plan === 'rental_managed';
     const d = c.delivery || { delivered: 0, total: 0 };
     if (!c.va_intro_done) {
       tasks.push({ key: 'intro', ic: '✉️', label: `Introduce yourself to ${c.name || 'this client'} as their account manager via email` });
@@ -420,7 +420,7 @@
         tasks.push({ key: 'invoice', ic: '🧾', label: `Time to send ${c.name || 'this client'}'s invoice${c.next_invoice_due ? ' (due ' + fmtDate(c.next_invoice_due) + ')' : ''}` });
       }
     }
-    if (c.plan === 'ppl' && c.payment_method === 'invoice') {
+    if (c.plan === 'rental' && c.payment_method === 'invoice') {
       if ((d.total || 0) > 0 && (d.delivered || 0) >= (d.total || 0)) {
         tasks.push({ key: 'reorder', ic: '📞', label: `${c.name || 'This client'}'s leads are delivered - follow up to reorder / send the next invoice` });
       }
@@ -447,9 +447,9 @@
 
     $('listSub').textContent = `${_clients.length} client${_clients.length !== 1 ? 's' : ''} assigned to you.`;
     el.innerHTML = banner + _clients.map(c => {
-      const isPpl = c.plan === 'ppl' || c.plan === 'ppl_managed';
+      const isRental = c.plan === 'rental' || c.plan === 'rental_managed';
       const d = c.delivery || {};
-      const leadStat = isPpl
+      const leadStat = isRental
         ? `<b>${(d.delivered != null ? d.delivered : c.delivered) || 0}/${(d.total != null ? d.total : c.totalLeads) || 0}</b> leads delivered`
         : `<b>${c.accountLeads || 0}</b> leads`;
       const tCount = _billingReady ? computeTasks(c).length : 0;
@@ -461,7 +461,7 @@
           <div class="client-name">${esc(c.name || '(no name)')} ${planBadge(c.plan)} ${isNew48(c) ? '<span class="badge new">New</span>' : ''} ${invSt}</div>
           <div class="stat-row">
             <span>${leadStat}</span>
-            ${isPpl ? `<span><b>${c.activeOrders || 0}</b> active order${c.activeOrders === 1 ? '' : 's'}</span>` : ''}
+            ${isRental ? `<span><b>${c.activeOrders || 0}</b> active order${c.activeOrders === 1 ? '' : 's'}</span>` : ''}
             <span><b>${c.notes || 0}</b> note${c.notes === 1 ? '' : 's'}</span>
             ${tCount ? `<span class="chip warn">${tCount} task${tCount === 1 ? '' : 's'}</span>` : ''}
             ${c.email ? `<span class="muted">${esc(c.email)}</span>` : ''}
@@ -518,7 +518,7 @@
     const cache = _clients.find(x => x.id === companyId) || {};
     const p = extra.profile || {};
     // Preview links / screenshots are a managed (DFY) thing only, not for rental-only clients.
-    const isManaged = c.plan === 'managed' || c.plan === 'ppl_managed';
+    const isManaged = c.plan === 'managed' || c.plan === 'rental_managed';
 
     // ── Tasks ──
     // The intro-email control is always shown (two-way toggle) so the VA can
@@ -841,7 +841,7 @@
     $('invClientName').value = company.name || '';
     $('invClientEmail').value = company.email || '';
     const cache = _clients.find(x => x.id === companyId) || {};
-    $('invOfferType').value = (company.plan === 'ppl') ? 'ppl' : 'managed';
+    $('invOfferType').value = (company.plan === 'rental') ? 'rental' : 'managed';
     $('invVertical').value = '';
     const today = new Date().toISOString().slice(0, 10);
     $('invDate').value = today;

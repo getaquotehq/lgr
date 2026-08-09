@@ -174,10 +174,10 @@ Deno.serve(async (req) => {
           .in("id", ids)
           .order("name", { ascending: true });
 
-        // Lead counts come from ppl_orders (the real fulfilment orders), NOT
-        // ppl_lead_orders (Stripe checkouts - many clients have none).
+        // Lead counts come from area_orders (the real fulfilment orders), NOT
+        // area_lead_orders (Stripe checkouts - many clients have none).
         const { data: orders } = await adminClient
-          .from("ppl_orders")
+          .from("area_orders")
           .select("company_id, total_leads, delivered_leads, status")
           .in("company_id", ids);
 
@@ -232,13 +232,13 @@ Deno.serve(async (req) => {
         }));
 
         const { data: leadOrders } = await adminClient
-          .from("ppl_lead_orders")
+          .from("area_lead_orders")
           .select("id, niche, area, quantity, delivered_count, price_per_lead, total_amount, status, created_at")
           .eq("company_id", companyId)
           .order("created_at", { ascending: false });
 
         const { data: orders } = await adminClient
-          .from("ppl_orders")
+          .from("area_orders")
           .select("id, total_leads, delivered_leads, status, due_date, notes, created_at")
           .eq("company_id", companyId)
           .order("created_at", { ascending: false });
@@ -312,7 +312,7 @@ Deno.serve(async (req) => {
         const safeIds = ids.length ? ids : ["00000000-0000-0000-0000-000000000000"];
 
         const { data: orders } = await adminClient
-          .from("ppl_orders").select("company_id, total_leads, delivered_leads, status").in("company_id", safeIds);
+          .from("area_orders").select("company_id, total_leads, delivered_leads, status").in("company_id", safeIds);
         const { data: invs } = await adminClient
           .from("invoices")
           .select("id, company_id, invoice_number, status, total, invoice_date, due_date, created_at")
@@ -684,12 +684,12 @@ Deno.serve(async (req) => {
         full_name: m.full_name, phone: m.phone, role: m.role, email: emails2[m.id as string] || "",
       }));
       const { data: leadOrders } = await adminClient
-        .from("ppl_lead_orders")
+        .from("area_lead_orders")
         .select("id, niche, area, quantity, delivered_count, price_per_lead, total_amount, status, created_at")
         .eq("company_id", companyId)
         .order("created_at", { ascending: false });
       const { data: orders } = await adminClient
-        .from("ppl_orders")
+        .from("area_orders")
         .select("id, total_leads, delivered_leads, status, due_date, notes, created_at")
         .eq("company_id", companyId)
         .order("created_at", { ascending: false });
@@ -710,15 +710,15 @@ Deno.serve(async (req) => {
       if (!ids.length) return json({ clients: [] });
       const { data: companies } = await adminClient
         .from("companies").select("id, name, plan, email, phone").in("id", ids).order("name", { ascending: true });
-      const { data: pplOrders } = await adminClient
-        .from("ppl_orders").select("company_id, total_leads, delivered_leads, status").in("company_id", ids);
+      const { data: areaOrders } = await adminClient
+        .from("area_orders").select("company_id, total_leads, delivered_leads, status").in("company_id", ids);
       const { data: notes } = await adminClient
         .from("client_notes").select("company_id").in("company_id", ids);
       const { data: leadRows } = await adminClient
         .from("leads").select("company_id").in("company_id", ids);
       const agg: Record<string, { totalLeads: number; delivered: number; activeOrders: number; notes: number; accountLeads: number }> = {};
       for (const id of ids) agg[id] = { totalLeads: 0, delivered: 0, activeOrders: 0, notes: 0, accountLeads: 0 };
-      for (const o of pplOrders || []) {
+      for (const o of areaOrders || []) {
         const a = agg[o.company_id as string]; if (!a) continue;
         a.totalLeads += (o.total_leads as number) || 0;
         a.delivered += (o.delivered_leads as number) || 0;

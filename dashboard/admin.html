@@ -248,8 +248,8 @@ h1{font-size:18px;font-weight:500}
               <label class="form-label" for="newCompanyPlan">Plan</label>
               <select class="form-input" id="newCompanyPlan">
                 <option value="managed">Managed</option>
-                <option value="ppl">Asset Rental</option>
-                <option value="ppl_managed">Rental + Managed</option>
+                <option value="rental">Asset Rental</option>
+                <option value="rental_managed">Rental + Managed</option>
               </select>
             </div>
             <div class="form-row">
@@ -1972,8 +1972,8 @@ h1{font-size:18px;font-weight:500}
         '<select class="form-input company-plan-select" style="height:32px;width:auto;font-size:12px">' +
           '<option value="free"'        + (plan === 'free'        ? ' selected' : '') + '>Free</option>' +
           '<option value="managed"'     + (plan === 'managed'     ? ' selected' : '') + '>Managed</option>' +
-          '<option value="ppl"'         + (plan === 'ppl'         ? ' selected' : '') + '>Asset Rental</option>' +
-          '<option value="ppl_managed"' + (plan === 'ppl_managed' ? ' selected' : '') + '>Rental + Managed</option>' +
+          '<option value="rental"'         + (plan === 'rental'         ? ' selected' : '') + '>Asset Rental</option>' +
+          '<option value="rental_managed"' + (plan === 'rental_managed' ? ' selected' : '') + '>Rental + Managed</option>' +
         '</select>' +
         '<button class="btn btn-sm btn-reject company-delete-btn" type="button">Delete</button>' +
       '</div>';
@@ -2126,12 +2126,12 @@ h1{font-size:18px;font-weight:500}
     rows.forEach(function (c) { listEl.appendChild(renderBillingRow(c)); });
   }
 
-  var PLAN_LABEL = { free: 'Free', managed: 'Managed', ppl: 'Asset Rental', ppl_managed: 'Rental + Managed' };
+  var PLAN_LABEL = { free: 'Free', managed: 'Managed', rental: 'Asset Rental', rental_managed: 'Rental + Managed' };
 
   function renderBillingRow(c) {
     var wrap = document.createElement('div');
     wrap.className = 'bill-row';
-    var ppl = (c.plan === 'ppl' || c.plan === 'ppl_managed');
+    var isRental = (c.plan === 'rental' || c.plan === 'rental_managed');
     var del = c.delivery || { delivered: 0, total: 0 };
     var pm = c.payment_method || '';
     var invStatus = c.invoice_status || 'none';
@@ -2140,7 +2140,7 @@ h1{font-size:18px;font-weight:500}
     if (isNewClient(c.created_at)) badges += '<span class="bill-badge bb-new">New</span> ';
     if (invStatus && invStatus !== 'none') badges += invBadge(invStatus) + ' ';
 
-    var deliveryLine = ppl
+    var deliveryLine = isRental
       ? '<span style="color:var(--muted)">Leads: <b style="color:var(--text)">' + (del.delivered || 0) + '/' + (del.total || 0) + '</b> delivered</span>'
       : '';
 

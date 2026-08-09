@@ -284,10 +284,10 @@ Deno.serve(async (req) => {
       if (!company_id || !UUID_RE.test(company_id)) {
         return json({ error: "company_id must be a valid UUID" }, 400);
       }
-      // "ppl" is the stored plan key for an asset-rental client.
-      const VALID_PLANS = ["free", "managed", "ppl", "ppl_managed"];
+      // "rental" is the stored plan key for an asset-rental client.
+      const VALID_PLANS = ["free", "managed", "rental", "rental_managed"];
       if (plan !== undefined && !VALID_PLANS.includes(plan)) {
-        return json({ error: "plan must be 'free', 'managed' or 'ppl'" }, 400);
+        return json({ error: "plan must be 'free', 'managed' or 'rental'" }, 400);
       }
 
       const update: Record<string, unknown> = {};

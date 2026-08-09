@@ -1700,7 +1700,7 @@ const LOCKED_SOURCE = "asset";
 // remain editable.
 function isDeliveredLead(lead) {
   if (!lead) return false;
-  if (lead.is_ppl === true) return true;
+  if (lead.is_area_lead === true) return true;
   return String(lead.source || "").trim().toLowerCase() === LOCKED_SOURCE;
 }
 // Fields that are NOT editable on a locked lead, per modal.
@@ -1861,7 +1861,7 @@ async function handleLeadSave(e) {
       delete payload.phone;
       delete payload.source;
       delete payload.postcode;
-      delete payload.is_ppl;
+      delete payload.is_area_lead;
       delete payload.custom_data;
     } else if (isDeliveredLead(existingLead) && !payload.postcode) {
       // Delivered leads: block clearing the postcode.
