@@ -209,6 +209,13 @@ td.mono{font-family:var(--mono);font-size:12px}
 .nichecard-s{font-size:10.5px;color:var(--ink3);margin-top:3px}
 .subrow td{background:var(--bg2);padding:12px 16px}
 .subrow .chip{display:inline-flex;align-items:center;gap:5px;background:var(--s2);border:1px solid var(--bd2);border-radius:20px;padding:3px 10px;font-size:11px;margin:2px 4px 2px 0}
+.pr-note{margin:0 0 14px;padding:9px 12px;border:1px solid var(--line);border-radius:8px;background:var(--s2);font-size:12.5px;color:var(--dim)}
+.pr-note b{color:var(--ink);font-weight:600}
+.pr-cell{display:flex;gap:4px;align-items:center}
+.pr-cell input{width:62px;padding:4px 6px;font-size:12px;font-family:inherit;border:1px solid var(--line);border-radius:5px;background:var(--bg);color:var(--ink);font-variant-numeric:tabular-nums}
+.pr-cell input.dirty{border-color:var(--acc);background:color-mix(in srgb,var(--acc) 8%,var(--bg))}
+.pr-cell .sep{color:var(--dim);font-size:11px}
+.pr-off{color:var(--amb);font-weight:600}
 .pacebar{width:120px;height:6px;background:var(--s3);border-radius:3px;overflow:hidden;display:inline-block;vertical-align:middle;margin-right:8px}
 .pacebar>span{display:block;height:100%;border-radius:3px}
 
@@ -319,6 +326,9 @@ td.mono{font-family:var(--mono);font-size:12px}
           </button>
           <button class="navbtn" data-panel="regions" onclick="nav('regions',this)">
             <span class="ni"><svg viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg></span>Regions
+          </button>
+          <button class="navbtn" data-panel="pricing" onclick="nav('pricing',this)">
+            <span class="ni"><svg viewBox="0 0 24 24"><path d="M12 1v22"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg></span>Pricing
           </button>
         </div>
       </div>
@@ -574,6 +584,28 @@ td.mono{font-family:var(--mono);font-size:12px}
         </div>
       </div>
 
+      <div class="panel" id="panel-pricing">
+        <div class="ph">
+          <div class="ph-left"><h1>Area pricing</h1><p>What each area charges per tier. Price lives on the asset - this edits them in bulk.</p></div>
+          <div class="ph-right">
+            <select class="fs" id="pr-niche" onchange="loadPricing()" style="width:auto"><option value="">All trades</option></select>
+            <button class="btn" onclick="resetAllToGeneral()" title="Put every area back on the standard tier price">Reset all to general</button>
+          </div>
+        </div>
+        <div class="pr-note" id="pr-general"></div>
+        <div class="twrap">
+          <table>
+            <thead><tr>
+              <th>Area</th>
+              <th>Starter</th><th>Growth</th><th>Scale</th>
+              <th title="Fee divided by floor - the most a lead can cost">Worst case / lead</th>
+              <th></th>
+            </tr></thead>
+            <tbody id="pricing-tbody"><tr><td colspan="6" class="empty">Loading…</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+
     </div>
   </div>
 
@@ -805,6 +837,7 @@ async function loadRefData(){
   const regionOpts = _regions.map(x=>`<option value="${x.id}">${esc(x.name)}</option>`).join('');
   const instOpts = _installers.map(x=>`<option value="${x.id}">${esc(x.business_name)}</option>`).join('');
   fillSelect('af-niche','All niches',nicheOpts);
+  fillSelect('pr-niche','All trades',nicheOpts);
   fillSelect('af-region','All regions',regionOpts);
   fillSelect('rf-installer','All installers',instOpts);
   fillSelect('rf-asset','All assets','');
@@ -844,6 +877,138 @@ function nav(panel, el){
   if(panel==='pipeline') loadPipeline();
   if(panel==='niches') loadNiches();
   if(panel==='regions') loadRegions();
+  if(panel==='pricing') loadPricing();
+}
+
+/* ════════════════════════════════════════════════════════════════════════
+   AREA PRICING
+
+   The price of an area is just the price on its assets - there is no separate
+   area-price table, deliberately. One would duplicate a number the assets
+   already hold and drift apart the moment somebody edited an asset directly.
+   So this screen reads the assets, and writes them back through
+   set_area_pricing(), which is one atomic statement gated on super-admin in
+   the database rather than only here.
+
+   "Worst case / lead" is fee divided by floor: the most a lead can cost if a
+   campaign only ever delivers the guaranteed floor. That is the number the
+   public site now promises in words, so it is worth seeing while you price.
+   ════════════════════════════════════════════════════════════════════════ */
+const PR_TIERS = ['starter','growth','scale'];
+let _pricing = [];
+
+async function loadPricing(){
+  const niche = $('pr-niche').value || null;
+  let q = db.from('assets').select('id,region_id,niche_id,tier,monthly_price_aud,floor_leads,sold_out')
+            .is('deleted_at', null);
+  if(niche) q = q.eq('niche_id', niche);
+  const { data, error } = await q;
+  if(error){ $('pricing-tbody').innerHTML = `<tr><td colspan="6" class="empty" style="color:var(--red)">${esc(error.message)}</td></tr>`; return; }
+  _pricing = data || [];
+
+  const g = PR_TIERS.map(t=>`${t} ${fmtAud(TIER_DEFAULTS[t].price)} / ${TIER_DEFAULTS[t].floor} leads`).join(' \u00b7 ');
+  $('pr-general').innerHTML = `<b>General price:</b> ${esc(g)} \u2014 ${fmtAud(TIER_DEFAULTS.starter.price/TIER_DEFAULTS.starter.floor)} per lead worst case. Anything differing from it is highlighted.`;
+  renderPricing();
+}
+
+function prGroup(regionId, tier){
+  return _pricing.filter(a=>a.region_id===regionId && a.tier===tier);
+}
+
+function renderPricing(){
+  // Only areas that actually have assets - an empty area has nothing to price.
+  const regionIds = [...new Set(_pricing.map(a=>a.region_id))]
+    .sort((a,b)=> regionName(a).localeCompare(regionName(b)));
+
+  $('pricing-tbody').innerHTML = regionIds.length ? regionIds.map(rid=>{
+    let worst = 0, offStandard = false;
+    const cells = PR_TIERS.map(t=>{
+      const grp = prGroup(rid,t);
+      if(!grp.length) return '<td class="dim">-</td>';
+      // A region can hold several trades at one tier. If they disagree the
+      // boxes stay blank rather than showing one trade's number as if it were
+      // the area's - typing a value then sets them all.
+      const prices = [...new Set(grp.map(a=>a.monthly_price_aud))];
+      const floors = [...new Set(grp.map(a=>a.floor_leads))];
+      const price = prices.length===1 ? prices[0] : '';
+      const floor = floors.length===1 ? floors[0] : '';
+      if(price!==''&&floor!=='') worst = Math.max(worst, price/floor);
+      if(price!==TIER_DEFAULTS[t].price || floor!==TIER_DEFAULTS[t].floor) offStandard = true;
+      const mixed = prices.length>1||floors.length>1 ? ' title="Trades in this area differ - type a value to set them all"' : '';
+      return `<td><div class="pr-cell"${mixed}>
+        <input type="number" min="1" step="50" value="${price}" placeholder="mixed" id="pp-${rid}-${t}" oninput="prDirty(this)">
+        <span class="sep">/</span>
+        <input type="number" min="1" step="1"  value="${floor}" placeholder="-" id="pf-${rid}-${t}" oninput="prDirty(this)">
+      </div></td>`;
+    }).join('');
+
+    return `<tr>
+      <td><strong>${esc(regionName(rid))}</strong></td>
+      ${cells}
+      <td class="mono ${offStandard?'pr-off':''}">${worst?fmtAud(Math.round(worst)):'-'}</td>
+      <td class="acts">
+        <button class="btn btn-xs" onclick="saveAreaPricing('${rid}')">Save</button>
+        <button class="btn btn-xs" onclick="resetAreaToGeneral('${rid}')" title="Put this area back on the standard tier price">Reset</button>
+      </td>
+    </tr>`;
+  }).join('') : '<tr><td colspan="6" class="empty">No assets to price.</td></tr>';
+}
+
+function prDirty(el){ el.classList.add('dirty'); }
+
+/* Save one area. Each tier is its own call because a tier can legitimately be
+   left blank (mixed, or untouched) and should then not be written at all. */
+async function saveAreaPricing(regionId){
+  const niche = $('pr-niche').value || null;
+  let touched = 0, changed = 0;
+  for(const t of PR_TIERS){
+    const pEl = $(`pp-${regionId}-${t}`), fEl = $(`pf-${regionId}-${t}`);
+    if(!pEl || !fEl) continue;
+    const price = pEl.value===''? null : parseInt(pEl.value,10);
+    const floor = fEl.value===''? null : parseInt(fEl.value,10);
+    if(price===null && floor===null) continue;
+    if(price!==null && (isNaN(price)||price<=0)){ toast(`${t}: price must be above zero`, true); return; }
+    if(floor!==null && (isNaN(floor)||floor<=0)){ toast(`${t}: floor must be at least 1 lead`, true); return; }
+    touched++;
+    const { data, error } = await db.rpc('set_area_pricing', {
+      p_region_id: regionId, p_tier: t, p_price: price, p_floor: floor, p_niche_id: niche,
+    });
+    if(error){ toast(error.message, true); return; }
+    changed += (data||0);
+  }
+  if(!touched){ toast('Nothing to save', true); return; }
+  toast(changed ? `${regionName(regionId)}: ${changed} asset(s) updated` : `${regionName(regionId)}: already at those prices`);
+  loadPricing();
+}
+
+async function resetAreaToGeneral(regionId){
+  if(!confirm(`Put ${regionName(regionId)} back on the general tier price?`)) return;
+  await prApplyGeneral([regionId]);
+}
+
+async function resetAllToGeneral(){
+  const ids = [...new Set(_pricing.map(a=>a.region_id))];
+  if(!ids.length){ toast('Nothing to reset', true); return; }
+  if(!confirm(`Put all ${ids.length} area(s) back on the general tier price?`)) return;
+  await prApplyGeneral(ids);
+}
+
+async function prApplyGeneral(regionIds){
+  const niche = $('pr-niche').value || null;
+  let changed = 0;
+  for(const rid of regionIds){
+    for(const t of PR_TIERS){
+      const { data, error } = await db.rpc('set_area_pricing', {
+        p_region_id: rid, p_tier: t,
+        p_price: TIER_DEFAULTS[t].price, p_floor: TIER_DEFAULTS[t].floor,
+        p_niche_id: niche,
+      });
+      if(error){ toast(error.message, true); return; }
+      changed += (data||0);
+    }
+  }
+  toast(changed ? `${changed} asset(s) back on the general price` : 'Already on the general price');
+  loadPricing();
 }
 
 /* ════════════════════════════════════════════════════════════════════════
