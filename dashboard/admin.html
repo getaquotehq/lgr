@@ -515,6 +515,7 @@ h1{font-size:18px;font-weight:500}
             <option value="retired">Retired</option>
           </select>
           <button class="btn2 btn-sm" id="lgrTierPricingBtn" type="button">Tier pricing</button>
+          <button class="btn2 btn-sm" id="lgrAreaPricingBtn" type="button">Area pricing</button>
           <button class="btn btn-sm" id="lgrRefreshFleetBtn" type="button">Refresh</button>
         </div>
       </div>
@@ -534,6 +535,31 @@ h1{font-size:18px;font-weight:500}
           <div id="lgrTierRows"></div>
           <div style="margin-top:12px;display:flex;gap:8px">
             <button class="btn btn-sm" id="lgrCloseTierBtn" type="button">Close</button>
+          </div>
+        </div>
+
+        <!-- Area pricing editor: same idea as tier pricing, but scoped to one area -->
+        <div id="lgrAreaEditor" class="hidden" style="margin-bottom:14px;padding:14px;background:var(--surface);border:1px solid var(--border);border-radius:10px">
+          <div style="font-weight:600;margin-bottom:4px">Area pricing</div>
+          <p style="font-size:12px;color:var(--muted);margin-bottom:12px">
+            Prices one area on its own, when it should not sit on the standard tier price. Blank boxes are left untouched.
+            The cap is monthly &divide; floor &mdash; the most a lead can cost if a campaign only ever delivers the guaranteed floor.
+            You can also hold the whole area back from sale without renting it out.
+          </p>
+          <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:10px">
+            <label class="bank-lbl" style="max-width:260px">Area
+              <select id="lgrAreaRegion" class="bank-in"><option value="">Pick an area…</option></select>
+            </label>
+            <label class="bank-lbl" style="max-width:260px">Apply to niche
+              <select id="lgrAreaNiche" class="bank-in"><option value="">All niches</option></select>
+            </label>
+          </div>
+          <div id="lgrAreaRows"></div>
+          <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap">
+            <button class="btn2 btn-sm" id="lgrAreaHoldBtn" type="button">Mark area sold out</button>
+            <button class="btn2 btn-sm" id="lgrAreaReleaseBtn" type="button">Put area back on sale</button>
+            <button class="btn btn-sm" id="lgrAreaResetBtn" type="button">Reset area to tier price</button>
+            <button class="btn btn-sm" id="lgrCloseAreaBtn" type="button">Close</button>
           </div>
         </div>
         <div id="lgrFleetLoading" class="notice">Loading fleet…</div>
@@ -2843,7 +2869,7 @@ h1{font-size:18px;font-weight:500}
     }
 
     // Feed every niche dropdown on the page from the one source.
-    ['lgrNicheFilter', 'lgrTierNiche'].forEach(function (id) {
+    ['lgrNicheFilter', 'lgrTierNiche', 'lgrAreaNiche'].forEach(function (id) {
       var sel = document.getElementById(id);
       if (!sel) return;
       var keep = sel.value;
@@ -2940,6 +2966,16 @@ h1{font-size:18px;font-weight:500}
     lgrAssets.forEach(function (a) { if (a.regions) regions[a.regions.id] = a.regions; });
     var regionList = Object.keys(regions).map(function (k) { return regions[k]; })
       .sort(function (a, b) { return a.name.localeCompare(b.name); });
+    // Same list feeds the Area pricing picker, so it can never offer a dead region.
+    var areaSel = document.getElementById('lgrAreaRegion');
+    if (areaSel) {
+      var keepArea = areaSel.value;
+      areaSel.innerHTML = '<option value="">Pick an area\u2026</option>' + regionList.map(function (r) {
+        return '<option value="' + escapeHtml(r.id) + '">' + escapeHtml(r.name) +
+               (r.state ? ' (' + escapeHtml(r.state) + ')' : '') + '</option>';
+      }).join('');
+      if (keepArea) areaSel.value = keepArea;
+    }
     sel.innerHTML = '<option value="">All areas</option>' + regionList.map(function (r) {
       return '<option value="' + escapeHtml(r.id) + '">' + escapeHtml(r.name) + ' · ' + escapeHtml(r.state || '') + '</option>';
     }).join('');
@@ -3000,6 +3036,14 @@ h1{font-size:18px;font-weight:500}
         renderLgrFleet();
       });
     });
+    var areaBox = document.getElementById('lgrAreaEditor');
+    if (areaBox && !areaBox.classList.contains('hidden')) renderLgrAreaEditor();
+
+    list.querySelectorAll('[data-lgr-hold]').forEach(function (b) {
+      b.addEventListener('click', function () {
+        holdLgrAsset(b.getAttribute('data-lgr-hold'), b.getAttribute('data-lgr-hold-to') === '1');
+      });
+    });
     list.querySelectorAll('[data-lgr-cancel]').forEach(function (b) {
       b.addEventListener('click', function () { lgrEditAsset = null; renderLgrFleet(); });
     });
@@ -3030,10 +3074,14 @@ h1{font-size:18px;font-weight:500}
         '<td style="padding:8px 10px">' + (a.floor_leads == null ? '-' : a.floor_leads) + '</td>' +
         '<td style="padding:8px 10px;color:var(--muted)">' + (a.typical_min || '-') + '–' + (a.typical_max || '-') + '</td>' +
         '<td style="padding:8px 10px;white-space:nowrap">' + lgrLeadRange(a) + '</td>' +
-        '<td style="padding:8px 10px">' + lgrStatusPill(a.status) + '</td>' +
+        '<td style="padding:8px 10px">' + (a.sold_out
+            ? '<span class="pill" style="background:#7f1d1d;color:#fff">sold out</span>'
+            : lgrStatusPill(a.status)) + '</td>' +
         '<td style="padding:8px 10px;color:var(--muted)">' + by + '</td>' +
         '<td style="padding:8px 10px;text-align:right">' +
-          '<button class="btn btn-sm" type="button" data-lgr-edit="' + escapeHtml(a.id) + '">Edit</button></td>' +
+          '<button class="btn btn-sm" type="button" data-lgr-edit="' + escapeHtml(a.id) + '">Edit</button> ' +
+          '<button class="btn btn-sm" type="button" data-lgr-hold="' + escapeHtml(a.id) + '" data-lgr-hold-to="' + (a.sold_out ? '0' : '1') + '">' +
+            (a.sold_out ? 'Unhold' : 'Hold') + '</button></td>' +
         '</tr>';
     }
 
@@ -3094,6 +3142,169 @@ h1{font-size:18px;font-weight:500}
     toast('Asset updated');
     lgrEditAsset = null;
     await loadLgrFleet();
+  }
+
+  // ── Area pricing ──────────────────────────────────────────────────────────
+  // Tier pricing above sets a price for a whole tier across the fleet. This
+  // does the same for a single area, for when one region should not sit on the
+  // standard price. Both write to assets - the price lives there and nowhere
+  // else, so there is no second copy to drift out of step.
+  //
+  // Writes go through set_area_pricing() rather than a direct update: it is one
+  // atomic statement and the super-admin check runs in the database, not just
+  // in this page.
+  function renderLgrAreaEditor() {
+    var wrap = document.getElementById('lgrAreaRows');
+    if (!wrap) return;
+    var regionId = document.getElementById('lgrAreaRegion').value;
+    var nicheId  = document.getElementById('lgrAreaNiche').value;
+
+    if (!regionId) {
+      wrap.innerHTML = '<p style="font-size:12px;color:var(--muted)">Pick an area to see what it charges.</p>';
+      return;
+    }
+    var inp = 'height:32px;width:100%;padding:0 8px;border-radius:6px;border:1px solid var(--border);background:var(--bg);font:inherit;font-size:13px';
+
+    wrap.innerHTML = LGR_TIERS.map(function (t) {
+      var scope = lgrAssets.filter(function (a) {
+        return a.region_id === regionId && a.tier === t && (!nicheId || a.niche_id === nicheId);
+      });
+      if (!scope.length) {
+        return '<div style="font-size:12px;color:var(--muted);margin-bottom:8px">' +
+               lgrTierLabel(t) + ' - no assets here</div>';
+      }
+      // Several niches can share one area and tier. If they disagree the box is
+      // left blank rather than showing one niche's number as the area's -
+      // typing a value then sets them all.
+      var prices = scope.map(function (a) { return a.monthly_price_aud; })
+                        .filter(function (v, i, arr) { return arr.indexOf(v) === i; });
+      var floors = scope.map(function (a) { return a.floor_leads; })
+                        .filter(function (v, i, arr) { return arr.indexOf(v) === i; });
+      var price = prices.length === 1 ? (prices[0] || '') : '';
+      var floor = floors.length === 1 ? (floors[0] || '') : '';
+      var mixed = (prices.length > 1 || floors.length > 1)
+        ? ' <span style="color:var(--muted);font-size:11px">(niches differ)</span>' : '';
+
+      return '<div style="display:grid;grid-template-columns:110px repeat(2,1fr) auto;gap:8px;align-items:end;margin-bottom:8px">' +
+        '<div style="font-weight:600;padding-bottom:8px">' + lgrTierLabel(t) + mixed + '</div>' +
+        '<label class="bank-lbl">Monthly<input id="lgrArea_' + t + '_monthly" class="bank-in" style="' + inp + '" type="number" min="1" step="50" value="' + price + '" placeholder="unchanged"></label>' +
+        '<label class="bank-lbl">Floor<input id="lgrArea_' + t + '_floor" class="bank-in" style="' + inp + '" type="number" min="1" step="1" value="' + floor + '" placeholder="unchanged"></label>' +
+        '<button class="btn2 btn-sm" type="button" data-lgr-area="' + t + '" style="margin-bottom:2px">Apply</button>' +
+        '</div>' +
+        '<div id="lgrAreaNote_' + t + '" style="font-size:11px;color:var(--muted);margin:-4px 0 12px 118px"></div>';
+    }).join('');
+
+    LGR_TIERS.forEach(updateLgrAreaNote);
+    wrap.querySelectorAll('input').forEach(function (i) {
+      i.addEventListener('input', function () {
+        var m = i.id.match(/^lgrArea_([a-z]+)_/);
+        if (m) updateLgrAreaNote(m[1]);
+      });
+    });
+    wrap.querySelectorAll('[data-lgr-area]').forEach(function (b) {
+      b.addEventListener('click', function () { applyLgrAreaPricing(b.getAttribute('data-lgr-area')); });
+    });
+  }
+
+  function updateLgrAreaNote(tier) {
+    var note = document.getElementById('lgrAreaNote_' + tier);
+    if (!note) return;
+    var mEl = document.getElementById('lgrArea_' + tier + '_monthly');
+    var fEl = document.getElementById('lgrArea_' + tier + '_floor');
+    if (!mEl || !fEl) return;
+    var m = Number(mEl.value || 0), fl = Number(fEl.value || 0);
+    note.textContent = (m && fl)
+      ? 'Caps at $' + (m / fl).toFixed(2) + ' per lead if only the floor lands.'
+      : '';
+  }
+
+  async function applyLgrAreaPricing(tier) {
+    var regionId = document.getElementById('lgrAreaRegion').value;
+    if (!regionId) { toast('Pick an area first', true); return; }
+    var nicheId = document.getElementById('lgrAreaNiche').value || null;
+
+    var mEl = document.getElementById('lgrArea_' + tier + '_monthly');
+    var fEl = document.getElementById('lgrArea_' + tier + '_floor');
+    if (!mEl || !fEl) { toast('No assets on that tier here', true); return; }
+
+    var price = mEl.value === '' ? null : Number(mEl.value);
+    var floor = fEl.value === '' ? null : Number(fEl.value);
+    if (price === null && floor === null) { toast('Nothing to change', true); return; }
+    if (price !== null && !(price > 0)) { toast('Monthly price must be above zero', true); return; }
+    // Floor divides the fee to give the per-lead cap, so zero would mean an
+    // unbounded price per lead.
+    if (floor !== null && !(floor > 0)) { toast('Floor must be at least 1 lead', true); return; }
+
+    var areaName = lgrRegionName(regionId);
+    if (!confirm('Reprice ' + lgrTierLabel(tier) + ' in ' + areaName + '?\n\n' +
+                 'Rented assets keep billing at their agreed rate until the subscription renews.')) return;
+
+    var res = await sb.rpc('set_area_pricing', {
+      p_region_id: regionId, p_tier: tier,
+      p_price: price, p_floor: floor, p_niche_id: nicheId,
+    });
+    if (res.error) { toast('Repricing failed: ' + res.error.message, true); return; }
+    toast(res.data ? res.data + ' asset(s) repriced' : 'Already at those prices');
+    await loadLgrFleet();
+  }
+
+  // Put one area back on whatever the tier currently charges elsewhere.
+  async function resetLgrAreaToTier() {
+    var regionId = document.getElementById('lgrAreaRegion').value;
+    if (!regionId) { toast('Pick an area first', true); return; }
+    var nicheId = document.getElementById('lgrAreaNiche').value || null;
+    if (!confirm('Put ' + lgrRegionName(regionId) + ' back on the standard tier price?')) return;
+
+    var changed = 0;
+    for (var i = 0; i < LGR_TIERS.length; i++) {
+      var t = LGR_TIERS[i];
+      // "Standard" means whatever that tier charges outside this area, so the
+      // reset follows the fleet instead of a hardcoded number.
+      var other = lgrAssets.filter(function (a) {
+        return a.tier === t && a.region_id !== regionId && a.monthly_price_aud && a.floor_leads;
+      })[0];
+      if (!other) continue;
+      var res = await sb.rpc('set_area_pricing', {
+        p_region_id: regionId, p_tier: t,
+        p_price: other.monthly_price_aud, p_floor: other.floor_leads,
+        p_niche_id: nicheId,
+      });
+      if (res.error) { toast('Reset failed: ' + res.error.message, true); return; }
+      changed += (res.data || 0);
+    }
+    toast(changed ? changed + ' asset(s) back on the tier price' : 'Already on the tier price');
+    await loadLgrFleet();
+  }
+
+  // ── Sold out ──────────────────────────────────────────────────────────────
+  // A manual hold, separate from status. Renting an asset sets status='rented'
+  // by itself; sold_out is a human saying "not for sale right now" - an area
+  // held back, or one already promised before the paperwork lands. Nothing
+  // clears it automatically.
+  async function holdLgrAsset(id, soldOut) {
+    var res = await sb.from('assets').update({ sold_out: soldOut }).eq('id', id);
+    if (res.error) { toast(res.error.message, true); return; }
+    toast(soldOut ? 'Held back from sale' : 'Back on sale');
+    await loadLgrFleet();
+  }
+
+  async function holdLgrArea(soldOut) {
+    var regionId = document.getElementById('lgrAreaRegion').value;
+    if (!regionId) { toast('Pick an area first', true); return; }
+    var nicheId = document.getElementById('lgrAreaNiche').value || null;
+    if (!confirm((soldOut ? 'Mark SOLD OUT' : 'Put back on sale') + ': every asset in ' +
+                 lgrRegionName(regionId) + '?')) return;
+    var res = await sb.rpc('set_area_sold_out', {
+      p_region_id: regionId, p_sold_out: soldOut, p_niche_id: nicheId,
+    });
+    if (res.error) { toast(res.error.message, true); return; }
+    toast((res.data || 0) + ' asset(s) updated');
+    await loadLgrFleet();
+  }
+
+  function lgrRegionName(id) {
+    var hit = lgrAssets.filter(function (a) { return a.region_id === id && a.regions; })[0];
+    return hit ? hit.regions.name : 'this area';
   }
 
   // ── Bulk tier pricing ─────────────────────────────────────────────────────
@@ -3398,6 +3609,19 @@ h1{font-size:18px;font-weight:500}
     document.getElementById('lgrCloseTierBtn').addEventListener('click', function () {
       document.getElementById('lgrTierEditor').classList.add('hidden');
     });
+    document.getElementById('lgrAreaPricingBtn').addEventListener('click', function () {
+      var box = document.getElementById('lgrAreaEditor');
+      box.classList.toggle('hidden');
+      if (!box.classList.contains('hidden')) renderLgrAreaEditor();
+    });
+    document.getElementById('lgrCloseAreaBtn').addEventListener('click', function () {
+      document.getElementById('lgrAreaEditor').classList.add('hidden');
+    });
+    document.getElementById('lgrAreaRegion').addEventListener('change', renderLgrAreaEditor);
+    document.getElementById('lgrAreaNiche').addEventListener('change', renderLgrAreaEditor);
+    document.getElementById('lgrAreaResetBtn').addEventListener('click', resetLgrAreaToTier);
+    document.getElementById('lgrAreaHoldBtn').addEventListener('click', function () { holdLgrArea(true); });
+    document.getElementById('lgrAreaReleaseBtn').addEventListener('click', function () { holdLgrArea(false); });
 
     document.getElementById('lgrRefreshRentalsBtn').addEventListener('click', loadLgrRentals);
     document.getElementById('lgrRentalStatusFilter').addEventListener('change', loadLgrRentals);
