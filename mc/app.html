@@ -536,6 +536,7 @@ td.mono{font-family:var(--mono);font-size:12px}
               <option value="closed_lost">Closed Lost</option>
             </select>
             <button class="btn btn-sm" onclick="loadPipeline()">↻ Refresh</button>
+            <button class="btn btn-p btn-sm" onclick="openPipelineModal()">+ Add lead</button>
           </div>
         </div>
         <div class="kg c5 mb4">
@@ -671,6 +672,34 @@ td.mono{font-family:var(--mono);font-size:12px}
 </div>
 
 <!-- ═══ NICHE MODAL ═══ -->
+<div class="overlay" id="m-pipeline">
+  <div class="modal">
+    <h2 id="mp-title">New sales lead</h2>
+    <div class="msub">An installer enquiring about renting an asset</div>
+    <input type="hidden" id="mp-id">
+    <div class="fgrid2">
+      <div class="frow"><label class="flabel">First name *</label><input class="fi" id="mp-first" placeholder="Jane"></div>
+      <div class="frow"><label class="flabel">Last name</label><input class="fi" id="mp-last" placeholder="Smith"></div>
+    </div>
+    <div class="fgrid2">
+      <div class="frow"><label class="flabel">Phone</label><input class="fi" id="mp-phone" type="tel" placeholder="0400 000 000"></div>
+      <div class="frow"><label class="flabel">Email</label><input class="fi" id="mp-email" type="email" placeholder="jane@business.com.au"></div>
+    </div>
+    <div class="fgrid2">
+      <div class="frow"><label class="flabel">Their business</label><input class="fi" id="mp-company" placeholder="Smith Solar"></div>
+      <div class="frow"><label class="flabel">Source</label><input class="fi" id="mp-source" list="mp-sources" placeholder="Phone call">
+        <datalist id="mp-sources">
+          <option value="Phone call"><option value="Email"><option value="Website form">
+          <option value="Referral"><option value="Cold outreach"><option value="Other">
+        </datalist>
+      </div>
+    </div>
+    <div class="frow"><label class="flabel">Stage</label><select class="fs" id="mp-stage"></select></div>
+    <div class="frow"><label class="flabel">Notes</label><textarea class="fta" id="mp-notes" placeholder="What they asked about, which area, anything worth remembering"></textarea></div>
+    <div class="macts"><button class="btn" onclick="closeModal('m-pipeline')">Cancel</button><button class="btn btn-p" id="mp-save" onclick="savePipelineLead()">Save lead</button></div>
+  </div>
+</div>
+
 <div class="overlay" id="m-niche">
   <div class="modal">
     <h2 id="mn-title">New niche</h2>
@@ -1778,8 +1807,103 @@ async function loadPipeline(){
         <select class="fs" style="font-size:10.5px;padding:3px 6px;width:auto" onchange="updatePipelineStage('${l.id}',this.value,this)">
           ${Object.entries(PIPELINE_STAGE_LABEL).map(([v,label])=>`<option value="${v}" ${l.pipeline_stage===v?'selected':''}>${label}</option>`).join('')}
         </select>
+        <button class="btn btn-xs" onclick="editPipelineLead('${l.id}')">Edit</button>
       </td>
     </tr>`).join('') : '<tr><td colspan="8" class="empty">No leads yet.</td></tr>';
+}
+
+/* ── Add / edit a sales lead ───────────────────────────────────────────
+   These are LGR's own B2B leads, not a client's. leads.company_id is NOT NULL,
+   so every row has to be owned by something - and the owner here is LGR's own
+   internal company record, not whichever installer is enquiring. That
+   installer's business goes in the free-text `company` column instead.
+
+   The id is resolved at runtime rather than hardcoded, so it survives the
+   record being recreated. Cached after the first lookup. */
+let _lgrCompanyId = null;
+
+async function lgrCompanyId(){
+  if(_lgrCompanyId) return _lgrCompanyId;
+  const { data, error } = await db.from('companies').select('id,name').order('created_at');
+  if(error) throw new Error('Could not resolve the owning company: '+error.message);
+  const rows = data||[];
+  if(!rows.length) throw new Error('No company record exists to own the lead.');
+  // Prefer the explicitly internal one; fall back to the only company if
+  // there is exactly one. Anything else is ambiguous and should say so rather
+  // than silently filing the lead against someone else's company.
+  const internal = rows.find(c => /internal/i.test(c.name||''));
+  if(internal) { _lgrCompanyId = internal.id; return _lgrCompanyId; }
+  if(rows.length === 1) { _lgrCompanyId = rows[0].id; return _lgrCompanyId; }
+  throw new Error('Several companies exist and none is marked internal - cannot tell which should own this lead.');
+}
+
+function openPipelineModal(lead){
+  const l = lead || null;
+  setVal('mp-id',     l?.id || '');
+  setVal('mp-first',  l?.first_name || '');
+  setVal('mp-last',   l?.last_name  || '');
+  setVal('mp-phone',  l?.phone   || '');
+  setVal('mp-email',  l?.email   || '');
+  setVal('mp-company',l?.company || '');
+  setVal('mp-source', l?.source  || '');
+  setVal('mp-notes',  l?.notes   || '');
+  $('mp-stage').innerHTML = Object.entries(PIPELINE_STAGE_LABEL)
+    .map(([v,label])=>`<option value="${v}" ${(l?.pipeline_stage||'new_lead')===v?'selected':''}>${label}</option>`)
+    .join('');
+  $('mp-title').textContent = l ? 'Edit sales lead' : 'New sales lead';
+  openModal('m-pipeline');
+}
+
+async function savePipelineLead(){
+  const id    = $('mp-id').value;
+  const first = $('mp-first').value.trim();
+  const last  = $('mp-last').value.trim();
+  const phone = $('mp-phone').value.trim();
+  const email = $('mp-email').value.trim();
+
+  if(!first){ toast('First name is required', true); return; }
+  // Not enforced by the database, but a lead you cannot contact is not a lead.
+  if(!phone && !email){ toast('Give a phone number or an email - otherwise there is no way to follow up', true); return; }
+
+  const payload = {
+    first_name: first,
+    last_name:  last  || null,
+    // `name` is what the table renders, so keep it in step with the parts.
+    name:       [first,last].filter(Boolean).join(' '),
+    phone:      phone || null,
+    email:      email || null,
+    company:    $('mp-company').value.trim() || null,
+    source:     $('mp-source').value.trim()  || null,
+    notes:      $('mp-notes').value.trim()   || null,
+    pipeline_stage: $('mp-stage').value,
+  };
+
+  const btn = $('mp-save'); btn.disabled = true; btn.textContent = 'Saving…';
+  try {
+    let error;
+    if(id){
+      ({ error } = await db.from('leads').update(payload).eq('id', id));
+    } else {
+      payload.company_id = await lgrCompanyId();
+      ({ error } = await db.from('leads').insert(payload));
+    }
+    if(error) throw new Error(error.message);
+    toast(id ? 'Lead updated ✓' : 'Lead added ✓');
+    closeModal('m-pipeline');
+    loadPipeline();
+  } catch(e){
+    toast(e.message, true);
+  } finally {
+    btn.disabled = false; btn.textContent = 'Save lead';
+  }
+}
+
+/* Re-read the row rather than closing over the rendered copy, so Edit always
+   opens what is actually stored right now. */
+async function editPipelineLead(id){
+  const { data, error } = await db.from('leads').select('*').eq('id', id).maybeSingle();
+  if(error || !data){ toast(error ? error.message : 'Lead not found', true); return; }
+  openPipelineModal(data);
 }
 
 async function updatePipelineStage(id, stage, sel){
