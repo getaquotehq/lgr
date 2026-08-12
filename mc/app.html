@@ -327,6 +327,9 @@ td.mono{font-family:var(--mono);font-size:12px}
           <button class="navbtn" data-panel="regions" onclick="nav('regions',this)">
             <span class="ni"><svg viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg></span>Regions
           </button>
+          <button class="navbtn" data-panel="reps" onclick="nav('reps',this)">
+            <span class="ni"><svg viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 00-3-3.87"/></svg></span>Sales Reps
+          </button>
           <button class="navbtn" data-panel="pricing" onclick="nav('pricing',this)">
             <span class="ni"><svg viewBox="0 0 24 24"><path d="M12 1v22"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg></span>Pricing
           </button>
@@ -407,7 +410,7 @@ td.mono{font-family:var(--mono);font-size:12px}
         <div class="twrap">
           <table>
             <thead><tr><th>Asset</th><th>Installer</th><th>Started</th><th>Ended</th><th>Monthly</th><th>Floor</th><th>Status</th><th></th></tr></thead>
-            <tbody id="rentals-tbody"><tr><td colspan="8" class="empty">Loading…</td></tr></tbody>
+            <tbody id="rentals-tbody"><tr><td colspan="9" class="empty">Loading…</td></tr></tbody>
           </table>
         </div>
       </div>
@@ -550,9 +553,9 @@ td.mono{font-family:var(--mono);font-size:12px}
           <table>
             <thead><tr>
               <th>Received</th><th>Name</th><th>Phone</th><th>Email</th><th>Company</th>
-              <th>Source</th><th>Notes</th><th>Stage</th>
+              <th>Source</th><th>Assigned</th><th>Notes</th><th>Stage</th>
             </tr></thead>
-            <tbody id="sp-tbody"><tr><td colspan="8" class="empty">Loading…</td></tr></tbody>
+            <tbody id="sp-tbody"><tr><td colspan="9" class="empty">Loading…</td></tr></tbody>
           </table>
         </div>
       </div>
@@ -581,6 +584,20 @@ td.mono{font-family:var(--mono);font-size:12px}
           <table>
             <thead><tr><th>Name</th><th>Slug</th><th>State</th><th>Sort</th><th>Assets</th><th></th></tr></thead>
             <tbody id="regions-tbody"><tr><td colspan="6" class="empty">Loading…</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="panel" id="panel-reps">
+        <div class="ph">
+          <div class="ph-left"><h1>Sales Reps</h1><p>Accounts that can work the B2B pipeline. A rep sees the pipeline and nothing else.</p></div>
+          <div class="ph-right"><button class="btn btn-p" onclick="openRepModal()">+ Add rep</button></div>
+        </div>
+        <div class="pr-note" id="reps-note"></div>
+        <div class="twrap">
+          <table>
+            <thead><tr><th>Name</th><th>Email</th><th>Phone</th><th>Sees</th><th>Can edit</th><th>Status</th><th></th></tr></thead>
+            <tbody id="reps-tbody"><tr><td colspan="7" class="empty">Loading…</td></tr></tbody>
           </table>
         </div>
       </div>
@@ -672,6 +689,31 @@ td.mono{font-family:var(--mono);font-size:12px}
 </div>
 
 <!-- ═══ NICHE MODAL ═══ -->
+<div class="overlay" id="m-rep">
+  <div class="modal">
+    <h2>New sales rep</h2>
+    <div class="msub">Creates a login and emails them a link to set their own password</div>
+    <div class="fgrid2">
+      <div class="frow"><label class="flabel">Name *</label><input class="fi" id="mr2-name" placeholder="Jane Smith"></div>
+      <div class="frow"><label class="flabel">Email *</label><input class="fi" id="mr2-email" type="email" placeholder="jane@leadgenrentals.com.au"></div>
+    </div>
+    <div class="frow"><label class="flabel">Phone</label><input class="fi" id="mr2-phone" type="tel" placeholder="0400 000 000"></div>
+    <div class="frow">
+      <label class="flabel">Which leads can they see?</label>
+      <select class="fs" id="mr2-vis">
+        <option value="assigned_only" selected>Only leads assigned to them</option>
+        <option value="all">Every lead in the pipeline</option>
+      </select>
+      <div class="fhint">They can always see leads they added themselves.</div>
+    </div>
+    <div class="frow">
+      <label class="flabel"><input type="checkbox" id="mr2-edit" checked style="margin-right:6px">Let them edit leads and move pipeline stages</label>
+      <div class="fhint">Unticked, they can read their leads but not change them.</div>
+    </div>
+    <div class="macts"><button class="btn" onclick="closeModal('m-rep')">Cancel</button><button class="btn btn-p" id="mr2-save" onclick="saveRep()">Create rep</button></div>
+  </div>
+</div>
+
 <div class="overlay" id="m-pipeline">
   <div class="modal">
     <h2 id="mp-title">New sales lead</h2>
@@ -694,7 +736,10 @@ td.mono{font-family:var(--mono);font-size:12px}
         </datalist>
       </div>
     </div>
-    <div class="frow"><label class="flabel">Stage</label><select class="fs" id="mp-stage"></select></div>
+    <div class="fgrid2">
+      <div class="frow"><label class="flabel">Stage</label><select class="fs" id="mp-stage"></select></div>
+      <div class="frow"><label class="flabel">Assigned to</label><select class="fs" id="mp-assigned"></select></div>
+    </div>
     <div class="frow"><label class="flabel">Notes</label><textarea class="fta" id="mp-notes" placeholder="What they asked about, which area, anything worth remembering"></textarea></div>
     <div class="macts"><button class="btn" onclick="closeModal('m-pipeline')">Cancel</button><button class="btn btn-p" id="mp-save" onclick="savePipelineLead()">Save lead</button></div>
   </div>
@@ -848,11 +893,65 @@ async function doLogin(){
 }
 async function doLogout(){ if(!confirm('Sign out?')) return; if(db) await db.auth.signOut(); }
 
+/* ── who is signed in ─────────────────────────────────────────────────────
+   Mission Control had no authorisation of its own: being signed in was enough
+   to get the whole panel. The data was never actually exposed - RLS decides
+   what each table returns - but a sales rep would have been shown every nav
+   item and a wall of empty tables.
+
+   So the panel now resolves a role at boot and shows only what that role is
+   meant to work in. This is presentation, not security. The database is still
+   the thing enforcing access, and it is what the tests below exercise. */
+let IS_ADMIN = false, IS_REP = false, MY_REP = null;
+
+const REP_PANELS = ['pipeline'];   // a rep works the B2B pipeline and nothing else
+
+async function resolveRole(){
+  IS_ADMIN = false; IS_REP = false; MY_REP = null;
+
+  const { data: sa } = await db.rpc('is_super_admin');
+  if(sa === true){ IS_ADMIN = true; return; }
+
+  const { data: rep } = await db.from('sales_reps')
+    .select('*').eq('user_id', currentUser.id).eq('is_active', true).maybeSingle();
+  if(rep){ IS_REP = true; MY_REP = rep; }
+}
+
+function applyRoleToNav(){
+  if(IS_ADMIN) return;                      // full panel, nothing to hide
+  document.querySelectorAll('.navbtn,.bnbtn').forEach(b=>{
+    if(!REP_PANELS.includes(b.dataset.panel)) b.style.display='none';
+  });
+  // Reps have no dashboard to land on, so send them where they actually work.
+  const label = document.querySelector('.navbtn[data-panel="pipeline"]');
+  nav('pipeline', label);
+}
+
+/* Someone who is neither an admin nor an active rep has no business here.
+   Signing them out is kinder than a panel of empty tables, and it makes a
+   revoked rep's access visibly end rather than quietly degrade. */
+async function denyAccess(){
+  $('app').classList.remove('visible');
+  $('login-screen').style.display='flex';
+  $('login-error').textContent='This account does not have access to Mission Control.';
+  await db.auth.signOut();
+}
+
 /* ── reference data ──────────────────────────────────────────────────────── */
 async function bootData(){
-  await loadRefData();
-  refreshPendingBadge();
-  nav('dashboard');
+  await resolveRole();
+  if(!IS_ADMIN && !IS_REP){ await denyAccess(); return; }
+
+  if(IS_ADMIN){
+    await loadRefData();
+    refreshPendingBadge();
+    nav('dashboard');
+  } else {
+    // A rep cannot read niches/regions, so loadRefData would only throw.
+    setText('uname', (MY_REP?.name || currentUser.email.split('@')[0]));
+    nav('pipeline');
+  }
+  applyRoleToNav();
 }
 async function loadRefData(){
   const [n,r,i] = await Promise.all([
@@ -907,6 +1006,7 @@ function nav(panel, el){
   if(panel==='niches') loadNiches();
   if(panel==='regions') loadRegions();
   if(panel==='pricing') loadPricing();
+  if(panel==='reps') loadReps();
 }
 
 /* ════════════════════════════════════════════════════════════════════════
@@ -1391,9 +1491,9 @@ async function loadRentals(){
     ? _assets.map(a=>`<option value="${a.id}">${esc(a.brand_name)}</option>`).join('')
     : '');
   if(!_assets.length){ const r=await db.from('assets').select('*'); _assets=r.data||[]; fillSelect('rf-asset','All assets',_assets.map(a=>`<option value="${a.id}">${esc(a.brand_name)}</option>`).join('')); }
-  $('rentals-tbody').innerHTML='<tr><td colspan="8" class="empty">Loading…</td></tr>';
+  $('rentals-tbody').innerHTML='<tr><td colspan="9" class="empty">Loading…</td></tr>';
   const { data, error } = await db.from('rentals').select('*').order('started_at',{ascending:false});
-  if(error){ $('rentals-tbody').innerHTML=`<tr><td colspan="8" class="empty" style="color:var(--red)">${esc(error.message)}</td></tr>`; return; }
+  if(error){ $('rentals-tbody').innerHTML=`<tr><td colspan="9" class="empty" style="color:var(--red)">${esc(error.message)}</td></tr>`; return; }
   _rentals=data||[]; renderRentals();
 }
 const assetName = id => (_assets.find(x=>x.id===id)||{}).brand_name || '-';
@@ -1778,13 +1878,19 @@ function exportLeadsCsv(){
 const PIPELINE_STAGE_LABEL = { new_lead:'New Lead', follow_up:'Follow Up', quote_in_progress:'Quote In Progress', quoted:'Quoted', closed_won:'Closed Won', closed_lost:'Closed Lost' };
 
 async function loadPipeline(){
-  $('sp-tbody').innerHTML='<tr><td colspan="8" class="empty">Loading…</td></tr>';
+  $('sp-tbody').innerHTML='<tr><td colspan="9" class="empty">Loading…</td></tr>';
+  // The Assigned picker needs the rep list. Admins only - a rep cannot write
+  // assignments and sees a plain name instead.
+  if(IS_ADMIN && !_reps.length){
+    const { data } = await db.from('sales_reps').select('*').order('created_at');
+    _reps = data || [];
+  }
   const stage = $('sp-stage').value;
   let q = db.from('leads').select('*').order('created_at',{ascending:false});
   if(stage) q = q.eq('pipeline_stage', stage);
   const { data, error } = await q;
   if(error){
-    $('sp-tbody').innerHTML = `<tr><td colspan="8" class="empty" style="color:var(--red)">${esc(error.message)}</td></tr>`;
+    $('sp-tbody').innerHTML = `<tr><td colspan="9" class="empty" style="color:var(--red)">${esc(error.message)}</td></tr>`;
     return;
   }
   const rows = data||[];
@@ -1802,6 +1908,12 @@ async function loadPipeline(){
       <td class="mono dim">${esc(l.email||'-')}</td>
       <td>${esc(l.company||'-')}</td>
       <td class="dim">${esc(l.source||'-')}</td>
+      <td>${IS_ADMIN
+        ? `<select class="fs" style="font-size:10.5px;padding:3px 6px;width:auto" onchange="assignLead('${l.id}',this.value,this)">
+             <option value="">Unassigned</option>
+             ${_reps.filter(r=>r.is_active).map(r=>`<option value="${r.user_id}" ${l.assigned_to===r.user_id?'selected':''}>${esc(r.name)}</option>`).join('')}
+           </select>`
+        : `<span class="dim">${esc(repName(l.assigned_to))}</span>`}</td>
       <td class="dim" style="max-width:220px;white-space:normal;font-size:11px">${esc(l.notes||'-')}</td>
       <td class="acts">
         <select class="fs" style="font-size:10.5px;padding:3px 6px;width:auto" onchange="updatePipelineStage('${l.id}',this.value,this)">
@@ -1809,7 +1921,102 @@ async function loadPipeline(){
         </select>
         <button class="btn btn-xs" onclick="editPipelineLead('${l.id}')">Edit</button>
       </td>
-    </tr>`).join('') : '<tr><td colspan="8" class="empty">No leads yet.</td></tr>';
+    </tr>`).join('') : '<tr><td colspan="9" class="empty">No leads yet.</td></tr>';
+}
+
+/* ── Sales reps ───────────────────────────────────────────────────────────
+   Creating a rep means creating an auth user, a profile and a sales_reps row,
+   which needs the service role - so it goes through the invite-rep edge
+   function rather than being done from here. Everything after creation is a
+   plain table edit, gated by RLS: only owner/admin can write sales_reps.
+
+   leads_visibility is what actually restricts a rep. The leads SELECT policy
+   reads it and returns assigned rows only, so unticking it here genuinely
+   narrows what the database hands back - it is not a UI filter. */
+let _reps = [];
+
+async function loadReps(){
+  const { data, error } = await db.from('sales_reps').select('*').order('created_at');
+  if(error){ $('reps-tbody').innerHTML=`<tr><td colspan="7" class="empty" style="color:var(--red)">${esc(error.message)}</td></tr>`; return; }
+  _reps = data || [];
+  $('reps-note').innerHTML = `<b>${_reps.filter(r=>r.is_active).length}</b> active rep(s). A rep signs in here and sees the Sales Pipeline only. Deactivating one blocks their sign-in immediately.`;
+
+  $('reps-tbody').innerHTML = _reps.length ? _reps.map(r=>`<tr${r.is_active?'':' style="opacity:.5"'}>
+      <td><strong>${esc(r.name)}</strong></td>
+      <td class="mono dim">${esc(r.email||'-')}</td>
+      <td class="mono">${esc(r.phone||'-')}</td>
+      <td>${r.leads_visibility==='all'?'<span class="badge bg-amb">every lead</span>':'<span class="badge bg-gray">assigned only</span>'}</td>
+      <td>${r.can_edit_leads?'<span class="badge bg-grn">yes</span>':'<span class="badge bg-gray">read only</span>'}</td>
+      <td>${r.is_active?'<span class="badge bg-grn">active</span>':'<span class="badge bg-red">disabled</span>'}</td>
+      <td class="acts">
+        <button class="btn btn-xs" onclick="toggleRepVisibility('${r.id}','${r.leads_visibility==='all'?'assigned_only':'all'}')">${r.leads_visibility==='all'?'Limit to assigned':'Show all leads'}</button>
+        <button class="btn btn-xs" onclick="toggleRepEdit('${r.id}',${r.can_edit_leads?'false':'true'})">${r.can_edit_leads?'Make read only':'Allow editing'}</button>
+        <button class="btn btn-xs" onclick="toggleRepActive('${r.id}',${r.is_active?'false':'true'})">${r.is_active?'Disable':'Enable'}</button>
+      </td>
+    </tr>`).join('') : '<tr><td colspan="7" class="empty">No reps yet.</td></tr>';
+}
+
+function openRepModal(){
+  setVal('mr2-name',''); setVal('mr2-email',''); setVal('mr2-phone','');
+  setVal('mr2-vis','assigned_only'); $('mr2-edit').checked = true;
+  openModal('m-rep');
+}
+
+async function saveRep(){
+  const name  = $('mr2-name').value.trim();
+  const email = $('mr2-email').value.trim().toLowerCase();
+  if(!name || !email){ toast('Name and email are required', true); return; }
+  if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){ toast('That email does not look right', true); return; }
+
+  const btn=$('mr2-save'); btn.disabled=true; btn.textContent='Creating…';
+  try{
+    const { data: { session } } = await db.auth.getSession();
+    const res = await fetch(`${CFG.url}/functions/v1/invite-rep`, {
+      method:'POST',
+      headers:{ 'Content-Type':'application/json', Authorization:`Bearer ${session.access_token}` },
+      body: JSON.stringify({
+        email, name, phone: $('mr2-phone').value.trim() || null,
+        // Only the leads section matters here - the rest of the dashboard's
+        // sections do not exist in Mission Control, so they stay shut.
+        visibility: {
+          leads: $('mr2-vis').value,
+          quotes:'none', appointments:'none', sales:'none', conversations:'none',
+        },
+      }),
+    });
+    const out = await res.json().catch(()=>({}));
+    if(!res.ok) throw new Error(out.error || `invite-rep returned ${res.status}`);
+
+    // can_edit_leads is not part of the invite payload, so set it after.
+    if($('mr2-edit').checked){
+      const { data: fresh } = await db.from('sales_reps').select('id').eq('email', email).maybeSingle();
+      if(fresh) await db.from('sales_reps').update({ can_edit_leads:true, can_manage_pipeline:true }).eq('id', fresh.id);
+    }
+    toast('Rep created - they have been emailed a link to set a password');
+    closeModal('m-rep');
+    loadReps();
+  } catch(e){
+    toast(e.message, true);
+  } finally {
+    btn.disabled=false; btn.textContent='Create rep';
+  }
+}
+
+async function toggleRepVisibility(id, vis){
+  const { error } = await db.from('sales_reps').update({ leads_visibility: vis }).eq('id', id);
+  if(error){ toast(error.message, true); return; }
+  toast(vis==='all'?'Now sees every lead':'Now sees assigned leads only'); loadReps();
+}
+async function toggleRepEdit(id, can){
+  const { error } = await db.from('sales_reps').update({ can_edit_leads:can, can_manage_pipeline:can }).eq('id', id);
+  if(error){ toast(error.message, true); return; }
+  toast(can?'Can edit leads':'Read only'); loadReps();
+}
+async function toggleRepActive(id, active){
+  if(!active && !confirm('Disable this rep? They will not be able to sign in.')) return;
+  const { error } = await db.from('sales_reps').update({ is_active: active }).eq('id', id);
+  if(error){ toast(error.message, true); return; }
+  toast(active?'Rep enabled':'Rep disabled'); loadReps();
 }
 
 /* ── Add / edit a sales lead ───────────────────────────────────────────
@@ -1850,6 +2057,10 @@ function openPipelineModal(lead){
   $('mp-stage').innerHTML = Object.entries(PIPELINE_STAGE_LABEL)
     .map(([v,label])=>`<option value="${v}" ${(l?.pipeline_stage||'new_lead')===v?'selected':''}>${label}</option>`)
     .join('');
+  $('mp-assigned').innerHTML = '<option value="">Unassigned</option>' +
+    _reps.filter(r=>r.is_active)
+         .map(r=>`<option value="${r.user_id}" ${l?.assigned_to===r.user_id?'selected':''}>${esc(r.name)}</option>`)
+         .join('');
   $('mp-title').textContent = l ? 'Edit sales lead' : 'New sales lead';
   openModal('m-pipeline');
 }
@@ -1876,6 +2087,7 @@ async function savePipelineLead(){
     source:     $('mp-source').value.trim()  || null,
     notes:      $('mp-notes').value.trim()   || null,
     pipeline_stage: $('mp-stage').value,
+    assigned_to: $('mp-assigned').value || null,
   };
 
   const btn = $('mp-save'); btn.disabled = true; btn.textContent = 'Saving…';
@@ -1904,6 +2116,23 @@ async function editPipelineLead(id){
   const { data, error } = await db.from('leads').select('*').eq('id', id).maybeSingle();
   if(error || !data){ toast(error ? error.message : 'Lead not found', true); return; }
   openPipelineModal(data);
+}
+
+function repName(userId){
+  if(!userId) return 'Unassigned';
+  const r = _reps.find(x=>x.user_id===userId);
+  return r ? r.name : 'Assigned';
+}
+
+/* Assigning is what makes a rep's restricted view mean anything: the leads
+   SELECT policy matches assigned_to against auth.uid(), so this is the switch
+   that decides whether they can see the row at all. */
+async function assignLead(id, userId, sel){
+  sel.disabled = true;
+  const { error } = await db.from('leads').update({ assigned_to: userId || null }).eq('id', id);
+  sel.disabled = false;
+  if(error){ toast('Assign failed: '+error.message, true); loadPipeline(); return; }
+  toast(userId ? `Assigned to ${repName(userId)}` : 'Unassigned');
 }
 
 async function updatePipelineStage(id, stage, sel){
