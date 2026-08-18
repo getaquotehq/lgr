@@ -141,11 +141,6 @@
   .lp-form{margin-top:11px;display:flex;gap:6px}
   .lp-in{flex:1;height:16px;border:1px solid var(--line);border-radius:3px;background:var(--bg)}
   .lp-btn{width:52px;height:16px;border-radius:3px;background:var(--blue)}
-  /* live card thumbnail: the real LP rendered at half scale inside the chrome */
-  .chrome.card-live{display:flex;flex-direction:column}
-  .mini-frame{position:relative;flex:1;overflow:hidden;background:#fff}
-  .mini-frame iframe{position:absolute;top:0;left:0;width:200%;height:200%;border:0;
-    transform:scale(.5);transform-origin:top left;background:#fff;pointer-events:none}
 
   .info{padding:18px}
   .row1{display:flex;justify-content:space-between;align-items:center;margin-bottom:3px;gap:10px}
@@ -176,20 +171,6 @@
     max-height:calc(100dvh - 48px);overflow-y:auto;overflow-x:hidden;box-shadow:var(--sh-lg);animation:pop .22s ease}
   @keyframes pop{from{opacity:0;transform:scale(.97)}to{opacity:1;transform:none}}
   .modal-shot{background:var(--bg);padding:22px 22px 0;height:210px;border-bottom:1px solid var(--line)}
-  /* live iframe preview inside the modal */
-  .modal-shot:has(.chrome.live){height:360px;padding:14px 14px 0}
-  .chrome.live{height:100%;display:flex;flex-direction:column;border-radius:8px 8px 0 0;overflow:hidden}
-  .chrome.live .chrome-bar{align-items:center}
-  .chrome.live a.url{text-decoration:none;color:var(--faint);cursor:pointer;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-  .chrome.live a.url:hover{color:var(--blue)}
-  .open-live{margin-left:auto;font-family:var(--mono);font-size:.62rem;font-weight:700;color:var(--blue);
-    text-decoration:none;border:1px solid var(--line-2);border-radius:5px;padding:3px 7px;white-space:nowrap}
-  .open-live:hover{background:var(--blue-tint)}
-  .live-frame{position:relative;flex:1;background:#fff;overflow:hidden}
-  .live-frame iframe{position:absolute;inset:0;width:100%;height:100%;border:0;background:#fff}
-  .live-fallback{position:absolute;left:50%;bottom:10px;transform:translateX(-50%);z-index:2;
-    font-size:.7rem;font-weight:700;color:var(--blue);background:rgba(255,255,255,.92);
-    border:1px solid var(--line-2);border-radius:6px;padding:5px 10px;text-decoration:none}
   .modal-body{padding:24px}
   .modal-body .m-meta{font-family:var(--mono);font-size:.68rem;color:var(--faint);
     letter-spacing:.08em;text-transform:uppercase;margin-bottom:8px}
@@ -236,6 +217,8 @@
 
   .empty{grid-column:1/-1;text-align:center;padding:64px 20px;color:var(--muted);
     border:1px dashed var(--line);border-radius:12px;background:var(--bg)}
+  .empty-h{font-size:1.3rem;font-weight:650;letter-spacing:-.02em;color:var(--ink);margin-bottom:10px}
+  .empty p{max-width:440px;margin:0 auto 20px;line-height:1.6}
   .sk-bar{background:var(--line-2);border-radius:6px;height:12px;display:block;
     animation:skpulse 1.2s ease-in-out infinite}
   @keyframes skpulse{0%,100%{opacity:.5}50%{opacity:1}}
@@ -350,8 +333,8 @@
   <div id="checkoutBanner"></div>
 
   <div class="head">
-    <h1>Assets available near <span id="regionLabel">-</span></h1>
-    <p class="sub">Each one is a ready-to-run <span id="nicheLabel">lead</span> engine. Rent an asset and it's locked to you - every lead it produces is yours alone, never shared, with your business name on the consent.</p>
+    <h1 id="fleetHeading">Assets available near <span id="regionLabel">-</span></h1>
+    <p class="sub" id="fleetSub">Each one is a ready-to-run <span id="nicheLabel">lead</span> engine. Rent an asset and it's locked to you - every lead it produces is yours alone, never shared, with your business name on the consent.</p>
   </div>
 
   <div class="filters">
@@ -541,18 +524,8 @@ function shot(item, big){
 function assetDomain(item){
   return (item.brand_domain || '').trim().replace(/^https?:\/\//,'').replace(/\/.*$/,'');
 }
-/* the live landing page URL for an asset: each asset is region-specific, so it
-   points at that region's area page - https://<domain>/<region-slug>/ - which
-   is where its exclusive postcodes actually convert. Falls back to the root
-   domain when an asset has no region slug. */
-function previewUrl(item){
-  const d = assetDomain(item);
-  if(!d) return null;
-  const slug = (item.region_slug || '').trim().toLowerCase();
-  return slug ? 'https://' + d + '/' + slug + '/' : 'https://' + d + '/';
-}
 /* the address-bar label: domain + /area so installers see exactly which page
-   their rent covers (e.g. clearsolarquotes.com.au/brisbane). */
+   their rent covers (e.g. example.com.au/brisbane). */
 function previewLabel(item){
   const d = assetDomain(item);
   if(!d) return '';
@@ -560,281 +533,13 @@ function previewLabel(item){
   return slug ? d + '/' + slug : d;
 }
 
-/* Per-brand landing-page previews.
-   The three solar brands no longer share a template - each has its own type
-   pairing, palette and layout - so each gets its own preview document rather
-   than one skeleton with the accent colour swapped:
-     au      = Space Grotesk/Inter, white, hard 1px rules, 4px corners, eucalypt
-     premium = Fraunces/Jost, cream, hairlines, centred column, no cards
-     clear   = Manrope, dark hero, gradient card head, 18px radii, blue/cyan
-   Keep these in step with the live sites when a brand is restyled. */
-/* Each brand carries two sets of hero copy: `home` for an asset with no region,
-   and `area(a)` which reproduces that brand's real location-page hero for area
-   `a`. An asset is region-specific, so the preview shows the page the installer
-   is actually renting - brisbane shows the Brisbane hero, not the homepage. */
-const PREVIEW_CFG = {
-  'ausolarquotes.com.au': {
-    kind:'au', a1:'#0d6e4f', logo:'https://ausolarquotes.com.au/au-solar-quotes-logo.png',
-    home:{eyebrow:'Matched to installers Australia-wide',
-      h1:'Solar quotes for <span class="hl">every Aussie postcode</span>.',
-      sub:'Australia-wide solar, matched to your local accredited installer.'},
-    area:a=>({eyebrow:'Matched to accredited '+a+' installers',
-      h1:'<span class="hl">'+a+'</span> solar quotes, done properly.',
-      sub:a+' solar, matched to a local accredited installer who actually covers your postcode.'}),
-    battery:a=>({eyebrow:'Matched to accredited '+(a?a+' ':'')+'battery installers',
-      h1:(a?'<span class="hl">'+a+'</span> battery':'Battery')+' retrofit, done properly.',
-      sub:'Already have solar? Add a battery, matched to '+(a?'a local':'your local')+' accredited installer who actually covers your postcode.'})},
-  'premiumsolarquotes.com.au': {
-    kind:'premium', a1:'#8a6a2f', logo:'https://premiumsolarquotes.com.au/premium-solar-quotes-logo.png',
-    home:{eyebrow:'By vetted, accredited installers',
-      h1:'Premium solar, <span class="hl">quoted properly</span>.',
-      sub:'Premium panels, premium installers, premium service.'},
-    area:a=>({eyebrow:'Vetted installers serving '+a,
-      h1:'Premium solar quotes for <span class="hl">'+a+'</span>.',
-      sub:'Premium panels and vetted installers for '+a+' homes, quoted properly.'}),
-    battery:a=>({eyebrow:'By vetted, accredited battery installers',
-      h1:'Premium battery retrofit'+(a?' for <span class="hl">'+a+'</span>':', <span class="hl">quoted properly</span>')+'.',
-      sub:'Already have solar? Vetted installers adding battery storage'+(a?' to '+a+' homes':'')+', quoted properly.'})},
-  'clearsolarquotes.com.au': {
-    kind:'clear', a1:'#2563eb', logo:'https://clearsolarquotes.com.au/clear-solar-quotes-logo.png',
-    home:{eyebrow:'Now matching homeowners with local installers',
-      h1:'Clear solar quotes from <span class="hl">a trusted local installer</span>.',
-      sub:'Clear, honest solar pricing from a trusted local installer.'},
-    area:a=>({eyebrow:'Now matching '+a+' homeowners',
-      h1:'Solar quotes in <span class="hl">'+a+'</span>, matched to a local installer.',
-      sub:'Clear, honest solar pricing for '+a+' homes, from one trusted local installer.'}),
-    battery:a=>({eyebrow:'Now matching homeowners adding a battery',
-      h1:a?'Battery retrofit in <span class="hl">'+a+'</span>, matched to a local installer.'
-          :'Clear battery retrofit quotes from <span class="hl">a trusted local installer</span>.',
-      sub:'Already have solar? Clear, honest battery retrofit pricing'+(a?' for '+a+' homes':'')+', from one trusted local installer.'})},
-};
-
-const PREVIEW_FONTS = {
-  au:"https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap",
-  premium:"https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Jost:wght@300;400;500;600&display=swap",
-  clear:"https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap",
-};
-
-/* Per-brand CSS for the preview document. Each block is a trimmed version of
-   that brand's real stylesheet - enough to read as the live page at thumbnail
-   size, without pulling the whole sheet in. */
-const PREVIEW_CSS = {
-au:`
-body{font-family:'Inter',system-ui,sans-serif;color:#0b1f19;background:#fff;line-height:1.6}
-h1,.q,.t,.brand{font-family:'Space Grotesk',system-ui,sans-serif;letter-spacing:-.02em}
-.top{display:flex;align-items:center;justify-content:space-between;height:54px;padding:0 20px;background:#fff;border-bottom:1px solid #d9e0dc}
-.brand{display:flex;align-items:center;gap:9px;font-weight:700;font-size:1rem}
-.brand img{height:22px;width:auto;display:block}
-.navcta{background:#0d6e4f;color:#fff;border-radius:4px;padding:9px 16px;font-weight:600;font-size:.78rem}
-.wrap{padding:26px 20px 32px}
-.eyebrow{display:inline-flex;align-items:center;gap:7px;border:1px solid #d9e0dc;color:#3a4a44;font-weight:600;font-size:.71rem;padding:6px 12px;border-radius:100px;margin-bottom:16px}
-.eyebrow .d{width:6px;height:6px;border-radius:50%;background:#0f7a4a}
-h1{font-size:1.95rem;line-height:1.08;font-weight:700;margin-bottom:13px}
-h1 .hl{color:#0d6e4f;box-shadow:inset 0 -.16em 0 rgba(224,163,46,.42)}
-.sub{font-size:.92rem;color:#3a4a44;margin-bottom:17px}
-.tick{display:flex;align-items:center;gap:9px;font-weight:500;font-size:.84rem;color:#3a4a44;margin-bottom:8px}
-.tick i{color:#0f7a4a;font-style:normal;font-weight:800}
-.rail{display:flex;border:1px solid #d9e0dc;border-radius:4px;margin-top:18px;background:#f3f6f4}
-.rail div{flex:1;padding:12px 14px;border-left:1px solid #d9e0dc}
-.rail div:first-child{border-left:none}
-.rail b{display:block;font-family:'Space Grotesk',sans-serif;font-size:1.15rem;color:#0d6e4f;line-height:1}
-.rail span{font-size:.7rem;color:#66756e}
-.card{margin-top:20px;background:#fff;border:1.5px solid #0b1f19;border-radius:4px;overflow:hidden;box-shadow:6px 6px 0 #f3f6f4}
-.card-head{padding:16px 20px;background:#0d6e4f;color:#fff}
-.card-head .t{font-weight:700;font-size:1rem}
-.card-head .s{font-size:.78rem;opacity:.9;margin-top:2px}
-.prog{padding:13px 20px 0}
-.pbar{height:4px;border-radius:2px;background:#d9e0dc;overflow:hidden}
-.ptext{font-size:.67rem;color:#66756e;margin-top:7px;font-weight:600;letter-spacing:.06em;text-transform:uppercase}
-.body{padding:17px 20px 21px}
-.q{font-weight:700;font-size:1.08rem;margin-bottom:4px}
-.qs{font-size:.81rem;color:#66756e;margin-bottom:15px}
-.opt{display:flex;align-items:center;justify-content:space-between;border:1.5px solid #c3cec8;border-radius:4px;padding:13px 15px;font-size:.9rem;font-weight:500;margin-bottom:9px}
-.opt span{color:#93a09a}
-.opt.sel{border-color:#0d6e4f;background:#f3f6f4;box-shadow:inset 3px 0 0 #0d6e4f}
-`,
-premium:`
-body{font-family:'Jost',system-ui,sans-serif;font-weight:400;color:#1c2b3a;background:#fbf8f2;line-height:1.7}
-h1,.q,.t{font-family:'Fraunces',Georgia,serif;letter-spacing:-.015em}
-.top{display:flex;align-items:center;justify-content:space-between;height:58px;padding:0 20px;background:#fbf8f2;border-bottom:1px solid #e2dbcd}
-.brand{display:flex;align-items:center;gap:9px;font-family:'Fraunces',Georgia,serif;font-weight:600;font-size:1.04rem}
-.brand img{height:23px;width:auto;display:block}
-.navcta{border:1px solid #1c2b3a;color:#1c2b3a;padding:8px 15px;font-size:.71rem;letter-spacing:.06em;text-transform:uppercase;font-weight:500}
-.wrap{padding:32px 20px 34px;max-width:520px;margin:0 auto;text-align:center}
-.eyebrow{display:inline-flex;align-items:center;gap:8px;font-size:.68rem;letter-spacing:.2em;text-transform:uppercase;color:#6d7f90;margin-bottom:18px}
-.eyebrow .d{width:5px;height:5px;border-radius:50%;background:#3f7d4e}
-h1{font-size:2.05rem;line-height:1.14;font-weight:500;margin-bottom:15px}
-h1 .hl{font-style:italic;color:#8a6a2f;font-weight:400}
-.sub{font-size:.92rem;color:#44576b;margin-bottom:20px;font-weight:300}
-.rule{width:54px;height:1px;background:#cfc5b2;margin:0 auto 20px}
-.tick{display:flex;align-items:center;gap:9px;font-size:.85rem;color:#44576b;margin-bottom:8px;font-weight:300;justify-content:center}
-.tick i{color:#3f7d4e;font-style:normal;font-weight:700}
-.card{margin-top:24px;background:#fff;border:1px solid #e2dbcd;text-align:left}
-.card-head{padding:20px;border-bottom:1px solid #e2dbcd;text-align:center}
-.card-head .t{font-weight:600;font-size:1.16rem}
-.card-head .s{font-size:.7rem;color:#6d7f90;margin-top:3px;letter-spacing:.1em;text-transform:uppercase}
-.prog{padding:17px 22px 0}
-.pbar{height:1px;background:#cfc5b2;overflow:hidden}
-.ptext{font-size:.66rem;color:#9aa8b4;margin-top:8px;letter-spacing:.16em;text-transform:uppercase}
-.body{padding:18px 22px 24px}
-.q{font-weight:600;font-size:1.14rem;margin-bottom:4px;line-height:1.25}
-.qs{font-size:.82rem;color:#6d7f90;margin-bottom:17px;font-weight:300}
-.opt{display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #e2dbcd;padding:13px 2px;font-size:.93rem}
-.opt:first-of-type{border-top:1px solid #e2dbcd}
-.opt span{color:#9aa8b4}
-.opt.sel{color:#8a6a2f;border-bottom-color:#8a6a2f;padding-left:11px}
-`,
-clear:`
-body{font-family:'Manrope',system-ui,sans-serif;color:#0f172a;background:#f7f9fc;line-height:1.6}
-h1,.q,.t,.brand{font-weight:800;letter-spacing:-.035em}
-.dark{background:#0a1020;background-image:radial-gradient(600px 260px at 80% -10%,rgba(56,189,248,.20),transparent 62%),radial-gradient(420px 240px at 6% 6%,rgba(37,99,235,.22),transparent 60%);padding-bottom:34px}
-.top{display:flex;align-items:center;justify-content:space-between;height:54px;padding:0 20px;border-bottom:1px solid rgba(255,255,255,.08)}
-.brand{display:flex;align-items:center;gap:9px;font-size:1rem;color:#fff}
-.brand img{height:22px;width:auto;display:block}
-.navcta{background:#fff;color:#0a1020;border-radius:100px;padding:8px 16px;font-weight:700;font-size:.78rem}
-.wrap{padding:24px 20px 0}
-.eyebrow{display:inline-flex;align-items:center;gap:7px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.14);color:#cbd8ea;font-weight:600;font-size:.71rem;padding:6px 13px;border-radius:100px;margin-bottom:16px}
-.eyebrow .d{width:6px;height:6px;border-radius:50%;background:#10b981}
-h1{font-size:1.9rem;line-height:1.1;margin-bottom:13px;color:#fff}
-h1 .hl{background:linear-gradient(100deg,#38bdf8,#a5b4fc);-webkit-background-clip:text;background-clip:text;color:transparent}
-.sub{font-size:.92rem;color:#a9b7cd;margin-bottom:17px}
-.tick{display:flex;align-items:center;gap:9px;font-weight:500;font-size:.84rem;color:#c2cee0;margin-bottom:8px}
-.tick i{color:#10b981;font-style:normal;font-weight:800}
-.card{margin:18px 20px 0;background:#fff;border:1px solid #e4e9f2;border-radius:18px;overflow:hidden;box-shadow:0 26px 60px -28px rgba(4,10,25,.65)}
-.card-head{padding:17px 20px;background:linear-gradient(120deg,#2563eb,#38bdf8);color:#fff}
-.card-head .t{font-size:1.02rem}
-.card-head .s{font-size:.78rem;opacity:.94;margin-top:2px;font-weight:500}
-.prog{padding:14px 20px 0}
-.pbar{height:7px;border-radius:100px;background:#e4e9f2;overflow:hidden}
-.ptext{font-size:.7rem;color:#69788c;margin-top:7px;font-weight:700}
-.body{padding:17px 20px 21px}
-.q{font-size:1.08rem;margin-bottom:4px}
-.qs{font-size:.82rem;color:#69788c;margin-bottom:15px}
-.opt{display:flex;align-items:center;justify-content:space-between;background:#f7f9fc;border:1.5px solid transparent;border-radius:12px;padding:13px 15px;font-size:.9rem;font-weight:600;margin-bottom:9px}
-.opt span{color:#94a3b8}
-.opt.sel{border-color:#2563eb;background:rgba(37,99,235,.07)}
-`};
-
-/* Build the landing-page preview as a self-contained HTML document, coded in
-   here (no hosted file) and fed to the iframe via srcdoc. It mirrors the real
-   LP - same hero + branded survey card the homeowner sees - but is pure
-   HTML/CSS with no scripts, so it renders instantly and can never send a lead. */
-function buildPreviewDoc(item){
-  const domain = (item.brand_domain || '').trim().toLowerCase();
-  const brand  = item.brand_name || 'Solar Quotes';
-  const c = PREVIEW_CFG[domain] || PREVIEW_CFG['ausolarquotes.com.au'];
-  const e = s => (s==null?'':String(s)).replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
-
-  /* Show the area page this asset actually covers. Fall back to the homepage
-     hero only when the asset has no region attached. Area names come from the
-     joined regions row, so they are escaped before going into the copy.
-     TRADE==='battery' means the installer arrived via the Battery Retrofit
-     option on solar-leads (?trade=battery) - same solar assets, same brand,
-     just the battery-flavoured hero instead of the general one. */
-  const area = (item.area || item.region || '').trim();
-  const copy = TRADE === 'battery' ? c.battery(e(area)) : (area ? c.area(e(area)) : c.home);
-
-  const head = `<div class="top">
-  <div class="brand"><img src="${c.logo}" alt="${e(brand)}"></div>
-  <div class="navcta">${c.kind==='premium'?'Request a quote':'Get my quote'}</div>
-</div>`;
-
-  const ticks = `<div class="tick"><i>&#10003;</i> One installer, matched to your postcode</div>
-  <div class="tick"><i>&#10003;</i> Qualified electricians &amp; accredited installers only</div>
-  <div class="tick"><i>&#10003;</i> 100% free &amp; obligation-free</div>`;
-
-  const card = `<div class="card">
-    <div class="card-head"><div class="t">${c.kind==='premium'?'Request your quote':'Get your free solar quote'}</div><div class="s">${c.kind==='premium'?'Under a minute':'Under a minute - matched to your area'}</div></div>
-    <div class="prog"><div class="pbar"><i></i></div><div class="ptext">Step 1 of 5</div></div>
-    <div class="body">
-      <div class="q">Do you own your home?</div>
-      <div class="qs">Rebates and installer quotes require the property owner's go-ahead.</div>
-      <div class="opt sel">Yes, I own it <span>&#8594;</span></div>
-      <div class="opt">No, I'm renting <span>&#8594;</span></div>
-    </div>
-  </div>`;
-
-  const hero = `<span class="eyebrow"><span class="d"></span> ${copy.eyebrow}</span>
-  <h1>${copy.h1}</h1>
-  <p class="sub">${copy.sub} Answer four quick questions and we'll match you with a single accredited installer covering your postcode.</p>`;
-
-  /* Each brand arranges the same pieces differently, matching its live page:
-     au keeps a stat rail under the hero, premium centres everything behind a
-     hairline rule, clear runs the hero on a dark ground with the card below. */
-  let bodyHtml;
-  if(c.kind === 'au'){
-    bodyHtml = `${head}<div class="wrap">${hero}${ticks}
-  <div class="rail"><div><b>1</b><span>installer per postcode</span></div><div><b>4</b><span>questions</span></div><div><b>$0</b><span>cost to you</span></div></div>
-  ${card}</div>`;
-  } else if(c.kind === 'premium'){
-    bodyHtml = `${head}<div class="wrap">${hero}<div class="rule"></div>${ticks}${card}</div>`;
-  } else {
-    bodyHtml = `<div class="dark">${head}<div class="wrap">${hero}${ticks}</div></div>${card}`;
-  }
-
-  return `<!doctype html><html lang="en"><head><meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="${PREVIEW_FONTS[c.kind]}" rel="stylesheet">
-<style>
-*{box-sizing:border-box;margin:0;padding:0}
-.pbar i{display:block;height:100%;width:0}
-${PREVIEW_CSS[c.kind]}
-</style></head><body>
-${bodyHtml}
-</body></html>`;
-}
-
-/* card thumbnail: the same coded-in preview, rendered at half scale inside the
-   browser chrome so each card shows its real LP instead of a skeleton - the
-   srcdoc is set by hydrateCardPreviews() after the grid renders. */
-function miniShot(item){
-  return `
-  <div class="chrome card-live">
-    <div class="chrome-bar">
-      <span class="dot"></span><span class="dot"></span><span class="dot"></span>
-      <span class="url">${esc(previewLabel(item) || item.brand_domain || '')}</span>
-    </div>
-    <div class="mini-frame"><iframe data-pv="${item._i}" scrolling="no" sandbox="" title="${esc(item.brand_name || 'Landing page')} preview" aria-hidden="true" tabindex="-1"></iframe></div>
-  </div>`;
-}
-
-/* Fill every card thumbnail iframe with its coded-in preview document. */
-function hydrateCardPreviews(){
-  document.querySelectorAll('#fleet iframe[data-pv]').forEach(f => {
-    const it = INVENTORY[+f.dataset.pv];
-    if(it) f.srcdoc = buildPreviewDoc(it);
-  });
-}
-
-/* live preview: the branded landing page rendered inside browser chrome. The
-   preview document is coded in above and injected via srcdoc (set in openModal);
-   the clickable address bar + "Open ↗" point at the brand's live domain so
-   installers can open the real funnel in a new tab. Falls back to the mock shot
-   if there's no domain yet. */
-function liveShot(item){
-  const live = previewUrl(item);   // https://<domain>/ (real site)
-  if(!live) return shot(item, true);
-  return `
-  <div class="chrome live">
-    <div class="chrome-bar">
-      <span class="dot"></span><span class="dot"></span><span class="dot"></span>
-      <a class="url" href="${esc(live)}" target="_blank" rel="noopener">${esc(previewLabel(item) || item.brand_domain || '')}</a>
-      <a class="open-live" href="${esc(live)}" target="_blank" rel="noopener">Open ↗</a>
-    </div>
-    <div class="live-frame">
-      <iframe title="${esc(item.brand_name || 'Landing page')} preview" sandbox=""></iframe>
-      <a class="live-fallback" href="${esc(live)}" target="_blank" rel="noopener">Open live landing page ↗</a>
-    </div>
-  </div>`;
-}
 
 function card(item){
   const open = item.status === "open";
   return `<article class="card ${open ? '' : 'taken'}">
     <div class="shot">
       <span class="ribbon ${item.status}">${open ? 'AVAILABLE' : 'TAKEN'}</span>
-      ${item.brand_domain ? miniShot(item) : shot(item, false)}
+      ${shot(item, false)}
     </div>
     <div class="info">
       <div class="row1">
@@ -878,6 +583,21 @@ function fleetError(){
   $('#countLine').innerHTML = '';
 }
 
+/* Nothing listed yet: the fleet is unseeded, so say so plainly rather than
+   showing an empty grid behind dead filters. */
+function comingSoon(){
+  const filters = document.querySelector('.filters');
+  if(filters) filters.style.display = 'none';
+  $('#fleetHeading').textContent = `${NC.label} assets are coming soon`;
+  $('#fleetSub').textContent = "We're building the next run of lead engines now. Each one is exclusive to a single business per area, so they go out in small batches.";
+  $('#countLine').innerHTML = '';
+  $('#fleet').innerHTML = `<div class="empty">
+      <div class="empty-h">Coming soon</div>
+      <p>No assets are listed right now. Tell us your trade and postcode and we'll come to you first when your area opens.</p>
+      <a href="/contact" class="btn btn-primary btn-glossy">Register your interest</a>
+    </div>`;
+}
+
 function render(){
   INVENTORY.forEach((x,i) => x._i = i);
   const list = INVENTORY.filter(x =>
@@ -892,7 +612,6 @@ function render(){
   $('#fleet').innerHTML = list.length
     ? list.map(card).join('')
     : `<div class="empty">Nothing matches that filter in ${esc(curRegion || 'that area')}.<br>Assets get built to order too - tell us the trade and the postcode.</div>`;
-  hydrateCardPreviews();
 }
 
 $('#regionSel').addEventListener('change', e => { curRegion = e.target.value || null; render(); });
@@ -944,9 +663,7 @@ function showRentStep(){
 
 function openModal(item){
   active = item;
-  $('#modalShot').innerHTML = liveShot(item);
-  const pframe = $('#modalShot iframe');
-  if(pframe) pframe.srcdoc = buildPreviewDoc(item);
+  $('#modalShot').innerHTML = shot(item, true);
   $('#modalMeta').textContent = `${item.area} · ${item.tier} (${item.code}) · ${item.price} +GST / 30 days`;
   $('#modalTitle').textContent = item.brand_name || '';
   showPreviewStep();
@@ -1031,6 +748,7 @@ async function loadInventory(){
       .order('tier', { ascending:true });
     if(error) throw error;
     INVENTORY = (data || []).map(mapRow);
+    if(!INVENTORY.length){ comingSoon(); return; }
 
     // distinct regions (in returned order) that actually have assets
     const seen = new Set(); REGIONS = [];

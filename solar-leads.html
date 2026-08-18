@@ -905,7 +905,9 @@
   const cap = s => s ? s.charAt(0).toUpperCase() + s.slice(1) : s;
   const TIER_NAME = { starter:'Starter', growth:'Growth', scale:'Scale' };
 
-  let sb = null, SOLAR_REGIONS = [];
+  // NO_STOCK: the niche has no assets at all yet, so the counter says
+  // "coming soon" rather than implying the typed area was checked and missed.
+  let sb = null, SOLAR_REGIONS = [], NO_STOCK = false;
   const hasConfig = cfg.url && cfg.anonKey && cfg.anonKey.indexOf('__') !== 0;
   if(hasConfig){
     sb = supabase.createClient(cfg.url, cfg.anonKey);
@@ -914,6 +916,7 @@
       .then(({ data }) => {
         const seen = new Set();
         (data||[]).forEach(a => { const r = a.regions; if(r && !seen.has(r.slug)){ seen.add(r.slug); SOLAR_REGIONS.push(r); } });
+        NO_STOCK = SOLAR_REGIONS.length === 0;
       });
   }
 
@@ -968,7 +971,9 @@
     const avail = assets.filter(a=>a.status==='available');
     const count = avail.length;
     const total = assets.length;
-    const pill = !region
+    const pill = NO_STOCK
+      ? `<span class="pill taken">Coming soon</span>`
+      : !region
       ? `<span class="pill taken">Not covered yet</span>`
       : total===0
         ? `<span class="pill taken">Coming soon</span>`
@@ -995,7 +1000,7 @@
     } else {
       classRow = `<div class="res">
         <span class="res-k">Class</span>
-        <span class="res-v">No open assets right now <small>see the full fleet or join the waitlist for this area</small></span>
+        <span class="res-v">${NO_STOCK ? 'Assets are being built now' : 'No open assets right now'} <small>${NO_STOCK ? 'tell us your area and we\'ll come to you first when it opens' : 'see the full fleet or join the waitlist for this area'}</small></span>
         <span class="res-r"><a href="${claimHref}" class="btn btn-ghost btn-sm">View fleet</a></span>
       </div>`;
     }
