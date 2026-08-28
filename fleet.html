@@ -18,21 +18,21 @@
 <noscript><img height="1" width="1" style="display:none" src="https://www.facebook.com/tr?id=1264556364606702&ev=PageView&noscript=1" /></noscript>
 <meta name="color-scheme" content="light dark">
 <title>Lead Engines Available by Area | Lead Gen Rentals</title>
-<meta name="description" content="See which exclusive lead engines are available to rent in your area right now. One installer per asset, month to month, with a guaranteed monthly floor of leads.">
+<meta name="description" content="See which lead engines have open slots right now. Engines are shared and slots are capped; every lead is named to one business at capture. Prepaid, month to month.">
 <link rel="canonical" href="https://leadgenrentals.com.au/fleet">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="Lead Gen Rentals">
 <meta property="og:locale" content="en_AU">
 <meta property="og:url" content="https://leadgenrentals.com.au/fleet">
 <meta property="og:title" content="Lead Engines Available by Area | Lead Gen Rentals">
-<meta property="og:description" content="See which exclusive lead engines are available to rent in your area right now. One installer per asset, month to month, with a guaranteed monthly floor of leads.">
+<meta property="og:description" content="See which lead engines have open slots right now. Engines are shared and slots are capped; every lead is named to one business at capture. Prepaid, month to month.">
 <meta property="og:image" content="https://leadgenrentals.com.au/lgr-og-image.png">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
-<meta property="og:image:alt" content="Lead Gen Rentals - Australia's exclusive lead rental engine">
+<meta property="og:image:alt" content="Lead Gen Rentals - shared lead engines, leads named to one business">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="Lead Engines Available by Area | Lead Gen Rentals">
-<meta name="twitter:description" content="See which exclusive lead engines are available to rent in your area right now. One installer per asset, month to month, with a guaranteed monthly floor of leads.">
+<meta name="twitter:description" content="See which lead engines have open slots right now. Engines are shared and slots are capped; every lead is named to one business at capture. Prepaid, month to month.">
 <meta name="twitter:image" content="https://leadgenrentals.com.au/lgr-og-image.png">
 <link rel="icon" href="favicon.ico">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -333,8 +333,8 @@
   <div id="checkoutBanner"></div>
 
   <div class="head">
-    <h1 id="fleetHeading">Assets available near <span id="regionLabel">-</span></h1>
-    <p class="sub" id="fleetSub">Each one is a ready-to-run <span id="nicheLabel">lead</span> engine. Rent an asset and it's locked to you - every lead it produces is yours alone, never shared, with your business name on the consent.</p>
+    <h1 id="fleetHeading">Engines with open slots near <span id="regionLabel">-</span></h1>
+    <p class="sub" id="fleetSub">Each one is a ready-to-run <span id="nicheLabel">lead</span> engine, shared by a capped number of renters. Take a slot and every lead the engine names to you is yours alone - your business name goes on the consent line before the homeowner ever submits.</p>
   </div>
 
   <div class="filters">
@@ -355,8 +355,8 @@
       <label for="statusSel">Availability</label>
       <select id="statusSel">
         <option value="all">All</option>
-        <option value="open">Available only</option>
-        <option value="taken">Taken</option>
+        <option value="open">Open slots only</option>
+        <option value="taken">Full</option>
       </select>
     </div>
     <div class="fcount" id="countLine"></div>
@@ -375,7 +375,7 @@
 
       <!-- STEP 1: preview of the landing page homeowners see -->
       <div id="modalPreview">
-        <p>This is the landing page homeowners see. Every lead it captures consents to <b>your business by name</b> - that's how exclusivity is proven at the point of capture, not promised afterwards.</p>
+        <p>This is the landing page homeowners see. The engine is shared, but the consent line is not: for the visitors assigned to you, it carries <b>your business name</b> - so exclusivity is proven at the point of capture, not promised afterwards.</p>
         <div class="mform">
           <div class="t" id="mformTitle">Get your free quote</div>
           <div class="b" id="mfield0">Full name</div>
@@ -394,7 +394,7 @@
       <!-- STEP 2: rental details (revealed on "Rent this asset") -->
       <form id="rentForm" style="display:none">
         <p style="margin-bottom:16px">You're renting <b id="rentAssetName"></b>. Enter your details and we'll take you to secure Stripe checkout - your business name goes on every lead's consent.</p>
-      <p style="margin-bottom:16px;font-size:.84rem;color:var(--muted)">Guaranteed floor of leads each cycle. No replacements and all sales are final - duds are blocked before delivery. Miss the floor and you choose: we keep running at our cost, or we refund the shortfall. <a href="/rental-terms" style="color:var(--blue);font-weight:600">Rental terms &rarr;</a></p>
+      <p style="margin-bottom:16px;font-size:.84rem;color:var(--muted)">Prepaid for the 30 days, cancel any time - cancelling frees your slot. No lead count is promised: what is promised is that leads named to you are yours alone and that your engine runs for the period you have paid for. <a href="/rental-terms" style="color:var(--blue);font-weight:600">Rental terms &rarr;</a></p>
         <div class="rf-grid">
           <div class="rf-f"><label for="rf-business">Business name<span class="req">*</span></label><input id="rf-business" type="text" placeholder="e.g. Bright Spark Electrical" autocomplete="organization"></div>
           <div class="rf-f"><label for="rf-contact">Your name</label><input id="rf-contact" type="text" placeholder="Full name" autocomplete="name"></div>
@@ -459,7 +459,7 @@ const _back = $('#backLink'); if(_back){ _back.textContent = NC.back; _back.href
   const state = q.get('checkout');
   const el = $('#checkoutBanner'); if(!el || !state) return;
   if(state === 'success'){
-    el.innerHTML = `<div class="banner ok"><span>✓</span><span><b>Payment received - your asset is now yours.</b> We'll email a welcome note shortly and your engine goes live within days. Every lead it makes is delivered to you alone.</span></div>`;
+    el.innerHTML = `<div class="banner ok"><span>✓</span><span><b>Payment received - your slot is confirmed.</b> We'll email a welcome note shortly and your engine goes live within days. Every lead it names to you is delivered to you alone.</span></div>`;
     if(window.lgrMetaTrackPurchase){
       const value = Number(q.get('value'));
       const currency = q.get('currency') || 'AUD';
@@ -468,7 +468,7 @@ const _back = $('#backLink'); if(_back){ _back.textContent = NC.back; _back.href
     const sessionId = q.get('session_id');
     if(sessionId) pollForDashboardLink(sessionId, el);
   } else if(state === 'cancelled'){
-    el.innerHTML = `<div class="banner info"><span>↩</span><span><b>Checkout cancelled - no charge was made.</b> The asset is still open. Pick it below whenever you're ready.</span></div>`;
+    el.innerHTML = `<div class="banner info"><span>↩</span><span><b>Checkout cancelled - no charge was made.</b> The slot is still open. Pick it below whenever you're ready.</span></div>`;
   }
 })();
 
@@ -534,11 +534,33 @@ function previewLabel(item){
 }
 
 
+/* ---------------------------------------------------------------------------
+   Renter slots on a shared engine.
+
+   PHASE 2 / TODO: `assets` has no capacity columns yet - the schema still
+   models one renter per asset (assets.rented_by, status available|rented).
+   Until the shared-engine migration lands there is no honest number to show,
+   so this deliberately renders a qualitative label rather than inventing a
+   count. Once `assets.slot_capacity` and a live count of active rentals per
+   asset are available, mapRow() will populate slots_taken / slot_capacity and
+   this returns the real "6 of 8 slots filled".
+
+   Do NOT hardcode a placeholder count here - a fabricated slot count is a
+   false scarcity claim.
+--------------------------------------------------------------------------- */
+function slotLabel(item){
+  const t = item.slots_taken, c = item.slot_capacity;
+  if(typeof t === 'number' && typeof c === 'number' && c > 0){
+    return `${t} of ${c} filled`;
+  }
+  return item.status === 'open' ? 'Limited' : 'Full';
+}
+
 function card(item){
   const open = item.status === "open";
   return `<article class="card ${open ? '' : 'taken'}">
     <div class="shot">
-      <span class="ribbon ${item.status}">${open ? 'AVAILABLE' : 'TAKEN'}</span>
+      <span class="ribbon ${item.status}">${open ? 'SLOTS OPEN' : 'FULL'}</span>
       ${shot(item, false)}
     </div>
     <div class="info">
@@ -548,7 +570,7 @@ function card(item){
       </div>
       <div class="tier-name">${esc(item.tier)}</div>
       <div class="specs">
-        <div class="spec"><span class="k">Typical leads / 30 days</span><span class="v">${esc(item.leads)}</span></div>
+        <div class="spec"><span class="k">Renter slots</span><span class="v">${esc(slotLabel(item))}</span></div>
         <div class="spec"><span class="k">Service businesses per lead</span><span class="v">1</span></div>
         <div class="spec"><span class="k">Ad spend</span><span class="v">We carry it</span></div>
       </div>
@@ -589,7 +611,7 @@ function comingSoon(){
   const filters = document.querySelector('.filters');
   if(filters) filters.style.display = 'none';
   $('#fleetHeading').textContent = `${NC.label} assets are coming soon`;
-  $('#fleetSub').textContent = "We're building the next run of lead engines now. Each one is exclusive to a single business per area, so they go out in small batches.";
+  $('#fleetSub').textContent = "We're building the next run of lead engines now. Each one takes a capped number of renters, so they go out in small batches.";
   $('#countLine').innerHTML = '';
   $('#fleet').innerHTML = `<div class="empty">
       <div class="empty-h">Coming soon</div>
@@ -607,11 +629,11 @@ function render(){
 
   $('#regionLabel').textContent = curRegion || '-';
   const open = INVENTORY.filter(x => (!curRegion || x.region === curRegion) && x.status === "open").length;
-  $('#countLine').innerHTML = `<span><b>${open} available</b>&nbsp;in ${esc(curRegion || 'all regions')}</span>`;
+  $('#countLine').innerHTML = `<span><b>${open} with open slots</b>&nbsp;in ${esc(curRegion || 'all regions')}</span>`;
 
   $('#fleet').innerHTML = list.length
     ? list.map(card).join('')
-    : `<div class="empty">Nothing matches that filter in ${esc(curRegion || 'that area')}.<br>Assets get built to order too - tell us the trade and the postcode.</div>`;
+    : `<div class="empty">Nothing matches that filter in ${esc(curRegion || 'that area')}.<br>Engines get built to order too - tell us the trade and the postcode.</div>`;
 }
 
 $('#regionSel').addEventListener('change', e => { curRegion = e.target.value || null; render(); });
@@ -654,7 +676,7 @@ function showRentStep(){
   $('#rentForm').style.display = '';
   $('#rentSecure').style.display = '';
   $('#rentAssetName').textContent = `${active.brand_name} - ${active.tier} (${active.area})`;
-  $('#rentTotal').innerHTML = `${esc(active.price)} <small>+GST per 30 days · floor ${active.floor} leads guaranteed</small>`;
+  $('#rentTotal').innerHTML = `${esc(active.price)} <small>+GST per 30 days · prepaid · cancel any time</small>`;
   $('#rentErr').classList.remove('on');
   const claim = $('#modalClaim');
   claim.disabled = false; claim.textContent = 'Continue to secure checkout →';
@@ -726,8 +748,9 @@ function mapRow(a){
     code: TIER_CODE[a.tier] || '',
     price: money(a.monthly_price_aud),
     price_aud: a.monthly_price_aud,
-    floor: a.floor_leads,
-    leads: (a.typical_min && a.typical_max) ? `${a.typical_min}-${a.typical_max}` : `${a.floor_leads}+`,
+    // Slot capacity is not in the schema yet - see slotLabel() below.
+    slots_taken: (typeof a.slots_taken === 'number') ? a.slots_taken : null,
+    slot_capacity: (typeof a.slot_capacity === 'number') ? a.slot_capacity : null,
     status: a.status === 'available' ? 'open' : 'taken',
     brand_name: a.brand_name,                       // {{brand_name}} slot
     brand_domain: a.brand_domain                    // {{brand_domain}} slot
@@ -741,7 +764,7 @@ async function loadInventory(){
   try{
     const sb = supabase.createClient(cfg.url, cfg.anonKey);
     const { data, error } = await sb.from('assets')
-      .select('id,tier,brand_name,brand_domain,monthly_price_aud,floor_leads,typical_min,typical_max,status,regions!inner(slug,name,sort_order),niches!inner(slug)')
+      .select('id,tier,brand_name,brand_domain,monthly_price_aud,status,regions!inner(slug,name,sort_order),niches!inner(slug)')
       .eq('niches.slug', NICHE)
       .eq('sold_out', false)   // held-back areas are not offered
       .order('sort_order', { referencedTable:'regions', ascending:true })
@@ -792,7 +815,7 @@ loadInventory();
       </div>
     </div>
     <div class="foot">
-      <p class="fine">© 2026 Lead Gen Rentals. Lead Gen Rentals runs paid advertising on its own accounts and delivers the resulting leads to a single service business per asset. A lead means a form submission containing a name and an Australian mobile number, captured with named consent to be contacted by that service business. Every lead is delivered to one service business only. Each class carries a guaranteed floor of leads per 30-day period. Where the floor is not met within the period, Lead Gen Rentals will at the service business's election either continue running the campaign at its own cost until the floor is reached, or refund the shortfall pro-rata at the floor rate (period fee ÷ floor). Volume above the floor is typical and varies with market conditions and season; it is not guaranteed. Lead Gen Rentals does not guarantee that any lead will answer, quote or convert. Where a service business holds multiple assets in one area, Lead Gen Rentals maps audiences and creative to minimise overlap and bears any resulting increase in its own advertising costs. Billed month to month in advance - cancel any time before your next cycle begins, no lock-in and no exit fee.</p>
+      <p class="fine">© 2026 Lead Gen Rentals. Lead Gen Rentals runs paid advertising on its own accounts and its own campaigns. Engines are shared: more than one service business may rent the same engine, up to a fixed number of slots per engine. Exclusivity is at the lead level, not the area level - renting an engine does not give a service business any exclusive right to an area, a postcode or a region. A lead means a form submission containing a name and an Australian mobile number, captured with named consent to be contacted by one identified service business. The business named on that consent line is assigned before the form is shown, and once a person has been assigned to a service business they remain assigned to that same business on every later visit and submission - a person is never reassigned. Each lead is delivered to that one service business and to no other. Lead Gen Rentals does not guarantee any number of leads, any cost per lead, or any outcome. Lead volume varies with market conditions, season and the advertising auction, and Lead Gen Rentals does not guarantee that any lead will answer, quote or convert. Starter, Growth and Scale are service levels; they are not a commitment to spend any stated amount. What Lead Gen Rentals commits to is that leads delivered to a service business are exclusive to it and named to it, and that its engine runs for the period paid for. Billed month to month in advance - cancel any time before your next cycle begins, no lock-in and no exit fee. Cancelling frees your slot on the engine.</p>
     </div>
   </div>
 </footer>
