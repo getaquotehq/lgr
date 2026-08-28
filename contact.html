@@ -150,32 +150,23 @@ footer{background:var(--ink);border-top:1px solid var(--ink);padding:56px 0 40px
 <main>
 <div class="hero"><span class="eyebrow">Contact</span>
   <h1>Talk to us.</h1>
-  <p class="lede">Questions about renting an engine, current availability, or an existing rental? Reach out and we will get back to you, usually within one business day.</p></div>
+  <p class="lede">Everything is self-serve - pick a trade, preview your engine and check out without talking to anyone. If you do need us, email is the fastest way in and we reply within one business day.</p></div>
 <section><div class="wrap"><div class="doc">
   <div class="card"><h3 style="margin-top:0">Email</h3>
     <p style="margin-bottom:16px"><a href="mailto:contact@leadgenrentals.com.au" style="font-size:1.1rem;font-weight:600">contact@leadgenrentals.com.au</a></p>
     <a href="mailto:contact@leadgenrentals.com.au" class="btn btn-primary">Send us an email</a></div>
 
-  <div class="card" style="margin-top:20px">
-    <h3 style="margin-top:0">Request a callback</h3>
-    <p style="margin-bottom:16px">Leave your details and we will call you back, usually within one business day.</p>
-    <form id="callbackForm" onsubmit="return submitCallback(event)">
-      <div class="grid2">
-        <div class="field"><label for="cb-name">Name</label><input id="cb-name" type="text" required></div>
-        <div class="field"><label for="cb-phone">Phone</label><input id="cb-phone" type="tel" required></div>
-      </div>
-      <div class="grid2">
-        <div class="field"><label for="cb-email">Email</label><input id="cb-email" type="email"></div>
-        <div class="field"><label for="cb-business">Business name</label><input id="cb-business" type="text"></div>
-      </div>
-      <div class="field"><label for="cb-message">What are you after?</label><textarea id="cb-message" rows="3"></textarea></div>
-      <button class="btn btn-primary" type="submit" id="cb-submit">Request a callback</button>
-      <div id="cb-status" style="margin-top:10px;font-size:.88rem"></div>
-    </form>
+  <div class="grid2" style="margin-top:20px">
+    <div class="card"><h3 style="margin-top:0">Sales</h3>
+      <p style="margin-bottom:10px">Pricing, availability and getting an engine live.</p>
+      <p style="margin-bottom:0"><a href="mailto:contact@leadgenrentals.com.au">contact@leadgenrentals.com.au</a></p></div>
+    <div class="card"><h3 style="margin-top:0">Support</h3>
+      <p style="margin-bottom:10px">Leads, billing, or cancelling - include your business name so we can find your account.</p>
+      <p style="margin-bottom:0"><a href="mailto:contact@leadgenrentals.com.au">contact@leadgenrentals.com.au</a></p></div>
   </div>
   <div class="grid2" style="margin-top:20px">
-    <div class="card"><h3 style="margin-top:0">New service businesses</h3><p style="margin-bottom:10px">Want to see what is available for your trade and area? Browse open assets and check live availability.</p><p style="margin-bottom:0"><a href="/#trades">Browse trades</a></p></div>
-    <div class="card"><h3 style="margin-top:0">Existing renters</h3><p style="margin-bottom:0">Questions about your leads, billing or cancelling a rental? Email us and reference your business name.</p></div>
+    <div class="card"><h3 style="margin-top:0">New service businesses</h3><p style="margin-bottom:10px">Want to see what is available for your trade? Browse open engines and check live availability.</p><p style="margin-bottom:0"><a href="/#trades">Browse trades</a></p></div>
+    <div class="card"><h3 style="margin-top:0">Existing renters</h3><p style="margin-bottom:0">Your leads, billing and one-click cancel all live in your <a href="/dashboard/">dashboard</a> - no need to contact us to make changes.</p></div>
   </div>
   <div class="legal-foot"><strong>LEADGEN RENTALS</strong> &nbsp;|&nbsp; Australia &nbsp;|&nbsp; <a href="mailto:contact@leadgenrentals.com.au">contact@leadgenrentals.com.au</a></div>
 </div></div></section>
@@ -221,38 +212,12 @@ footer{background:var(--ink);border-top:1px solid var(--ink);padding:56px 0 40px
 }
 </script>
 
-<script src="supabase-config.js"></script>
 <script>
 const b=document.getElementById('burger'),m=document.getElementById('mobileMenu');
 const t=o=>{b.classList.toggle('on',o);m.classList.toggle('on',o);document.body.classList.toggle('menu-open',o);b.setAttribute('aria-expanded',o)};
 b.addEventListener('click',()=>t(!b.classList.contains('on')));
 m.querySelectorAll('a').forEach(a=>a.addEventListener('click',()=>t(false)));
 
-const cfg=window.LGR_SUPABASE||{};
-async function submitCallback(e){
-  e.preventDefault();
-  const btn=document.getElementById('cb-submit'),status=document.getElementById('cb-status');
-  const payload={
-    name:document.getElementById('cb-name').value.trim(),
-    phone:document.getElementById('cb-phone').value.trim(),
-    email:document.getElementById('cb-email').value.trim(),
-    business:document.getElementById('cb-business').value.trim(),
-    message:document.getElementById('cb-message').value.trim(),
-  };
-  btn.disabled=true; btn.textContent='Sending…'; status.textContent=''; status.style.color='';
-  try{
-    const res=await fetch(cfg.url+'/functions/v1/contact-callback-request',{method:'POST',headers:{'Content-Type':'application/json',apikey:cfg.anonKey,Authorization:'Bearer '+cfg.anonKey},body:JSON.stringify(payload)});
-    if(!res.ok) throw new Error('Request failed');
-    document.getElementById('callbackForm').reset();
-    if(window.lgrMetaTrackLead) window.lgrMetaTrackLead({content_name:'Contact callback request'});
-    status.textContent='Thanks, we\'ll be in touch soon.'; status.style.color='var(--green)';
-  }catch(err){
-    status.textContent='Something went wrong. Please email us instead.'; status.style.color='#c0392b';
-  }finally{
-    btn.disabled=false; btn.textContent='Request a callback';
-  }
-  return false;
-}
 </script>
 </body>
 </html>
