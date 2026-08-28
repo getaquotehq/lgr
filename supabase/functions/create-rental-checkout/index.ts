@@ -11,7 +11,8 @@
 // with the amount.
 //
 // No lead volume is guaranteed on any tier, so nothing here quotes a floor,
-// a lead count or a refund. Tiers are service levels only.
+// a lead count or a refund. Tiers are service levels only. Customer-facing copy
+// never describes engine capacity mechanics - see MODEL.md.
 //
 // Request (JSON):
 //   { asset_id, business_name, contact_name, email, phone }
@@ -136,8 +137,8 @@ serve(async (req) => {
     const regionName = (asset as any).regions?.name || ''
     const tierName = TIER_NAME[asset.tier] || asset.tier
     const productName = `${asset.brand_name} - ${tierName} lead engine`
-    const productDesc = `${nicheName} lead engine${regionName ? ' - ' + regionName : ''}, shared engine with a ` +
-      `capped number of renters. Leads named to you on the consent line are delivered to you alone. ` +
+    const productDesc = `${nicheName} lead engine${regionName ? ' - ' + regionName : ''}. ` +
+      `Every lead named to you on the consent line is delivered to you alone and is never resold. ` +
       `No lead volume is guaranteed. Flat monthly rental, prepaid, cancel any time.`
 
     // ── reuse a Stripe customer for this email if we've seen it before ────────

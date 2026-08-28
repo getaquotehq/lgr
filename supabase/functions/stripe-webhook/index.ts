@@ -286,8 +286,8 @@ async function sendConfirmationEmail(to: string, m: Record<string, string>, magi
     <h2 style="font-size:20px;letter-spacing:-.02em;margin:0 0 6px">You're locked in, ${esc(firstName)}.</h2>
     <p style="font-size:15px;line-height:1.55;color:#3A424D;margin:0 0 18px">
       Your rental of <strong>${esc(brandName)}</strong>${regionName ? ' in ' + esc(regionName) : ''} is now active.
-      The engine is shared with a capped number of other renters, but the leads are not: every lead named to
-      you goes to your business and nobody else, with your name on the consent.
+      Every lead it produces for you goes to your business and nobody else, with your name on the consent
+      the homeowner agrees to. Yours alone, never resold.
     </p>
     <table style="border-collapse:collapse;font-size:14px;width:100%;border:1px solid #E6E8EB;border-radius:10px;overflow:hidden">
       <tr><td style="padding:11px 14px;color:#656D76;border-bottom:1px solid #F0F2F4">Asset</td><td style="padding:11px 14px;text-align:right;font-weight:600;border-bottom:1px solid #F0F2F4">${esc(brandName)}</td></tr>

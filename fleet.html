@@ -18,21 +18,21 @@
 <noscript><img height="1" width="1" style="display:none" src="https://www.facebook.com/tr?id=1264556364606702&ev=PageView&noscript=1" /></noscript>
 <meta name="color-scheme" content="light dark">
 <title>Lead Engines Available by Area | Lead Gen Rentals</title>
-<meta name="description" content="See which lead engines have open slots right now. Engines are shared and slots are capped; every lead is named to one business at capture. Prepaid, month to month.">
+<meta name="description" content="See which lead engines have open slots right now. Slots are limited, and every lead is named to your business at capture. Prepaid, month to month.">
 <link rel="canonical" href="https://leadgenrentals.com.au/fleet">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="Lead Gen Rentals">
 <meta property="og:locale" content="en_AU">
 <meta property="og:url" content="https://leadgenrentals.com.au/fleet">
 <meta property="og:title" content="Lead Engines Available by Area | Lead Gen Rentals">
-<meta property="og:description" content="See which lead engines have open slots right now. Engines are shared and slots are capped; every lead is named to one business at capture. Prepaid, month to month.">
+<meta property="og:description" content="See which lead engines have open slots right now. Slots are limited, and every lead is named to your business at capture. Prepaid, month to month.">
 <meta property="og:image" content="https://leadgenrentals.com.au/lgr-og-image.png">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
-<meta property="og:image:alt" content="Lead Gen Rentals - shared lead engines, leads named to one business">
+<meta property="og:image:alt" content="Lead Gen Rentals - exclusive named leads for Australian trades">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="Lead Engines Available by Area | Lead Gen Rentals">
-<meta name="twitter:description" content="See which lead engines have open slots right now. Engines are shared and slots are capped; every lead is named to one business at capture. Prepaid, month to month.">
+<meta name="twitter:description" content="See which lead engines have open slots right now. Slots are limited, and every lead is named to your business at capture. Prepaid, month to month.">
 <meta name="twitter:image" content="https://leadgenrentals.com.au/lgr-og-image.png">
 <link rel="icon" href="favicon.ico">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -334,7 +334,7 @@
 
   <div class="head">
     <h1 id="fleetHeading">Engines with open slots near <span id="regionLabel">-</span></h1>
-    <p class="sub" id="fleetSub">Each one is a ready-to-run <span id="nicheLabel">lead</span> engine, shared by a capped number of renters. Take a slot and every lead the engine names to you is yours alone - your business name goes on the consent line before the homeowner ever submits.</p>
+    <p class="sub" id="fleetSub">Each one is a ready-to-run <span id="nicheLabel">lead</span> engine. Take a slot and every lead named to you is yours alone - your business name goes on the consent line before the homeowner ever submits. Slots are limited.</p>
   </div>
 
   <div class="filters">
@@ -375,7 +375,7 @@
 
       <!-- STEP 1: preview of the landing page homeowners see -->
       <div id="modalPreview">
-        <p>This is the landing page homeowners see. The engine is shared, but the consent line is not: for the visitors assigned to you, it carries <b>your business name</b> - so exclusivity is proven at the point of capture, not promised afterwards.</p>
+        <p>This is the landing page homeowners see. The consent line carries <b>your business name</b> - so exclusivity is proven at the point of capture, not promised afterwards.</p>
         <div class="mform">
           <div class="t" id="mformTitle">Get your free quote</div>
           <div class="b" id="mfield0">Full name</div>
@@ -535,11 +535,11 @@ function previewLabel(item){
 
 
 /* ---------------------------------------------------------------------------
-   Renter slots on a shared engine.
+   Renter slots per engine.
 
    PHASE 2 / TODO: `assets` has no capacity columns yet - the schema still
    models one renter per asset (assets.rented_by, status available|rented).
-   Until the shared-engine migration lands there is no honest number to show,
+   Until the capacity migration lands there is no honest number to show,
    so this deliberately renders a qualitative label rather than inventing a
    count. Once `assets.slot_capacity` and a live count of active rentals per
    asset are available, mapRow() will populate slots_taken / slot_capacity and
@@ -572,7 +572,7 @@ function card(item){
       <div class="specs">
         <div class="spec"><span class="k">Renter slots</span><span class="v">${esc(slotLabel(item))}</span></div>
         <div class="spec"><span class="k">Service businesses per lead</span><span class="v">1</span></div>
-        <div class="spec"><span class="k">Ad spend</span><span class="v">We carry it</span></div>
+        <div class="spec"><span class="k">Setup</span><span class="v">Nothing to do</span></div>
       </div>
       <div class="priceline">
         <span class="price">${esc(item.price)}<small> +GST / 30 days</small></span>
@@ -611,11 +611,11 @@ function comingSoon(){
   const filters = document.querySelector('.filters');
   if(filters) filters.style.display = 'none';
   $('#fleetHeading').textContent = `${NC.label} assets are coming soon`;
-  $('#fleetSub').textContent = "We're building the next run of lead engines now. Each one takes a capped number of renters, so they go out in small batches.";
+  $('#fleetSub').textContent = "We're building the next run of lead engines now. Slots are limited, so they go out in small batches.";
   $('#countLine').innerHTML = '';
   $('#fleet').innerHTML = `<div class="empty">
       <div class="empty-h">Coming soon</div>
-      <p>No assets are listed right now. Tell us your trade and postcode and we'll come to you first when your area opens.</p>
+      <p>No assets are listed right now. Tell us your trade and postcode and we'll come to you first when a slot opens.</p>
       <a href="/contact" class="btn btn-primary btn-glossy">Register your interest</a>
     </div>`;
 }
@@ -815,7 +815,7 @@ loadInventory();
       </div>
     </div>
     <div class="foot">
-      <p class="fine">© 2026 Lead Gen Rentals. Lead Gen Rentals runs paid advertising on its own accounts and its own campaigns. Engines are shared: more than one service business may rent the same engine, up to a fixed number of slots per engine. Exclusivity is at the lead level, not the area level - renting an engine does not give a service business any exclusive right to an area, a postcode or a region. A lead means a form submission containing a name and an Australian mobile number, captured with named consent to be contacted by one identified service business. The business named on that consent line is assigned before the form is shown, and once a person has been assigned to a service business they remain assigned to that same business on every later visit and submission - a person is never reassigned. Each lead is delivered to that one service business and to no other. Lead Gen Rentals does not guarantee any number of leads, any cost per lead, or any outcome. Lead volume varies with market conditions, season and the advertising auction, and Lead Gen Rentals does not guarantee that any lead will answer, quote or convert. Starter, Growth and Scale are service levels; they are not a commitment to spend any stated amount. What Lead Gen Rentals commits to is that leads delivered to a service business are exclusive to it and named to it, and that its engine runs for the period paid for. Billed month to month in advance - cancel any time before your next cycle begins, no lock-in and no exit fee. Cancelling frees your slot on the engine.</p>
+      <p class="fine">© 2026 Lead Gen Rentals. Lead Gen Rentals runs paid advertising on its own accounts and its own campaigns. A lead means a form submission containing a name and an Australian mobile number, captured with named consent to be contacted by one identified service business. Every lead delivered to a service business is exclusive to it and named to it, is delivered to no other business, and is never resold. Renting does not grant any exclusive right to an area, a postcode or a region. Lead Gen Rentals does not guarantee any number of leads, any cost per lead, or any outcome. Lead volume varies with market conditions, season and the advertising auction, and Lead Gen Rentals does not guarantee that any lead will answer, quote or convert. Starter, Growth and Scale are service levels; they are not a commitment to spend any stated amount. Billed month to month in advance - cancel any time before your next cycle begins, no lock-in and no exit fee; cancelling frees your slot. Full terms at <a href="/terms" style="color:inherit;text-decoration:underline">leadgenrentals.com.au/terms</a>.</p>
     </div>
   </div>
 </footer>
