@@ -267,7 +267,6 @@ td.mono{font-family:var(--mono);font-size:12px}
     <div class="tb-sp"></div>
     <div class="live-pill"><div class="ldot"></div>LIVE</div>
     <span id="clock"></span>
-    <button class="ibtn" onclick="nav('dashboard')" title="Below-floor alerts" style="position:relative">⚠<span id="alert-badge" style="display:none;position:absolute;top:-2px;right:-2px;background:var(--red);color:#fff;border-radius:8px;font-size:8px;padding:0 4px;font-family:var(--mono);font-weight:700;line-height:1.6">0</span></button>
     <span class="uname-chip" id="uname"></span>
     <button class="ibtn" id="theme-btn" onclick="toggleTheme()" title="Toggle theme">◐</button>
     <button class="ibtn" onclick="doLogout()" title="Sign out">⎋</button>
@@ -351,23 +350,14 @@ td.mono{font-family:var(--mono);font-size:12px}
           <div class="ph-left"><h1>Dashboard</h1><p>Live snapshot across the LGR fleet</p></div>
           <div class="ph-right"><button class="btn btn-sm" onclick="loadDashboard()">↻ Refresh</button></div>
         </div>
-        <div class="kg c4">
+        <div class="kg c3">
           <div class="kpi"><div class="klabel">Active rentals</div><div class="kval blu" id="db-active">-</div><div class="ksub" id="db-active-sub"></div></div>
           <div class="kpi"><div class="klabel">Leads this month</div><div class="kval grn" id="db-leads">-</div><div class="ksub" id="db-leads-sub"></div></div>
-          <div class="kpi"><div class="klabel">Below floor pace</div><div class="kval red" id="db-below">-</div><div class="ksub">Early-warning flags</div></div>
           <div class="kpi"><div class="klabel">Available assets</div><div class="kval" id="db-avail">-</div><div class="ksub" id="db-avail-sub"></div></div>
         </div>
 
         <div class="sl">Leads delivered · last 14 days<div class="sl-line"></div></div>
         <div style="background:var(--s1);border:1px solid var(--bd);border-radius:var(--r2);padding:16px;margin-bottom:8px"><canvas id="db-chart" height="90"></canvas></div>
-
-        <div class="sl">⚠ Assets below floor pace<div class="sl-line"></div></div>
-        <div class="twrap">
-          <table>
-            <thead><tr><th>Asset</th><th>Installer</th><th>Day</th><th>Leads so far</th><th>Projected / floor</th><th>Pace</th></tr></thead>
-            <tbody id="db-below-tbody"><tr><td colspan="6" class="empty">Loading…</td></tr></tbody>
-          </table>
-        </div>
 
         <div class="sl">Available assets per niche<div class="sl-line"></div></div>
         <div class="nichegrid" id="db-niche-grid"></div>
@@ -392,7 +382,7 @@ td.mono{font-family:var(--mono);font-size:12px}
         <div class="twrap">
           <table>
             <thead><tr id="assets-head"></tr></thead>
-            <tbody id="assets-tbody"><tr><td colspan="10" class="empty">Loading…</td></tr></tbody>
+            <tbody id="assets-tbody"><tr><td colspan="9" class="empty">Loading…</td></tr></tbody>
           </table>
         </div>
       </div>
@@ -409,8 +399,8 @@ td.mono{font-family:var(--mono);font-size:12px}
         </div>
         <div class="twrap">
           <table>
-            <thead><tr><th>Asset</th><th>Installer</th><th>Started</th><th>Ended</th><th>Monthly</th><th>Floor</th><th>Status</th><th></th></tr></thead>
-            <tbody id="rentals-tbody"><tr><td colspan="9" class="empty">Loading…</td></tr></tbody>
+            <thead><tr><th>Asset</th><th>Installer</th><th>Started</th><th>Ended</th><th>Monthly</th><th>Status</th><th></th></tr></thead>
+            <tbody id="rentals-tbody"><tr><td colspan="7" class="empty">Loading…</td></tr></tbody>
           </table>
         </div>
       </div>
@@ -432,7 +422,7 @@ td.mono{font-family:var(--mono);font-size:12px}
       <!-- ═══ LEAD DISTRIBUTION ═══ -->
       <div class="panel" id="panel-leads">
         <div class="ph">
-          <div class="ph-left"><h1>Lead Distribution</h1><p>Captured leads · delivery &amp; floor tracking</p></div>
+          <div class="ph-left"><h1>Lead Distribution</h1><p>Captured leads · delivery tracking</p></div>
           <div class="ph-right">
             <select class="fs" id="lf-niche" onchange="loadLeads(true)" style="width:auto"><option value="">All niches</option></select>
             <select class="fs" id="lf-asset" onchange="loadLeads(true)" style="width:auto"><option value="">All assets</option></select>
@@ -454,10 +444,6 @@ td.mono{font-family:var(--mono);font-size:12px}
           <div class="kpi"><div class="klabel">Duplicate</div><div class="kval" id="ld-duplicate" style="color:var(--amb)">-</div></div>
           <div class="kpi"><div class="klabel">Invalid</div><div class="kval red" id="ld-invalid">-</div></div>
         </div>
-        <div class="kg c5 mb4">
-          <div class="kpi"><div class="klabel">Outstanding to floor</div><div class="kval" id="ld-outstanding" style="color:var(--amb)">-</div><div class="ksub">rented assets · floor − cycle matched</div></div>
-        </div>
-
         <div class="sl" style="cursor:pointer;user-select:none" onclick="toggleLdBreakdown()">
           By installer · current 30-day cycle <span id="ld-chevron" style="font-size:10px;margin-left:6px;color:var(--ink3)">▶</span>
           <div class="sl-line"></div>
@@ -616,10 +602,9 @@ td.mono{font-family:var(--mono);font-size:12px}
             <thead><tr>
               <th>Area</th>
               <th>Starter</th><th>Growth</th><th>Scale</th>
-              <th title="Fee divided by floor - the most a lead can cost">Worst case / lead</th>
               <th></th>
             </tr></thead>
-            <tbody id="pricing-tbody"><tr><td colspan="6" class="empty">Loading…</td></tr></tbody>
+            <tbody id="pricing-tbody"><tr><td colspan="5" class="empty">Loading…</td></tr></tbody>
           </table>
         </div>
       </div>
@@ -649,10 +634,9 @@ td.mono{font-family:var(--mono);font-size:12px}
       <div class="frow"><label class="flabel">Brand domain <a id="ma-preview-link" href="#" target="_blank" rel="noopener" style="display:none;float:right;font-weight:600;color:var(--acc);text-decoration:none">Open preview ↗</a></label><input class="fi" id="ma-domain" placeholder="yourbrand.com.au" oninput="syncPreviewLink()"></div>
       <div class="frow"><label class="flabel">Niche *</label><select class="fs" id="ma-niche"></select></div>
       <div class="frow"><label class="flabel">Region *</label><select class="fs" id="ma-region"></select></div>
-      <div class="frow"><label class="flabel">Tier *</label><select class="fs" id="ma-tier" onchange="applyTierDefaults()"><option value="starter">Starter</option><option value="growth">Growth</option><option value="scale">Scale</option></select><div class="fhint">Auto-fills price + floor (overridable)</div></div>
+      <div class="frow"><label class="flabel">Tier *</label><select class="fs" id="ma-tier" onchange="applyTierDefaults()"><option value="starter">Starter</option><option value="growth">Growth</option><option value="scale">Scale</option></select><div class="fhint">Auto-fills the standard price (overridable)</div></div>
       <div class="frow"><label class="flabel">Status *</label><select class="fs" id="ma-status" onchange="onAssetStatusChange()"><option value="available">Available</option><option value="rented">Rented</option><option value="maintenance">Maintenance</option></select></div>
       <div class="frow"><label class="flabel">Monthly price (AUD) *</label><input class="fi" id="ma-price" type="number" min="0"></div>
-      <div class="frow"><label class="flabel">Floor leads *</label><input class="fi" id="ma-floor" type="number" min="0"></div>
       <div class="frow"><label class="flabel">Typical min / mo</label><input class="fi" id="ma-tmin" type="number" min="0"></div>
       <div class="frow"><label class="flabel">Typical max / mo</label><input class="fi" id="ma-tmax" type="number" min="0"></div>
       <div class="frow" id="ma-rentedby-row"><label class="flabel">Rented by</label><select class="fs" id="ma-rentedby"><option value="">- none -</option></select></div>
@@ -817,7 +801,7 @@ td.mono{font-family:var(--mono);font-size:12px}
 'use strict';
 const CFG = window.LGR_MC_SUPABASE || {};
 let db, currentUser;
-const TIER_DEFAULTS = { starter:{price:1100,floor:10}, growth:{price:2200,floor:20}, scale:{price:3300,floor:30} };
+const TIER_DEFAULTS = { starter:{price:1100}, growth:{price:2200}, scale:{price:3300} };
 
 /* caches */
 let _niches=[], _regions=[], _installers=[], _assets=[];
@@ -1019,24 +1003,23 @@ function nav(panel, el){
    set_area_pricing(), which is one atomic statement gated on super-admin in
    the database rather than only here.
 
-   "Worst case / lead" is fee divided by floor: the most a lead can cost if a
-   campaign only ever delivers the guaranteed floor. That is the number the
-   public site now promises in words, so it is worth seeing while you price.
+   There is no floor and no per-lead ceiling: the fee is the whole commercial
+   promise, and no lead volume is guaranteed on any tier.
    ════════════════════════════════════════════════════════════════════════ */
 const PR_TIERS = ['starter','growth','scale'];
 let _pricing = [];
 
 async function loadPricing(){
   const niche = $('pr-niche').value || null;
-  let q = db.from('assets').select('id,region_id,niche_id,tier,monthly_price_aud,floor_leads,sold_out')
+  let q = db.from('assets').select('id,region_id,niche_id,tier,monthly_price_aud,sold_out')
             .is('deleted_at', null);
   if(niche) q = q.eq('niche_id', niche);
   const { data, error } = await q;
   if(error){ $('pricing-tbody').innerHTML = `<tr><td colspan="6" class="empty" style="color:var(--red)">${esc(error.message)}</td></tr>`; return; }
   _pricing = data || [];
 
-  const g = PR_TIERS.map(t=>`${t} ${fmtAud(TIER_DEFAULTS[t].price)} / ${TIER_DEFAULTS[t].floor} leads`).join(' \u00b7 ');
-  $('pr-general').innerHTML = `<b>General price:</b> ${esc(g)} \u2014 ${fmtAud(TIER_DEFAULTS.starter.price/TIER_DEFAULTS.starter.floor)} per lead worst case. Anything differing from it is highlighted.`;
+  const g = PR_TIERS.map(t=>`${t} ${fmtAud(TIER_DEFAULTS[t].price)}`).join(' \u00b7 ');
+  $('pr-general').innerHTML = `<b>General price:</b> ${esc(g)} per 30 days. Anything differing from it is highlighted.`;
   renderPricing();
 }
 
@@ -1050,7 +1033,7 @@ function renderPricing(){
     .sort((a,b)=> regionName(a).localeCompare(regionName(b)));
 
   $('pricing-tbody').innerHTML = regionIds.length ? regionIds.map(rid=>{
-    let worst = 0, offStandard = false;
+    let offStandard = false;
     const cells = PR_TIERS.map(t=>{
       const grp = prGroup(rid,t);
       if(!grp.length) return '<td class="dim">-</td>';
@@ -1058,29 +1041,23 @@ function renderPricing(){
       // boxes stay blank rather than showing one trade's number as if it were
       // the area's - typing a value then sets them all.
       const prices = [...new Set(grp.map(a=>a.monthly_price_aud))];
-      const floors = [...new Set(grp.map(a=>a.floor_leads))];
       const price = prices.length===1 ? prices[0] : '';
-      const floor = floors.length===1 ? floors[0] : '';
-      if(price!==''&&floor!=='') worst = Math.max(worst, price/floor);
-      if(price!==TIER_DEFAULTS[t].price || floor!==TIER_DEFAULTS[t].floor) offStandard = true;
-      const mixed = prices.length>1||floors.length>1 ? ' title="Trades in this area differ - type a value to set them all"' : '';
+      if(price!==TIER_DEFAULTS[t].price) offStandard = true;
+      const mixed = prices.length>1 ? ' title="Trades in this area differ - type a value to set them all"' : '';
       return `<td><div class="pr-cell"${mixed}>
         <input type="number" min="1" step="50" value="${price}" placeholder="mixed" id="pp-${rid}-${t}" oninput="prDirty(this)">
-        <span class="sep">/</span>
-        <input type="number" min="1" step="1"  value="${floor}" placeholder="-" id="pf-${rid}-${t}" oninput="prDirty(this)">
       </div></td>`;
     }).join('');
 
     return `<tr>
       <td><strong>${esc(regionName(rid))}</strong></td>
       ${cells}
-      <td class="mono ${offStandard?'pr-off':''}">${worst?fmtAud(Math.round(worst)):'-'}</td>
       <td class="acts">
         <button class="btn btn-xs" onclick="saveAreaPricing('${rid}')">Save</button>
         <button class="btn btn-xs" onclick="resetAreaToGeneral('${rid}')" title="Put this area back on the standard tier price">Reset</button>
       </td>
     </tr>`;
-  }).join('') : '<tr><td colspan="6" class="empty">No assets to price.</td></tr>';
+  }).join('') : '<tr><td colspan="5" class="empty">No assets to price.</td></tr>';
 }
 
 function prDirty(el){ el.classList.add('dirty'); }
@@ -1091,16 +1068,14 @@ async function saveAreaPricing(regionId){
   const niche = $('pr-niche').value || null;
   let touched = 0, changed = 0;
   for(const t of PR_TIERS){
-    const pEl = $(`pp-${regionId}-${t}`), fEl = $(`pf-${regionId}-${t}`);
-    if(!pEl || !fEl) continue;
+    const pEl = $(`pp-${regionId}-${t}`);
+    if(!pEl) continue;
     const price = pEl.value===''? null : parseInt(pEl.value,10);
-    const floor = fEl.value===''? null : parseInt(fEl.value,10);
-    if(price===null && floor===null) continue;
-    if(price!==null && (isNaN(price)||price<=0)){ toast(`${t}: price must be above zero`, true); return; }
-    if(floor!==null && (isNaN(floor)||floor<=0)){ toast(`${t}: floor must be at least 1 lead`, true); return; }
+    if(price===null) continue;
+    if(isNaN(price)||price<=0){ toast(`${t}: price must be above zero`, true); return; }
     touched++;
     const { data, error } = await db.rpc('set_area_pricing', {
-      p_region_id: regionId, p_tier: t, p_price: price, p_floor: floor, p_niche_id: niche,
+      p_region_id: regionId, p_tier: t, p_price: price, p_niche_id: niche,
     });
     if(error){ toast(error.message, true); return; }
     changed += (data||0);
@@ -1129,7 +1104,7 @@ async function prApplyGeneral(regionIds){
     for(const t of PR_TIERS){
       const { data, error } = await db.rpc('set_area_pricing', {
         p_region_id: rid, p_tier: t,
-        p_price: TIER_DEFAULTS[t].price, p_floor: TIER_DEFAULTS[t].floor,
+        p_price: TIER_DEFAULTS[t].price,
         p_niche_id: niche,
       });
       if(error){ toast(error.message, true); return; }
@@ -1144,8 +1119,7 @@ async function prApplyGeneral(regionIds){
    DASHBOARD
    ════════════════════════════════════════════════════════════════════════ */
 async function loadDashboard(){
-  setText('db-active','…'); setText('db-leads','…'); setText('db-below','…'); setText('db-avail','…');
-  $('db-below-tbody').innerHTML = '<tr><td colspan="6" class="empty">Loading…</td></tr>';
+  setText('db-active','…'); setText('db-leads','…'); setText('db-avail','…');
   // rented assets (with niche/region), all live assets, this-month leads, cycle leads
   const monthStart = new Date(); monthStart.setDate(1); monthStart.setHours(0,0,0,0);
   const since = new Date(Date.now()-35*86400000).toISOString();
@@ -1166,27 +1140,7 @@ async function loadDashboard(){
   setText('db-avail', available.length);
   setText('db-avail-sub', `${_niches.length} niches`);
 
-  // below-floor pace
-  const flagged = [];
-  for(const a of rented){
-    const p = pace(a, cycleLeads);
-    if(p && p.projected < a.floor_leads) flagged.push({a,p});
-  }
-  flagged.sort((x,y)=> (x.p.projected/x.a.floor_leads) - (y.p.projected/y.a.floor_leads));
-  setText('db-below', flagged.length);
-  updateAlertBadge(flagged.length);
   renderLeadsChart(cycleLeadsRes.data||[]);
-  $('db-below-tbody').innerHTML = flagged.length ? flagged.map(({a,p})=>{
-    const pct = Math.min(100, Math.round(p.projected/a.floor_leads*100));
-    return `<tr>
-      <td><strong>${esc(a.brand_name)}</strong><div class="dim" style="font-size:11px">${esc(nicheName(a.niche_id))} · ${esc(regionName(a.region_id))}</div></td>
-      <td>${esc(installerName(a.rented_by))}</td>
-      <td class="mono">${p.day} / 30</td>
-      <td class="mono">${p.leads}</td>
-      <td class="mono"><span style="color:var(--red)">${p.projected}</span> / ${a.floor_leads}</td>
-      <td><span class="pacebar"><span style="width:${pct}%;background:var(--red)"></span></span><span class="mono" style="font-size:11px">${pct}%</span></td>
-    </tr>`;
-  }).join('') : '<tr><td colspan="6" class="empty">✓ Every rented asset is on or above floor pace</td></tr>';
 
   // available per niche
   const grid = $('db-niche-grid');
@@ -1195,10 +1149,6 @@ async function loadDashboard(){
     const total = assets.filter(a=>a.niche_id===n.id).length;
     return `<div class="nichecard"><div class="nichecard-n">${esc(n.name)}</div><div class="nichecard-v">${cnt}</div><div class="nichecard-s">available · ${total} total</div></div>`;
   }).join('') || '<div class="empty">No niches</div>';
-}
-function updateAlertBadge(n){
-  const b=$('alert-badge'); if(!b) return;
-  if(n>0){ b.textContent=n; b.style.display='block'; } else b.style.display='none';
 }
 let _dbChart=null;
 function renderLeadsChart(leads){
@@ -1221,17 +1171,6 @@ function renderLeadsChart(leads){
   });
 }
 // pace = leads_so_far / days_into_cycle * 30, cycle = [rented_until-30d, rented_until]
-function pace(a, cycleLeads){
-  if(!a.rented_until) return null;
-  const end = new Date(a.rented_until+'T00:00:00');
-  const start = new Date(end); start.setDate(start.getDate()-30);
-  const nowD = new Date();
-  const cursor = nowD < end ? nowD : end;
-  const day = Math.max(1, Math.round(daysBetween(start, cursor)));
-  const leads = cycleLeads.filter(l => l.asset_id===a.id && l.installer_id===a.rented_by && new Date(l.captured_at)>=start).length;
-  const projected = Math.round(leads / day * 30);
-  return { day, leads, projected };
-}
 
 /* ════════════════════════════════════════════════════════════════════════
    ASSETS
@@ -1243,7 +1182,6 @@ const ASSET_COLS = [
   {k:'region', label:'Region'},
   {k:'tier', label:'Tier'},
   {k:'monthly_price_aud', label:'Monthly'},
-  {k:'floor_leads', label:'Floor'},
   {k:'status', label:'Status'},
   {k:'rented_until', label:'Rented until'},
 ];
@@ -1258,9 +1196,9 @@ function setAssetSort(col){
   renderAssets();
 }
 async function loadAssets(){
-  $('assets-tbody').innerHTML='<tr><td colspan="10" class="empty">Loading…</td></tr>';
+  $('assets-tbody').innerHTML='<tr><td colspan="9" class="empty">Loading…</td></tr>';
   const { data, error } = await db.from('assets').select('*').order('brand_name');
-  if(error){ $('assets-tbody').innerHTML=`<tr><td colspan="10" class="empty" style="color:var(--red)">${esc(error.message)}</td></tr>`; return; }
+  if(error){ $('assets-tbody').innerHTML=`<tr><td colspan="9" class="empty" style="color:var(--red)">${esc(error.message)}</td></tr>`; return; }
   _assets = data||[];
   renderAssets();
 }
@@ -1302,7 +1240,6 @@ function renderAssets(){
       <td>${esc(regionName(a.region_id))}</td>
       <td><span class="tierpill">${esc(a.tier)}</span></td>
       <td class="mono">${fmtAud(a.monthly_price_aud)}</td>
-      <td class="mono">${a.floor_leads}</td>
       <td><span class="badge ${badge}">${a.sold_out?'sold out':esc(a.status)}</span></td>
       <td class="mono dim">${fmtDate(a.rented_until)}</td>
       <td class="acts">${a.deleted_at
@@ -1310,7 +1247,7 @@ function renderAssets(){
         : `<button class="btn btn-xs" onclick="openAssetModal('${a.id}')">Edit</button>
            <button class="btn btn-xs" onclick="toggleSoldOut('${a.id}',${a.sold_out?'false':'true'})" title="${a.sold_out?'Put this asset back on sale':'Hold this asset back from sale'}">${a.sold_out?'Unhold':'Hold'}</button>${assetQuickMenu(a)}`}</td>
     </tr>`;
-  }).join('') : '<tr><td colspan="10" class="empty">No assets match.</td></tr>';
+  }).join('') : '<tr><td colspan="9" class="empty">No assets match.</td></tr>';
 }
 function assetQuickMenu(a){
   const statuses = ['available','rented','maintenance'].filter(s=>s!==a.status);
@@ -1338,7 +1275,6 @@ function openAssetModal(id){
   $('ma-tier').value = a?.tier || 'starter';
   $('ma-status').value = a?.status || 'available';
   setVal('ma-price', a?.monthly_price_aud ?? TIER_DEFAULTS.starter.price);
-  setVal('ma-floor', a?.floor_leads ?? TIER_DEFAULTS.starter.floor);
   setVal('ma-tmin', a?.typical_min);
   setVal('ma-tmax', a?.typical_max);
   $('ma-rentedby').value = a?.rented_by || '';
@@ -1358,7 +1294,7 @@ function syncPreviewLink(){
 }
 function applyTierDefaults(){
   const d = TIER_DEFAULTS[$('ma-tier').value]; if(!d) return;
-  setVal('ma-price', d.price); setVal('ma-floor', d.floor);
+  setVal('ma-price', d.price);
 }
 function onAssetStatusChange(){
   const rented = $('ma-status').value==='rented';
@@ -1377,7 +1313,6 @@ async function saveAsset(){
     tier: $('ma-tier').value,
     status,
     monthly_price_aud: parseInt($('ma-price').value,10),
-    floor_leads: parseInt($('ma-floor').value,10),
     typical_min: $('ma-tmin').value?parseInt($('ma-tmin').value,10):null,
     typical_max: $('ma-tmax').value?parseInt($('ma-tmax').value,10):null,
     rented_by: status==='rented' ? rentedBy : null,
@@ -1385,7 +1320,7 @@ async function saveAsset(){
     service_postcodes: (function(){ const p=parsePostcodes($('ma-postcodes').value); return p.length?p:null; })(),
   };
   if(!payload.brand_name){ toast('Brand name required', true); return; }
-  if(isNaN(payload.monthly_price_aud)||isNaN(payload.floor_leads)){ toast('Price and floor required', true); return; }
+  if(isNaN(payload.monthly_price_aud)){ toast('Price is required', true); return; }
   const btn=$('ma-save'); btn.disabled=true; btn.textContent='Saving…';
   let error, savedId=id;
   if(id){ ({error} = await db.from('assets').update(payload).eq('id',id)); }
@@ -1394,17 +1329,17 @@ async function saveAsset(){
     error=res.error; savedId=res.data?.id;
   }
   // if newly rented, open a rental row for history (only when it changed to rented)
-  if(!error && status==='rented' && rentedBy){ await ensureOpenRental(savedId, rentedBy, payload.monthly_price_aud, payload.floor_leads); }
+  if(!error && status==='rented' && rentedBy){ await ensureOpenRental(savedId, rentedBy, payload.monthly_price_aud); }
   btn.disabled=false; btn.textContent='Save asset';
   if(error){ toast('Error: '+error.message, true); return; }
   toast(id?'Asset updated ✓':'Asset created ✓');
   closeModal('m-asset'); loadAssets();
 }
 // Open a rentals row if this asset+installer has no active rental yet.
-async function ensureOpenRental(assetId, installerId, price, floor){
+async function ensureOpenRental(assetId, installerId, price){
   const { data } = await db.from('rentals').select('id').eq('asset_id',assetId).eq('installer_id',installerId).is('ended_at',null).limit(1);
   if(data && data.length) return;
-  await db.from('rentals').insert({ asset_id:assetId, installer_id:installerId, monthly_price_aud:price, floor_leads:floor });
+  await db.from('rentals').insert({ asset_id:assetId, installer_id:installerId, monthly_price_aud:price });
 }
 async function markAssetStatus(id, status){
   const a=_assets.find(x=>x.id===id); if(!a) return;
@@ -1420,7 +1355,7 @@ async function duplicateAsset(id){
   const a=_assets.find(x=>x.id===id); if(!a) return;
   const copy = { niche_id:a.niche_id, region_id:a.region_id, tier:a.tier,
     brand_name:a.brand_name+' (copy)', brand_domain:a.brand_domain,
-    monthly_price_aud:a.monthly_price_aud, floor_leads:a.floor_leads,
+    monthly_price_aud:a.monthly_price_aud,
     typical_min:a.typical_min, typical_max:a.typical_max, status:'available' };
   const { error } = await db.from('assets').insert(copy);
   if(error){ toast('Error: '+error.message, true); return; }
@@ -1491,9 +1426,9 @@ async function loadRentals(){
     ? _assets.map(a=>`<option value="${a.id}">${esc(a.brand_name)}</option>`).join('')
     : '');
   if(!_assets.length){ const r=await db.from('assets').select('*'); _assets=r.data||[]; fillSelect('rf-asset','All assets',_assets.map(a=>`<option value="${a.id}">${esc(a.brand_name)}</option>`).join('')); }
-  $('rentals-tbody').innerHTML='<tr><td colspan="9" class="empty">Loading…</td></tr>';
+  $('rentals-tbody').innerHTML='<tr><td colspan="7" class="empty">Loading…</td></tr>';
   const { data, error } = await db.from('rentals').select('*').order('started_at',{ascending:false});
-  if(error){ $('rentals-tbody').innerHTML=`<tr><td colspan="9" class="empty" style="color:var(--red)">${esc(error.message)}</td></tr>`; return; }
+  if(error){ $('rentals-tbody').innerHTML=`<tr><td colspan="7" class="empty" style="color:var(--red)">${esc(error.message)}</td></tr>`; return; }
   _rentals=data||[]; renderRentals();
 }
 const assetName = id => (_assets.find(x=>x.id===id)||{}).brand_name || '-';
@@ -1514,11 +1449,10 @@ function renderRentals(){
       <td class="mono dim">${fmtDate(r.started_at)}</td>
       <td class="mono dim">${r.ended_at?fmtDate(r.ended_at):'-'}</td>
       <td class="mono">${fmtAud(r.monthly_price_aud)}</td>
-      <td class="mono">${r.floor_leads}</td>
       <td><span class="badge ${active?'bg-grn':'bg-gray'}">${active?'active':'ended'}</span>${r.stripe_subscription_id?` <span class="badge bg-blu" title="${esc(r.stripe_subscription_id)}">Stripe</span>`:''}</td>
       <td>${active?`<button class="btn btn-xs" onclick="endRental('${r.id}','${r.asset_id}')">End rental</button> `:''}<button class="btn btn-xs btn-red" onclick="deleteRental('${r.id}')">Delete</button></td>
     </tr>`;
-  }).join('') : '<tr><td colspan="8" class="empty">No rentals match.</td></tr>';
+  }).join('') : '<tr><td colspan="7" class="empty">No rentals match.</td></tr>';
 }
 async function deleteRental(id){
   if(!confirm('PERMANENTLY delete this rental record?\n\nThis removes the history row only (the asset and business stay). This cannot be undone.')) return;
@@ -1701,7 +1635,6 @@ async function loadLeads(reset){
   if(unsentEl) unsentEl.style.color = unsent ? 'var(--red)' : 'var(--ink3)';
   setText('ld-duplicate', all.filter(l=>l.status==='duplicate').length);
   setText('ld-invalid', all.filter(l=>l.status==='invalid').length);
-  computeOutstanding();
 
   // By-installer breakdown (current 30-day cycle, delivered only)
   renderLdBreakdown();
@@ -1750,16 +1683,6 @@ async function loadLeads(reset){
   }).join('') : '<tr><td colspan="6" class="empty">No delivery events yet.</td></tr>';
 }
 
-// "Outstanding to floor": across rented assets, sum max(0, floor − delivered this cycle).
-async function computeOutstanding(){
-  const rented=_assets.filter(a=>a.status==='rented' && !a.deleted_at);
-  if(!rented.length){ setText('ld-outstanding','0'); return; }
-  const since=new Date(Date.now()-30*86400000).toISOString();
-  const { data } = await db.from('asset_leads').select('asset_id,installer_id').eq('status','delivered').gte('captured_at',since);
-  const byAsset={}; (data||[]).forEach(l=>{ byAsset[l.asset_id]=(byAsset[l.asset_id]||0)+1; });
-  const out=rented.reduce((s,a)=>s+Math.max(0,(a.floor_leads||0)-(byAsset[a.id]||0)),0);
-  setText('ld-outstanding', out);
-}
 async function renderLdBreakdown(){
   const since=new Date(Date.now()-30*86400000).toISOString();
   const { data } = await db.from('asset_leads').select('installer_id,status').gte('captured_at',since);
@@ -1770,19 +1693,15 @@ async function renderLdBreakdown(){
   const rows=_installers.map(i=>({i,s:m[i.id]||{delivered:0,duplicate:0,invalid:0}}))
     .filter(r=>r.s.delivered||r.s.duplicate||r.s.invalid);
   $('ld-breakdown').innerHTML = rows.length ? `<div class="twrap"><table style="font-size:12px">
-    <!-- "Matched", not "Delivered": this counts leads attributed to the installer
-         (what the floor is measured against), which is a different question to
-         whether the email/SMS actually went out. -->
-    <thead><tr><th>Installer</th><th>Matched</th><th>Duplicate</th><th>Invalid</th><th>Floor (rented)</th></tr></thead>
+    <!-- "Matched", not "Delivered": this counts leads attributed to the installer,
+         which is a different question to whether the email/SMS actually went out. -->
+    <thead><tr><th>Installer</th><th>Matched</th><th>Duplicate</th><th>Invalid</th></tr></thead>
     <tbody>${rows.map(({i,s})=>{
-      const floor=_assets.filter(a=>a.rented_by===i.id&&a.status==='rented').reduce((x,a)=>x+(a.floor_leads||0),0);
-      const under = floor && s.delivered<floor;
       return `<tr>
         <td><strong>${esc(i.business_name)}</strong></td>
         <td class="mono" style="color:var(--grn)">${s.delivered}</td>
         <td class="mono" style="color:var(--amb)">${s.duplicate}</td>
         <td class="mono" style="color:${s.invalid?'var(--red)':'var(--ink3)'}">${s.invalid}</td>
-        <td class="mono">${floor?`<span style="color:${under?'var(--red)':'var(--grn)'}">${s.delivered}</span> / ${floor}`:'-'}</td>
       </tr>`;
     }).join('')}</tbody></table></div>` : '<div class="empty">No leads in the last 30 days.</div>';
 }
@@ -1849,7 +1768,7 @@ async function sendTestLead(){
   }
   const dup = data && data.is_duplicate;
   box.style.cssText=`display:block;padding:8px 10px;border-radius:6px;font-size:12px;margin-bottom:8px;background:${dup?'var(--acc-dim)':'var(--grn-dim)'};color:${dup?'var(--amb)':'var(--grn)'}`;
-  box.textContent = dup ? '⚠ Captured as DUPLICATE (same phone/asset/installer within 30 days) - did not count toward floor.' : '✓ Lead captured & delivered.';
+  box.textContent = dup ? '⚠ Captured as DUPLICATE (same phone/asset/installer within 30 days) - not delivered again.' : '✓ Lead captured & delivered.';
   toast(dup?'Duplicate captured':'Test lead delivered ✓');
   loadLeads(true);
 }

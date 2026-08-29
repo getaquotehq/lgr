@@ -127,5 +127,10 @@ but not yet built** - see the Phase 2 notes in the handover:
   (`assets.rented_by`, `status available|rented`). `fleet.html:slotLabel()`
   deliberately renders a qualitative label rather than inventing a count.
 - No assignment table exists. §2 is not implemented in the lead-capture flow.
-- `assets.floor_leads` / `rentals.floor_leads` still exist as NOT NULL columns
-  and must be dropped.
+- ~~`assets.floor_leads` / `rentals.floor_leads` still exist~~ **Done.** The
+  floor columns are dropped from `assets`, `rentals` and `rental_checkouts`;
+  `activate_rental` no longer copies a floor onto the rental; `set_area_pricing`
+  lost its `p_floor` argument; and `area_pricing_overview` no longer computes
+  `worst_case_per_lead`. Mission Control's below-floor alerting, pace table and
+  "outstanding to floor" tracking are gone with them. Tiers were left exactly as
+  they were - `assets_tier_check` is still a plain starter/growth/scale enum.
