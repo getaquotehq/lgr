@@ -333,8 +333,8 @@
   <div id="checkoutBanner"></div>
 
   <div class="head">
-    <h1 id="fleetHeading">Engines with open slots near <span id="regionLabel">-</span></h1>
-    <p class="sub" id="fleetSub">Each one is a ready-to-run <span id="nicheLabel">lead</span> engine. Take a slot and every lead named to you is yours alone - your business name goes on the consent line before the homeowner ever submits. Slots are limited.</p>
+    <h1 id="fleetHeading">Live engines near <span id="regionLabel">-</span></h1>
+    <p class="sub" id="fleetSub">Every one of these is a <span id="nicheLabel">lead</span> engine that already exists - landing page built, campaigns tuned, ready to run under your name. Put your budget behind one and every lead it produces is yours alone. Slots are limited.</p>
   </div>
 
   <div class="filters">
@@ -556,6 +556,24 @@ function slotLabel(item){
   return item.status === 'open' ? 'Limited' : 'Full';
 }
 
+/* ---------------------------------------------------------------------------
+   Per-engine lead estimate.
+
+   Sourced from assets.typical_min / typical_max - numbers WE set per engine,
+   from that engine's own history. Both columns are nullable and both are null
+   until an engine has actually run, in which case this renders nothing at all.
+
+   Never invent a range here, and never derive one from price or tier. A
+   printed "typical" figure is a representation to the buyer: if it is not
+   backed by that engine's real delivery history it should not be on the page.
+   Blank is the correct output for a new engine.
+--------------------------------------------------------------------------- */
+function estimateLabel(item){
+  const lo = item.typical_min, hi = item.typical_max;
+  if(typeof lo !== 'number' || typeof hi !== 'number' || lo <= 0 || hi < lo) return null;
+  return `${lo}-${hi}`;
+}
+
 function card(item){
   const open = item.status === "open";
   return `<article class="card ${open ? '' : 'taken'}">
@@ -570,6 +588,7 @@ function card(item){
       </div>
       <div class="tier-name">${esc(item.tier)}</div>
       <div class="specs">
+        ${estimateLabel(item) ? `<div class="spec"><span class="k">Recent months</span><span class="v">${esc(estimateLabel(item))} leads</span></div>` : ''}
         <div class="spec"><span class="k">Renter slots</span><span class="v">${esc(slotLabel(item))}</span></div>
         <div class="spec"><span class="k">Service businesses per lead</span><span class="v">1</span></div>
         <div class="spec"><span class="k">Setup</span><span class="v">Nothing to do</span></div>
@@ -748,6 +767,10 @@ function mapRow(a){
     code: TIER_CODE[a.tier] || '',
     price: money(a.monthly_price_aud),
     price_aud: a.monthly_price_aud,
+    // Per-engine estimate, set by us on the asset row. Null until we have
+    // real history for that engine - estimateLabel() renders nothing then.
+    typical_min: (typeof a.typical_min === 'number') ? a.typical_min : null,
+    typical_max: (typeof a.typical_max === 'number') ? a.typical_max : null,
     // Slot capacity is not in the schema yet - see slotLabel() below.
     slots_taken: (typeof a.slots_taken === 'number') ? a.slots_taken : null,
     slot_capacity: (typeof a.slot_capacity === 'number') ? a.slot_capacity : null,
@@ -764,7 +787,7 @@ async function loadInventory(){
   try{
     const sb = supabase.createClient(cfg.url, cfg.anonKey);
     const { data, error } = await sb.from('assets')
-      .select('id,tier,brand_name,brand_domain,monthly_price_aud,status,regions!inner(slug,name,sort_order),niches!inner(slug)')
+      .select('id,tier,brand_name,brand_domain,monthly_price_aud,typical_min,typical_max,status,regions!inner(slug,name,sort_order),niches!inner(slug)')
       .eq('niches.slug', NICHE)
       .eq('sold_out', false)   // held-back areas are not offered
       .order('sort_order', { referencedTable:'regions', ascending:true })
