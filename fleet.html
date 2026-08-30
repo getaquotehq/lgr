@@ -472,15 +472,15 @@ const TIER_CODE = { starter:'T1', growth:'T2', scale:'T3' };
 // via ?niche=<slug> (defaults to solar).
 const NICHE_CFG = {
   solar:       { label:'Residential Solar', noun:'solar project',       quote:'Get your free solar quote',      page:'/solar-leads',       back:'← Solar leads',       fields:['Postcode','Average quarterly power bill','How soon are you looking to install?'] },
+  battery:     { label:'Solar Battery',     noun:'battery install',     quote:'Get your free battery quote',    page:'/solar-battery-leads', back:'← Battery leads',     fields:['Postcode','Existing solar?','How soon are you looking to install?'] },
   hvac:        { label:'Residential HVAC',  noun:'heating & cooling job', quote:'Get your free HVAC quote',       page:'/hvac-leads',        back:'← HVAC leads',        fields:['Postcode','Type of system','How soon are you looking to install?'] },
   roofing:     { label:'Residential Roofing', noun:'roofing job',        quote:'Get your free roofing quote',    page:'/roofing-leads',     back:'← Roofing leads',     fields:['Postcode','What does your roof need?','How soon are you looking to start?'] },
   renovations: { label:'Home Renovations',  noun:'renovation',           quote:'Get your free renovation quote', page:'/renovations-leads', back:'← Renovation leads',  fields:['Postcode','Project type','Approx budget'] },
 };
 const NICHE = (new URLSearchParams(location.search).get('niche') || 'solar').toLowerCase();
-// Battery retrofit isn't a separate niche - it's served by the same solar
-// assets and landing pages, selected via the Trade dropdown on solar-leads
-// (?trade=battery on the Claim/View fleet link). This just changes which
-// hero copy the preview shows for the page load, not which assets are queried.
+// Battery is its own niche, priced separately from solar, so ?niche=battery
+// selects battery engines. ?trade= still carries the sub-trade a visitor came
+// in for (solar vs battery retrofit) purely as context for the copy shown.
 const TRADE = (new URLSearchParams(location.search).get('trade') || '').toLowerCase();
 const NC = NICHE_CFG[NICHE] || NICHE_CFG.solar;
 

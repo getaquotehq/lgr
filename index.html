@@ -620,7 +620,10 @@
     const grid = document.getElementById('trades');
     const cfg = window.LGR_SUPABASE || {};
     const esc = s => (s==null?'':String(s)).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-    const href = slug => slug === 'solar' ? '/solar-leads' : '/' + slug + '-leads';
+    // Page filenames do not all follow /<slug>-leads, so map the exceptions
+    // explicitly. A wrong guess here is a 404 on the main call to action.
+    const PAGE = { solar: '/solar-leads', battery: '/solar-battery-leads' };
+    const href = slug => PAGE[slug] || '/' + slug + '-leads';
     const label = n => n.slug === 'solar' ? 'solar' : n.name.toLowerCase();
     const cardLive = n =>
       '<a href="'+href(n.slug)+'" class="trade live">'

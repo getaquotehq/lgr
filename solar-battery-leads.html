@@ -945,7 +945,7 @@
   if(hasConfig){
     sb = supabase.createClient(cfg.url, cfg.anonKey);
     // preload the solar regions so we can match a typed suburb/postcode to one
-    sb.from('assets').select('regions!inner(slug,name),niches!inner(slug)').eq('niches.slug','solar').eq('sold_out', false)
+    sb.from('assets').select('regions!inner(slug,name),niches!inner(slug)').eq('niches.slug','battery').eq('sold_out', false)
       .then(({ data }) => {
         const seen = new Set();
         (data||[]).forEach(a => { const r = a.regions; if(r && !seen.has(r.slug)){ seen.add(r.slug); SOLAR_REGIONS.push(r); } });
@@ -993,7 +993,7 @@
     `<div class="res"><span class="res-v" style="color:var(--muted);font-weight:450">${esc(msg)}</span></div>`;
 
   // The trade selector has no matching column in the assets table - every
-  // solar asset serves both general solar and battery-retrofit enquiries,
+  // battery engines are their own niche, priced separately from solar,
   // there is no separately-filterable pool. Rather than fake a filter against
   // data that doesn't exist, the selection is threaded through as context:
   // it relabels what's shown and tags the claim link, so an installer who
@@ -1013,7 +1013,9 @@
         : count > 0
           ? `<span class="pill open">${count} of ${total} available</span>`
           : `<span class="pill taken">Fully booked</span>`;
-    const tradeParam = `trade=${encodeURIComponent(trade)}`;
+    // niche=battery so the fleet lists battery engines at battery prices;
+    // without it the fleet defaults to solar and shows the solar price.
+    const tradeParam = `niche=battery&trade=${encodeURIComponent(trade)}`;
     const claimHref = region
       ? `/fleet.html?region=${encodeURIComponent(region.slug)}&${tradeParam}`
       : `/fleet.html?${tradeParam}`;
@@ -1057,7 +1059,7 @@
     try{
       let q = sb.from('assets')
         .select('tier,monthly_price_aud,status,regions!inner(slug,name),niches!inner(slug)')
-        .eq('niches.slug','solar').is('deleted_at', null)
+        .eq('niches.slug','battery').is('deleted_at', null)
         .eq('sold_out', false);   // held-back areas are not offered
       if(region) q = q.eq('regions.slug', region.slug);
       const { data, error } = await q;
