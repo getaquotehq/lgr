@@ -366,7 +366,7 @@
 
   <div class="head">
     <h1 id="fleetHeading">Live engines near <span id="regionLabel">-</span></h1>
-    <p class="sub" id="fleetSub">Every one of these is a <span id="nicheLabel">lead</span> engine that already exists - landing page built, campaigns tuned, ready to run under your name. Put your budget behind one and every lead it produces is yours alone. Slots are limited.</p>
+    <p class="sub" id="fleetSub">Every one of these is a <span id="nicheLabel">lead</span> engine that already exists - landing page built, campaigns tuned, ready to run under your name. Take one and every lead it produces is yours alone. Slots are limited.</p>
   </div>
 
   <div class="filters">
@@ -423,7 +423,7 @@
         </div>
       </div>
 
-      <!-- STEP 2: rental details (revealed on "Rent this asset") -->
+      <!-- STEP 2: rental details (revealed on "Take this engine") -->
       <form id="rentForm" style="display:none">
         <p style="margin-bottom:16px">You're renting <b id="rentAssetName"></b>. Enter your details and we'll take you to secure Stripe checkout - your business name goes on every lead's consent.</p>
       <p style="margin-bottom:16px;font-size:.84rem;color:var(--muted)">Prepaid for the 30 days, cancel any time - cancelling frees your slot. What is promised: leads named to you are yours alone, and your engine runs for the period you have paid for. <a href="/rental-terms" style="color:var(--blue);font-weight:600">Rental terms &rarr;</a></p>
@@ -439,7 +439,7 @@
 
       <div class="modal-actions">
         <button class="btn btn-ghost" id="modalClose" type="button">Close</button>
-        <button class="btn btn-primary go btn-glossy" id="modalClaim" type="button">Rent this asset →</button>
+        <button class="btn btn-primary go btn-glossy" id="modalClaim" type="button">Take this engine →</button>
       </div>
       <p class="rf-secure" id="rentSecure" style="display:none">🔒 Payments processed securely by Stripe · billed monthly in advance · cancel any time</p>
     </div>
@@ -719,7 +719,7 @@ function showPreviewStep(){
   $('#rentSecure').style.display = 'none';
   const claim = $('#modalClaim');
   claim.disabled = active && active.status !== 'open';
-  claim.textContent = 'Rent this asset →';
+  claim.textContent = 'Take this engine →';
 }
 function showRentStep(){
   rentStep = true;
@@ -747,7 +747,7 @@ $('#modalClose').addEventListener('click', closeModal);
 $('#modal').addEventListener('click', e => { if(e.target.id === 'modal') closeModal(); });
 document.addEventListener('keydown', e => { if(e.key === 'Escape') closeModal(); });
 
-/* Rent this asset -> collect details -> Stripe subscription checkout */
+/* Take this engine -> collect details -> Stripe subscription checkout */
 $('#modalClaim').addEventListener('click', async () => {
   if(!active) return;
   if(!rentStep){ showRentStep(); return; }
@@ -778,7 +778,7 @@ async function startCheckout(){
     });
     const data = await res.json().catch(() => ({}));
     if(!res.ok || !data.url) throw new Error(data.error || 'We could not start checkout. Please try again.');
-    if(window.lgrMetaTrackLead) window.lgrMetaTrackLead({content_name:'Rental asset checkout', content_category: NC.label});
+    if(window.lgrMetaTrackLead) window.lgrMetaTrackLead({content_name:'Engine checkout', content_category: NC.label});
     window.location.href = data.url;
   }catch(e){
     err.textContent = e.message || 'We could not start checkout. Please try again.';
@@ -870,7 +870,7 @@ loadInventory();
       </div>
     </div>
     <div class="foot">
-      <p class="fine">© 2026 Lead Gen Rentals. Lead Gen Rentals runs paid advertising on its own accounts and its own campaigns. A lead means a form submission containing a name and an Australian mobile number, captured with named consent to be contacted by one identified service business. Every lead delivered to a service business is exclusive to it and named to it, is delivered to no other business, and is never resold. Renting does not grant any exclusive right to an area, a postcode or a region. Lead Gen Rentals does not guarantee any number of leads, any cost per lead, or any outcome. Lead volume varies with market conditions, season and the advertising auction, and Lead Gen Rentals does not guarantee that any lead will answer, quote or convert. Starter, Growth and Scale are service levels; they are not a commitment to spend any stated amount. Billed month to month in advance - cancel any time before your next cycle begins, no lock-in and no exit fee; cancelling frees your slot. Full terms at <a href="/terms" style="color:inherit;text-decoration:underline">leadgenrentals.com.au/terms</a>.</p>
+      <p class="fine">© 2026 Lead Gen Rentals. Lead Gen Rentals runs paid advertising on its own accounts and its own campaigns. A lead means a form submission containing a name and an Australian mobile number, captured with named consent to be contacted by one identified service business. Every lead delivered to a service business is exclusive to it and named to it, is delivered to no other business, and is never resold. Renting does not grant any exclusive right to an area, a postcode or a region. Lead Gen Rentals does not guarantee any number of leads, any cost per lead, or any outcome. Lead volume varies with market conditions, season and the advertising auction, and Lead Gen Rentals does not guarantee that any lead will answer, quote or convert. Starter, Growth and Scale are service levels. They are not a lead count. Billed month to month in advance - cancel any time before your next cycle begins, no lock-in and no exit fee; cancelling frees your slot. Full terms at <a href="/terms" style="color:inherit;text-decoration:underline">leadgenrentals.com.au/terms</a>.</p>
     </div>
   </div>
 </footer>
