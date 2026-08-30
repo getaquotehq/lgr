@@ -317,6 +317,14 @@
   /* Orbitron on headings - display face only, body copy stays Inter */
   h1,h2,h3,h4,.brand,.tier-name,.kval{font-family:var(--display);letter-spacing:-.02em}
   h1{letter-spacing:-.03em}
+  /* Live consent preview in checkout: the buyer sees their own name on the
+     consent line before paying, which is the thing being promised. */
+  .rf-consent{grid-column:1/-1;margin:10px 0 0;padding:12px 14px;border:1px solid var(--blue-line);
+    background:var(--blue-tint);border-radius:9px}
+  .rf-consent-k{display:block;font-family:var(--mono);font-size:.62rem;letter-spacing:.09em;
+    text-transform:uppercase;color:var(--blue-600);margin-bottom:6px}
+  .rf-consent-v{display:block;font-size:.84rem;color:var(--ink-2);line-height:1.5}
+  .rf-consent-v b{color:var(--ink);font-weight:650}
 </style>
 <script>(function(){try{var t=localStorage.getItem("lgr-theme")||"dark";document.documentElement.setAttribute("data-theme",t);}catch(e){}})();function toggleTheme(){try{var r=document.documentElement,n=r.getAttribute("data-theme")==="dark"?"light":"dark";r.setAttribute("data-theme",n);localStorage.setItem("lgr-theme",n);}catch(e){}}</script>
 </head>
@@ -407,7 +415,7 @@
 
       <!-- STEP 1: preview of the landing page homeowners see -->
       <div id="modalPreview">
-        <p>This is the landing page homeowners see. The consent line carries <b>your business name</b> - so exclusivity is proven at the point of capture, not promised afterwards.</p>
+        <p>This is the landing page homeowners see. The consent line carries <b>your business name</b>, so exclusivity is proven at the moment they submit rather than promised afterwards. Enter your business name on the next step and you will see it here before you pay anything.</p>
         <div class="mform">
           <div class="t" id="mformTitle">Get your free quote</div>
           <div class="b" id="mfield0">Full name</div>
@@ -418,7 +426,7 @@
           <div class="b" id="mfield5">&nbsp;</div>
           <div class="chk">
             <span class="tick"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3.5"><path d="M20 6 9 17l-5-5"/></svg></span>
-            <span>I agree to be contacted about my <span id="mConsentNoun">project</span> by <span class="slot">{{business_name}}</span>.</span>
+            <span>I agree to be contacted about my <span id="mConsentNoun">project</span> by <span class="slot" id="mConsentName">your business name</span>.</span>
           </div>
         </div>
       </div>
@@ -428,7 +436,7 @@
         <p style="margin-bottom:16px">You're renting <b id="rentAssetName"></b>. Enter your details and we'll take you to secure Stripe checkout - your business name goes on every lead's consent.</p>
       <p style="margin-bottom:16px;font-size:.84rem;color:var(--muted)">Prepaid for the 30 days, cancel any time - cancelling frees your slot. What is promised: leads named to you are yours alone, and your engine runs for the period you have paid for. <a href="/rental-terms" style="color:var(--blue);font-weight:600">Rental terms &rarr;</a></p>
         <div class="rf-grid">
-          <div class="rf-f"><label for="rf-business">Business name<span class="req">*</span></label><input id="rf-business" type="text" placeholder="e.g. Bright Spark Electrical" autocomplete="organization"></div>
+          <div class="rf-f"><label for="rf-business">Business name<span class="req">*</span></label><input id="rf-business" type="text" placeholder="e.g. Bright Spark Electrical" autocomplete="organization"><p class="rf-consent" id="rfConsent"><span class="rf-consent-k">This is what your leads agree to</span><span class="rf-consent-v">I agree to be contacted about my <span id="rfConsentNoun">project</span> by <b id="rfConsentName">your business name</b>.</span></p></div>
           <div class="rf-f"><label for="rf-contact">Your name</label><input id="rf-contact" type="text" placeholder="Full name" autocomplete="name"></div>
           <div class="rf-f"><label for="rf-email">Email<span class="req">*</span></label><input id="rf-email" type="email" placeholder="you@business.com.au" autocomplete="email"></div>
           <div class="rf-f"><label for="rf-phone">Phone</label><input id="rf-phone" type="tel" placeholder="04xx xxx xxx" autocomplete="tel"></div>
@@ -705,6 +713,7 @@ let rentStep = false;   // false = preview, true = details form
 (function initPreviewForm(){
   $('#mformTitle').textContent = NC.quote;
   $('#mConsentNoun').textContent = NC.noun;
+  $('#rf-business').addEventListener('input', syncConsentName);
   const labels = ['Full name','Email','Phone number', ...NC.fields];
   for(let i=0;i<6;i++){
     const el = $('#mfield'+i);
@@ -721,6 +730,18 @@ function showPreviewStep(){
   claim.disabled = active && active.status !== 'open';
   claim.textContent = 'Take this engine →';
 }
+/* Fill the consent line, in the checkout form and in the mocked landing page,
+   with whatever the buyer has typed. This is the "see your name on it before
+   you pay" promise, so it must show their real input and fall back to neutral
+   placeholder text rather than a made-up business. */
+function syncConsentName(){
+  var typed = ($('#rf-business').value || '').trim();
+  var shown = typed || 'your business name';
+  var a = $('#rfConsentName'), b = $('#mConsentName');
+  if(a) a.textContent = shown;
+  if(b) b.textContent = shown;
+}
+
 function showRentStep(){
   rentStep = true;
   $('#modalPreview').style.display = 'none';
@@ -731,6 +752,8 @@ function showRentStep(){
   $('#rentErr').classList.remove('on');
   const claim = $('#modalClaim');
   claim.disabled = false; claim.textContent = 'Continue to secure checkout →';
+  $('#rfConsentNoun').textContent = NC.noun;
+  syncConsentName();
   setTimeout(() => $('#rf-business').focus(), 40);
 }
 
