@@ -134,6 +134,8 @@
   .url{flex:1;margin-left:6px;background:var(--bg);border:1px solid var(--line-2);
     border-radius:4px;padding:3px 8px;font-family:var(--mono);font-size:.58rem;color:var(--faint);
     overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+  .url-locked{display:flex;align-items:center;gap:5px;font-style:italic}
+  .url-locked svg{flex-shrink:0;opacity:.8}
   .lp{padding:14px}
   .lp-brand{height:9px;width:38%;border-radius:2px;background:var(--blue);opacity:.85;margin-bottom:12px}
   .lp-h{font-family:var(--mono);font-size:.66rem;color:var(--blue);background:var(--blue-tint);
@@ -375,6 +377,7 @@
   <div class="head">
     <h1 id="fleetHeading">Live engines near <span id="regionLabel">-</span></h1>
     <p class="sub" id="fleetSub">Every one of these is a <span id="nicheLabel">lead</span> engine that already exists - landing page built, campaigns tuned, ready to run under your name. Take one and every lead it produces is yours alone. Slots are limited.</p>
+    <p class="sub" style="font-size:.82rem;opacity:.8">We list the trade, the area, the level and the price. We don't publish which page or domain an engine runs on: it is a live funnel we pay to advertise and a paying renter depends on, so the address, the page and the campaign are yours from the moment your slot is paid for.</p>
   </div>
 
   <div class="filters">
@@ -415,7 +418,8 @@
 
       <!-- STEP 1: preview of the landing page homeowners see -->
       <div id="modalPreview">
-        <p>This is the landing page homeowners see. The consent line carries <b>your business name</b>, so exclusivity is proven at the moment they submit rather than promised afterwards. Enter your business name on the next step and you will see it here before you pay anything.</p>
+        <p>This is the form a homeowner fills in on your engine. The consent line carries <b>your business name</b>, so exclusivity is proven at the moment they submit rather than promised afterwards. Enter your business name on the next step and you will see it here before you pay anything.</p>
+        <p style="font-size:.8rem;color:var(--muted)">We don't publish which page or which domain an engine runs on. Anyone can read this page, and a live funnel we fund the ads for is not something to hand to your competitors or to whoever fancies filling it with rubbish. You get the address, the live page and the campaign the moment your slot is paid for.</p>
         <div class="mform">
           <div class="t" id="mformTitle">Get your free quote</div>
           <div class="b" id="mfield0">Full name</div>
@@ -458,9 +462,10 @@
 <script src="supabase-config.js"></script>
 <script>
 /* ------------------------------------------------------------------
-   Live inventory from Supabase. Card rendering + the {{brand_name}},
-   {{brand_domain}}, {{area_name}} slot pattern are preserved - the
-   slots are now populated from `assets` rows joined to `regions`.
+   Live inventory from Supabase, read from the `assets_public` catalogue view.
+   The view carries trade, area, tier, price and availability and nothing that
+   identifies the engine - no brand name, no domain. Those are revealed to a
+   renter in the dashboard once their slot is paid for.
 ------------------------------------------------------------------ */
 const $ = s => document.querySelector(s);
 const esc = s => (s==null?'':String(s)).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -539,17 +544,26 @@ async function pollForDashboardLink(sessionId, bannerEl){
   }
 }
 
-/* the "vehicle photo": a landing page in browser chrome (brand slots = DB row) */
+/* The "vehicle photo": the shape of the landing page, not its identity.
+   The address bar used to print the engine's real domain, and the heading its
+   real brand name. Both are withheld until a slot is paid for - see the
+   assets_public view and the "renter reads own engines" policy. What is drawn
+   here is what the page IS (a quote funnel for this trade, in this area, with
+   the consent line on the form), which is the part a buyer actually needs to
+   judge the offer. */
 function shot(item, big){
   return `
   <div class="chrome">
     <div class="chrome-bar">
       <span class="dot"></span><span class="dot"></span><span class="dot"></span>
-      <span class="url">${esc(previewLabel(item) || item.brand_domain || '')}</span>
+      <span class="url url-locked">
+        <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" aria-hidden="true" focusable="false"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>
+        <span>revealed when your slot is paid for</span>
+      </span>
     </div>
     <div class="lp">
       <div class="lp-brand"></div>
-      <span class="lp-h">${esc(item.brand_name || '')}</span>
+      <span class="lp-h">${esc(NC.quote)}</span>
       <div class="lp-l" style="width:92%"></div>
       <div class="lp-l" style="width:68%"></div>
       ${big ? '<div class="lp-l" style="width:80%"></div>' : ''}
@@ -560,18 +574,9 @@ function shot(item, big){
   </div>`;
 }
 
-/* the bare domain for an asset (host only, no path) */
-function assetDomain(item){
-  return (item.brand_domain || '').trim().replace(/^https?:\/\//,'').replace(/\/.*$/,'');
-}
-/* the address-bar label: domain + /area so installers see exactly which page
-   their rent covers (e.g. example.com.au/brisbane). */
-function previewLabel(item){
-  const d = assetDomain(item);
-  if(!d) return '';
-  const slug = (item.region_slug || '').trim().toLowerCase();
-  return slug ? d + '/' + slug : d;
-}
+/* There is deliberately no assetDomain()/previewLabel() here any more. The
+   engine's domain is not sent to this page at all: /fleet reads the
+   assets_public catalogue view, which has no brand_domain column to render. */
 
 
 /* ---------------------------------------------------------------------------
@@ -638,7 +643,7 @@ function card(item){
       </div>
       <div class="actions">
         ${open
-          ? `<button class="btn btn-ghost" data-i="${item._i}" data-a="preview">Preview</button>
+          ? `<button class="btn btn-ghost" data-i="${item._i}" data-a="preview">See the form</button>
              <button class="btn btn-primary btn-glossy" data-i="${item._i}" data-a="claim">Rent</button>`
           : `<button class="btn btn-mute" data-i="${item._i}" data-a="wait">Join waitlist</button>`}
       </div>
@@ -747,7 +752,7 @@ function showRentStep(){
   $('#modalPreview').style.display = 'none';
   $('#rentForm').style.display = '';
   $('#rentSecure').style.display = '';
-  $('#rentAssetName').textContent = `${active.brand_name} - ${active.tier} (${active.area})`;
+  $('#rentAssetName').textContent = `the ${active.area} ${NC.label} engine - ${active.tier}`;
   $('#rentTotal').innerHTML = `${esc(active.price)} <small>+GST per 30 days · prepaid · cancel any time</small>`;
   $('#rentErr').classList.remove('on');
   const claim = $('#modalClaim');
@@ -761,7 +766,7 @@ function openModal(item){
   active = item;
   $('#modalShot').innerHTML = shot(item, true);
   $('#modalMeta').textContent = `${item.area} · ${item.tier} (${item.code}) · ${item.price} +GST / 30 days`;
-  $('#modalTitle').textContent = item.brand_name || '';
+  $('#modalTitle').textContent = `${item.area} · ${NC.label}`;
   showPreviewStep();
   $('#modal').classList.add('on');
 }
@@ -810,14 +815,15 @@ async function startCheckout(){
   }
 }
 
-/* ---- map an assets row (with joined region) to a card item ---- */
+/* ---- map an assets_public row to a card item ----
+   The view is flat (region_name / region_slug rather than a joined `regions`
+   object) and carries no brand_name or brand_domain. */
 function mapRow(a){
-  const region = a.regions || {};
   return {
     id: a.id,
-    region: region.name || '',
-    region_slug: region.slug || '',
-    area: region.name || '',                       // {{area_name}} slot
+    region: a.region_name || '',
+    region_slug: a.region_slug || '',
+    area: a.region_name || '',                     // {{area_name}} slot
     tier: cap(a.tier),
     code: TIER_CODE[a.tier] || '',
     price: money(a.monthly_price_aud),
@@ -829,9 +835,7 @@ function mapRow(a){
     // Slot capacity is not in the schema yet - see slotLabel() below.
     slots_taken: (typeof a.slots_taken === 'number') ? a.slots_taken : null,
     slot_capacity: (typeof a.slot_capacity === 'number') ? a.slot_capacity : null,
-    status: a.status === 'available' ? 'open' : 'taken',
-    brand_name: a.brand_name,                       // {{brand_name}} slot
-    brand_domain: a.brand_domain                    // {{brand_domain}} slot
+    status: a.status === 'available' ? 'open' : 'taken'
   };
 }
 
@@ -841,11 +845,13 @@ async function loadInventory(){
   skeleton();
   try{
     const sb = supabase.createClient(cfg.url, cfg.anonKey);
-    const { data, error } = await sb.from('assets')
-      .select('id,tier,brand_name,brand_domain,monthly_price_aud,typical_min,typical_max,status,regions!inner(slug,name,sort_order),niches!inner(slug)')
-      .eq('niches.slug', NICHE)
+    // assets_public, not assets: the base table is no longer readable with the
+    // anon key, and the view has no column that names the engine.
+    const { data, error } = await sb.from('assets_public')
+      .select('id,tier,monthly_price_aud,typical_min,typical_max,status,region_slug,region_name,region_sort_order,niche_slug')
+      .eq('niche_slug', NICHE)
       .eq('sold_out', false)   // held-back areas are not offered
-      .order('sort_order', { referencedTable:'regions', ascending:true })
+      .order('region_sort_order', { ascending:true })
       .order('tier', { ascending:true });
     if(error) throw error;
     INVENTORY = (data || []).map(mapRow);

@@ -113,12 +113,45 @@ guarantee:
 - month to month, no lock-in, no exit fee, self-serve cancel that frees the slot
 - "the engine is shared, but named consent means your lead is yours alone"
 - transparent published pricing per trade and area, no "contact us" dead ends
-- preview-before-pay: the engine mocked up with their brand before payment
+- preview-before-pay: the *form* a homeowner fills in, with the prospect's own
+  business name filled into the consent line live at checkout, before a card is
+  charged. Never the engine's page, brand name or domain - see §6.
 - a dashboard showing campaign activity alongside leads delivered, so a thin
   period visibly shows LGR did what it promised without LGR having promised a
   number
 
-## 6. Implementation status
+## 6. Engine identity is not public
+
+An engine's **identity** - its brand name, its domain and the live page itself -
+is disclosed to a renter when their slot is paid for, and to nobody else. What
+is public is the **catalogue**: trade, area, tier, price, availability.
+
+The reason is asymmetry. A prospect gains nothing from the domain that the area,
+trade, level, price and the consent-line preview do not already give them. An
+adversary gains everything: with the URL a competitor or an ex-renter can fill a
+funnel we fund the ads for with rubbish, mass-report the ads to the platform, or
+clone it outright. Anti-spam measures raise the cost of each junk submission;
+they do nothing about a report or a clone, and nothing about the fact that the
+target was published. So the identity is withheld and the trust levers in §5 -
+named consent shown live at checkout, published pricing, month-to-month, the
+dashboard - carry the risk instead. None of them require naming the engine.
+
+Enforced in the database, not the markup:
+
+- `public.assets_public` is the catalogue view (trade, area, tier, price,
+  availability). It is what `anon` reads, and it has no identity columns.
+- `anon` has no SELECT on `public.assets` at all.
+- `authenticated` reads a full asset row only through the
+  `renter reads own engines` policy: an asset they hold a live `rentals` row
+  against. A free dashboard account with no rental sees exactly what anon sees.
+- Super admins are unaffected; Mission Control reads and writes the base table.
+
+The consequence for copy: nothing anywhere may promise a prospect that they will
+see the page, the brand or the URL before paying. "You see your name on the
+consent line before you pay" is true and is the promise to make. "You see the
+engine before you pay" is not.
+
+## 7. Implementation status
 
 Phase 1 (copy, positioning, legal) is done. The following are **specified here
 but not yet built** - see the Phase 2 notes in the handover:
