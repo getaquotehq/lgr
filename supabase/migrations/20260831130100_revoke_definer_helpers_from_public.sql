@@ -13,16 +13,25 @@
 -- revoking it first would have broken every RLS policy that calls it.
 -- ============================================================================
 
--- Self-scoped: both read auth.uid() and describe only the caller. Needed by
--- `authenticated` because RLS policies call them and policies evaluate as the
--- calling role.
+-- !! WRONG. Superseded by 20260831150000, which reverses every revoke below.
+--
+-- All four of these are called from RLS policy expressions, and a policy is
+-- evaluated as the QUERYING role - so revoking EXECUTE does not filter rows, it
+-- raises "permission denied for function ..." and fails the whole query.
+-- current_company_id() alone is referenced by 62 policies across 26 tables.
+--
+-- The verification below was the mistake. It looked for policies granted to a
+-- role NAMED anon or public. These policies carry pg_policy.polroles = {0};
+-- oid 0 is PUBLIC and has no row in pg_roles, so the lookup matched nothing and
+-- reported "no policy references either" when 58 of them did.
+--
+-- Left in place rather than edited so the migration history stays honest about
+-- what was applied. See 20260831150000 for the fix.
 grant execute on function public.current_company_id() to authenticated, service_role;
 grant execute on function public.is_super_admin()     to authenticated, service_role;
 revoke execute on function public.current_company_id() from public, anon;
 revoke execute on function public.is_super_admin()     from public, anon;
 
--- Take an arbitrary user id rather than deriving it from the session, and
--- nothing in any client calls them. Server-side only.
 grant execute on function public.get_rep_visibility(uuid, text) to service_role;
 grant execute on function public.has_permission(uuid, text)     to service_role;
 revoke execute on function public.get_rep_visibility(uuid, text) from public, anon, authenticated;
@@ -38,5 +47,7 @@ revoke execute on function public.has_permission(uuid, text)     from public, an
 -- Confirmed after applying that service_role can still execute every function
 -- revoked here and in 20260831130000 - the Stripe webhook path
 -- (activate_rental / release_rental) and the SMS credit path are unaffected.
+-- That much held. What was NOT checked was whether anything other than a
+-- direct client call reaches these functions, and RLS does.
 
 notify pgrst, 'reload schema';
