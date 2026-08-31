@@ -555,7 +555,7 @@
         <div class="step">
           <div class="step-n"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#F59E0B" stroke-width="2.2"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg></div>
           <h4>You see the machine</h4>
-          <p>Open the lot and look at it. The exact page a homeowner lands on, what it produced last month, what it costs us to run. No reseller will ever show you the ad that made your lead - because then you'd know why it doesn't close.</p>
+          <p>From the day you're in: the exact page a homeowner lands on, the ad that brought them, and the campaign activity beside every lead it delivers. No reseller will ever show you the ad that made your lead - because then you'd know why it doesn't close. We don't hand the live page to people who aren't renting it, so the reveal is at checkout, not before.</p>
         </div>
         <div class="step">
           <div class="step-n"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#F59E0B" stroke-width="2.2"><path d="M13 2 3 14h9l-1 8 10-12h-9l1-8Z"/></svg></div>
@@ -584,7 +584,7 @@
         <div class="step">
           <div class="step-n">01</div>
           <h4>Pick a live engine</h4>
-          <p>Tell us where you work and see the engines already running for your trade, what each one looks like and what it is doing, before you pay anything. Slots are limited.</p>
+          <p>Tell us where you work and see which engines have open slots for your trade, what each one costs and what it has been producing. The engine's own page and address stay private until your slot is paid for - it is a live funnel we fund the ads for, not a demo. Slots are limited.</p>
         </div>
         <div class="step">
           <div class="step-n">02</div>
@@ -945,10 +945,10 @@
   if(hasConfig){
     sb = supabase.createClient(cfg.url, cfg.anonKey);
     // preload the solar regions so we can match a typed suburb/postcode to one
-    sb.from('assets').select('regions!inner(slug,name),niches!inner(slug)').eq('niches.slug','battery').eq('sold_out', false)
+    sb.from('assets_public').select('region_slug,region_name,niche_slug').eq('niche_slug','battery').eq('sold_out', false)
       .then(({ data }) => {
         const seen = new Set();
-        (data||[]).forEach(a => { const r = a.regions; if(r && !seen.has(r.slug)){ seen.add(r.slug); SOLAR_REGIONS.push(r); } });
+        (data||[]).forEach(a => { const r = a.region_slug ? { slug:a.region_slug, name:a.region_name } : null; if(r && !seen.has(r.slug)){ seen.add(r.slug); SOLAR_REGIONS.push(r); } });
         NO_STOCK = SOLAR_REGIONS.length === 0;
       });
   }
@@ -961,8 +961,13 @@
     [2250,2263,'central-coast'],[2280,2310,'newcastle'],[2500,2530,'wollongong'],
     [2600,2620,'canberra'],[2900,2920,'canberra'],
     [2340,2349,'tamworth'],[2440,2447,'port-macquarie'],[2448,2456,'coffs-harbour'],[2640,2641,'albury-wodonga'],
-    [3000,3207,'melbourne'],[3335,3341,'melbourne'],[3427,3442,'melbourne'],[3750,3810,'melbourne'],[3910,3920,'melbourne'],[3975,3980,'melbourne'],
+    // Specific ranges FIRST: matchRegion() returns on the first hit, and
+    // Melbourne's 3000-3207 contains Dandenong (3175) and Frankston/Mornington
+    // (3199-3201). Listed after Melbourne, those two areas were unreachable -
+    // 3175 resolved to Melbourne. regions.postcodes in the database resolves
+    // the same overlap by narrowest-range-wins, so the two agree.
     [3175,3175,'dandenong'],[3199,3201,'frankston-mornington-peninsula'],[3211,3230,'geelong'],
+    [3000,3207,'melbourne'],[3335,3341,'melbourne'],[3427,3442,'melbourne'],[3750,3810,'melbourne'],[3910,3920,'melbourne'],[3975,3980,'melbourne'],
     [3350,3360,'ballarat'],[3550,3564,'bendigo'],[3500,3509,'mildura'],[3630,3639,'shepparton'],[3820,3825,'warragul'],
     [4000,4206,'brisbane'],[4300,4305,'brisbane'],[4207,4287,'gold-coast'],
     [4350,4361,'toowoomba'],[4550,4575,'sunshine-coast'],[4655,4662,'hervey-bay'],[4670,4676,'bundaberg'],[4700,4709,'rockhampton'],[4870,4879,'cairns'],
@@ -1057,11 +1062,11 @@
     const region = matchRegion(typed);
     if(!region){ renderCounter(null, typed, [], trade); return; }
     try{
-      let q = sb.from('assets')
-        .select('tier,monthly_price_aud,status,regions!inner(slug,name),niches!inner(slug)')
-        .eq('niches.slug','battery').is('deleted_at', null)
+      let q = sb.from('assets_public')
+        .select('tier,monthly_price_aud,status,region_slug,region_name,niche_slug')
+        .eq('niche_slug','battery')
         .eq('sold_out', false);   // held-back areas are not offered
-      if(region) q = q.eq('regions.slug', region.slug);
+      if(region) q = q.eq('region_slug', region.slug);
       const { data, error } = await q;
       if(error) throw error;
       renderCounter(region, typed, data || [], trade);

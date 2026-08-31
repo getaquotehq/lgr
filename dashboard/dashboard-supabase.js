@@ -1357,9 +1357,12 @@ async function loadActiveOrdersDash() {
   const body  = document.getElementById("activeOrdersBody");
   if (!panel || !body || !currentCompanyId) return;
 
-  // Assets rent at a flat monthly rate with a guaranteed lead floor, so the
-  // useful figures are what you hold, what it's contracted to deliver, and
-  // what's actually landed so far this cycle.
+  // Assets rent at a flat monthly rate and nothing guarantees a lead count, so
+  // the useful figures are what you hold, what has actually landed this cycle,
+  // and the engine's typical range for context. This used to read
+  // "N of FLOOR leads ... FLOOR guaranteed" off rentals.floor_leads - a column
+  // dropped in 20260828120000, so it rendered "0 of -" and, worse, published a
+  // guarantee the terms explicitly disclaim (MODEL.md section 4).
   const { data: insts } = await sb
     .from("installers").select("id").eq("company_id", currentCompanyId);
   const instIds = (insts || []).map((i) => i.id);
@@ -1367,7 +1370,7 @@ async function loadActiveOrdersDash() {
 
   const { data: rentals } = await sb
     .from("rentals")
-    .select("*, assets(id, tier, rented_until, niches(name), regions(name, state))")
+    .select("*, assets(id, tier, rented_until, typical_min, typical_max, niches(name), regions(name, state))")
     .in("installer_id", instIds)
     .is("ended_at", null)
     .order("started_at", { ascending: false });
@@ -1392,16 +1395,15 @@ async function loadActiveOrdersDash() {
   body.innerHTML = rentals.map((r, i) => {
     const a = r.assets || {};
     const delivered = counts[i];
-    const floor = r.floor_leads ?? null;
-    const short = floor != null && delivered < floor;
+    const typical = (a.typical_min && a.typical_max) ? `${a.typical_min}-${a.typical_max} typical` : null;
     return `<div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 0;border-bottom:1px solid var(--border)">
       <div>
         <div style="font-weight:500">${escapeHtml(a.regions?.name || "Asset")}</div>
         <div style="font-size:12px;color:var(--muted)">${escapeHtml(a.niches?.name || "")}</div>
       </div>
       <div style="text-align:right">
-        <div style="font-weight:600">${delivered} of ${floor ?? "-"} leads<span style="color:${short ? "var(--muted)" : "#0f8a4d"}">${short ? "" : " ✓"}</span></div>
-        <div style="font-size:12px;color:var(--muted)">this cycle · ${floor ?? "-"} guaranteed</div>
+        <div style="font-weight:600">${delivered} lead${delivered === 1 ? "" : "s"} this cycle</div>
+        <div style="font-size:12px;color:var(--muted)">${typical ? escapeHtml(typical) + " · " : ""}no volume is guaranteed</div>
       </div>
     </div>`;
   }).join("");
@@ -5569,10 +5571,18 @@ async function skipReviewRequest(requestId) {
 // =============================================================================
 // Rent Assets
 // =============================================================================
-// An asset is one lead generation engine: a brand funnel for a single trade in
-// a single area. It rents for a flat monthly rate with a guaranteed lead floor,
-// so there is nothing to price per lead and no quantity to choose - either the
-// asset is available or somebody else already has it.
+// An asset is one lead generation engine: a funnel for a single trade in a
+// single area. It rents for a flat monthly rate, so there is nothing to price
+// per lead and no quantity to choose - either the asset is available or
+// somebody else already has it.
+//
+// The market grid below reads `assets_public`, the catalogue view, and shows
+// trade, area, tier, price and availability. It does NOT show which page or
+// domain the engine runs on: that is withheld until a slot is paid for, and the
+// base table is not readable by an account holding no live rental. Once the
+// rental exists, "Your Rentals" further down reads the full asset row and links
+// the live page. Signing up for a dashboard account is free, so this grid has
+// to assume its reader is a competitor.
 
 const RENT_TIERS = ['starter', 'growth', 'scale'];
 
@@ -5587,19 +5597,25 @@ function rentTierLabel(t) {
   return t ? t.charAt(0).toUpperCase() + t.slice(1) : '-';
 }
 
-// What a lead actually costs on this asset: the monthly rate spread across the
-// volume it produces. Best case is the top of the typical range, worst case is
-// the guaranteed floor - which is the number we are contractually held to.
+// What a lead has worked out at on this asset: the monthly rate spread across
+// the range that engine has actually produced. Both ends come from
+// typical_min/typical_max, which are null until an engine has real history - in
+// which case this renders nothing, which is the correct output. There is no
+// floor to divide by any more (it was dropped from the schema) and no
+// guarantee to imply.
 function rentLeadRange(a) {
   const m = Number(a.monthly_price_aud || 0);
-  if (!m || !a.floor_leads || !a.typical_max) return null;
+  if (!m || !a.typical_min || !a.typical_max) return null;
   return {
     low:  m / a.typical_max,
-    high: m / a.floor_leads,
+    high: m / a.typical_min,
   };
 }
 
-function rentPreviewUrl(a) {
+// The live engine URL. Only ever called from "Your Rentals", for a rental this
+// account actually holds - never from the market grid, which has no
+// brand_domain to give it in the first place.
+function rentEngineUrl(a) {
   const d = String(a.brand_domain || '').replace(/^https?:\/\//, '').replace(/\/.*$/, '');
   if (!d) return null;
   const slug = a.regions?.slug ? String(a.regions.slug).toLowerCase() : '';
@@ -5612,13 +5628,19 @@ async function loadBuyLeads() {
 
   try {
     const { data, error } = await sb
-      .from('assets')
-      .select('*, niches(id,slug,name), regions(id,slug,name,state)')
-      .is('deleted_at', null)
-      .eq('status', 'available');
+      .from('assets_public')
+      .select('id,tier,monthly_price_aud,typical_min,typical_max,status,niche_id,niche_slug,niche_name,region_id,region_slug,region_name,region_state')
+      .eq('status', 'available')
+      .eq('sold_out', false);
     if (error) throw error;
 
-    _rentAssets = (data || []).sort((a, b) =>
+    // Reshape the flat view rows to look like the joined rows this grid used to
+    // receive, so the filter and render code below is unchanged.
+    _rentAssets = (data || []).map((a) => ({
+      ...a,
+      niches:  { id: a.niche_id,  slug: a.niche_slug,  name: a.niche_name },
+      regions: { id: a.region_id, slug: a.region_slug, name: a.region_name, state: a.region_state },
+    })).sort((a, b) =>
       (a.regions?.name || '').localeCompare(b.regions?.name || '') ||
       RENT_TIERS.indexOf(a.tier) - RENT_TIERS.indexOf(b.tier)
     );
@@ -5680,7 +5702,6 @@ function renderRentGrid() {
     '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px">' +
     rows.map((a) => {
       const r = rentLeadRange(a);
-      const preview = rentPreviewUrl(a);
       return `
       <div style="border:1px solid var(--border);border-radius:12px;padding:16px;background:var(--surface,transparent);display:flex;flex-direction:column;gap:10px">
         <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px">
@@ -5697,12 +5718,16 @@ function renderRentGrid() {
         </div>
 
         <div style="font-size:13px;line-height:1.7">
-          <div><strong>${a.floor_leads ?? '-'}</strong> leads guaranteed each month</div>
-          <div style="color:var(--muted)">Typically ${a.typical_min ?? '-'} to ${a.typical_max ?? '-'}</div>
-          ${r ? `<div style="color:var(--muted)">Works out at $${r.low.toFixed(2)} to $${r.high.toFixed(2)} a lead</div>` : ''}
+          ${a.typical_min && a.typical_max
+            ? `<div>Typical month: <strong>${a.typical_min} to ${a.typical_max}</strong> leads</div>` : ''}
+          ${r ? `<div style="color:var(--muted)">Worked out at $${r.low.toFixed(2)} to $${r.high.toFixed(2)} a lead</div>` : ''}
+          <div style="color:var(--muted)">Every lead is named to you and delivered to you alone. No lead count is guaranteed.</div>
         </div>
 
-        ${preview ? `<a href="${escapeHtml(preview)}" target="_blank" rel="noopener" style="font-size:12px;color:var(--accent,#F59E0B)">See the page your leads land on →</a>` : ''}
+        <div style="font-size:11px;color:var(--muted);display:flex;align-items:center;gap:5px">
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" aria-hidden="true"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>
+          <span>The live page and its address are shown here once your slot is paid for.</span>
+        </div>
 
         <button class="btn-primary" type="button" data-rent="${escapeHtml(a.id)}" style="margin-top:auto">Rent this asset</button>
       </div>`;
@@ -5798,7 +5823,7 @@ async function loadMyRentals() {
     '<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:13px">' +
     '<thead><tr style="text-align:left;color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.04em">' +
     '<th style="padding:8px 10px">Asset</th><th style="padding:8px 10px">Tier</th>' +
-    '<th style="padding:8px 10px">Monthly</th><th style="padding:8px 10px">Guaranteed</th>' +
+    '<th style="padding:8px 10px">Monthly</th><th style="padding:8px 10px">Your engine</th>' +
     '<th style="padding:8px 10px">Started</th><th style="padding:8px 10px">Status</th>' +
     '</tr></thead><tbody>' +
     _rentMine.map((r) => {
@@ -5810,7 +5835,11 @@ async function loadMyRentals() {
         </td>
         <td style="padding:8px 10px">${escapeHtml(rentTierLabel(a.tier))}</td>
         <td style="padding:8px 10px;font-weight:500">${rentMoney(r.monthly_price_aud)}</td>
-        <td style="padding:8px 10px">${r.floor_leads ?? '-'} a month</td>
+        <td style="padding:8px 10px">${
+          rentEngineUrl(a)
+            ? `<a href="${escapeHtml(rentEngineUrl(a))}" target="_blank" rel="noopener" style="color:var(--accent,#F59E0B)">${escapeHtml(a.brand_name || 'Open the live page')} &rarr;</a>`
+            : '<span style="color:var(--muted)">Going live shortly</span>'
+        }</td>
         <td style="padding:8px 10px;color:var(--muted)">${r.started_at ? new Date(r.started_at).toLocaleDateString('en-AU') : '-'}</td>
         <td style="padding:8px 10px">${r.ended_at ? 'Ended ' + new Date(r.ended_at).toLocaleDateString('en-AU') : '<span style="color:#0f8a4d;font-weight:600">Active</span>'}</td>
       </tr>`;

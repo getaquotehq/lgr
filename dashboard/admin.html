@@ -524,8 +524,9 @@ h1{font-size:18px;font-weight:500}
         <div id="lgrTierEditor" class="hidden" style="margin-bottom:14px;padding:14px;background:var(--surface);border:1px solid var(--border);border-radius:10px">
           <div style="font-weight:600;margin-bottom:4px">Tier pricing</div>
           <p style="font-size:12px;color:var(--muted);margin-bottom:12px">
-            Sets the monthly rent and the guaranteed lead floor for every asset on a tier. The cost-per-lead range clients see is derived:
-            monthly &divide; typical max = the floor price, monthly &divide; guaranteed floor = the cap. Leave the niche filter on "all niches" to reprice the whole fleet.
+            Sets the monthly rent for every asset on a tier. The per-lead range clients see is derived from the rent and the
+            engine's typical range: monthly &divide; typical max is the low end, monthly &divide; typical min is the high end. There is no
+            lead floor and nothing here guarantees volume. Leave the niche filter on "all niches" to reprice the whole fleet.
           </p>
           <div style="margin-bottom:10px">
             <label class="bank-lbl" style="max-width:260px">Apply to niche
@@ -543,8 +544,8 @@ h1{font-size:18px;font-weight:500}
           <div style="font-weight:600;margin-bottom:4px">Area pricing</div>
           <p style="font-size:12px;color:var(--muted);margin-bottom:12px">
             Prices one area on its own, when it should not sit on the standard tier price. Blank boxes are left untouched.
-            The cap is monthly &divide; floor &mdash; the most a lead can cost if a campaign only ever delivers the guaranteed floor.
-            You can also hold the whole area back from sale without renting it out.
+            The high end of the per-lead range is monthly &divide; the engine's typical minimum &mdash; a typical figure, not a worst case,
+            because no volume is guaranteed. You can also hold the whole area back from sale without renting it out.
           </p>
           <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:10px">
             <label class="bank-lbl" style="max-width:260px">Area
@@ -2815,20 +2816,23 @@ h1{font-size:18px;font-weight:500}
 
   // ══ Lead Gen Rentals ════════════════════════════════════════════════════════
   // Rental assets are priced per tier, not per lead: the client pays a flat
-  // monthly rent and is guaranteed a lead floor. The cost-per-lead figure shown
-  // on the site is derived from those two numbers, so editing either here moves
-  // what the public pages quote.
+  // monthly rent and no volume is guaranteed (MODEL.md section 4). The per-lead
+  // figure shown on the site is derived from the rent and the engine's typical
+  // range, so editing either here moves what the public pages quote - and what
+  // they quote is a typical range, never a floor.
   var lgrAssets = [], lgrNiches = [], lgrRentals = [], lgrPending = [], lgrEditAsset = null;
   var LGR_TIERS = ['starter', 'growth', 'scale'];
 
   function lgrMoney(n) { return (n == null || n === '') ? '-' : '$' + Number(n).toLocaleString('en-AU'); }
   function lgrTierLabel(t) { return t ? t.charAt(0).toUpperCase() + t.slice(1) : '-'; }
 
-  // monthly / typical_max = cheapest a lead can land; monthly / floor = the cap.
+  // monthly / typical_max = the low end; monthly / typical_min = the high end.
   function lgrLeadRange(a) {
     var m = Number(a.monthly_price_aud || 0);
-    if (!m || !a.floor_leads || !a.typical_max) return '-';
-    return '$' + (m / a.typical_max).toFixed(2) + ' - $' + (m / a.floor_leads).toFixed(2);
+    // floor_leads was dropped in 20260828120000. The high end of the range is
+    // now monthly / typical_min - a typical figure, not a worst case.
+    if (!m || !a.typical_min || !a.typical_max) return '-';
+    return '$' + (m / a.typical_max).toFixed(2) + ' - $' + (m / a.typical_min).toFixed(2);
   }
 
   function lgrStatusPill(status) {
@@ -3024,7 +3028,7 @@ h1{font-size:18px;font-weight:500}
       '<thead><tr style="text-align:left;color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.04em">' +
       '<th style="padding:8px 10px">Asset</th><th style="padding:8px 10px">Area</th>' +
       '<th style="padding:8px 10px">Niche</th><th style="padding:8px 10px">Tier</th>' +
-      '<th style="padding:8px 10px">Monthly</th><th style="padding:8px 10px">Floor</th>' +
+      '<th style="padding:8px 10px">Monthly</th>' +
       '<th style="padding:8px 10px">Typical</th><th style="padding:8px 10px">$/lead</th>' +
       '<th style="padding:8px 10px">Status</th><th style="padding:8px 10px">Rented by</th>' +
       '<th style="padding:8px 10px"></th></tr></thead><tbody>' +
@@ -3071,7 +3075,6 @@ h1{font-size:18px;font-weight:500}
         '<td style="padding:8px 10px">' + niche + '</td>' +
         '<td style="padding:8px 10px">' + escapeHtml(lgrTierLabel(a.tier)) + '</td>' +
         '<td style="padding:8px 10px;font-weight:500">' + lgrMoney(a.monthly_price_aud) + '</td>' +
-        '<td style="padding:8px 10px">' + (a.floor_leads == null ? '-' : a.floor_leads) + '</td>' +
         '<td style="padding:8px 10px;color:var(--muted)">' + (a.typical_min || '-') + '–' + (a.typical_max || '-') + '</td>' +
         '<td style="padding:8px 10px;white-space:nowrap">' + lgrLeadRange(a) + '</td>' +
         '<td style="padding:8px 10px">' + (a.sold_out
@@ -3095,7 +3098,6 @@ h1{font-size:18px;font-weight:500}
           return '<option value="' + t + '"' + (a.tier === t ? ' selected' : '') + '>' + lgrTierLabel(t) + '</option>';
         }).join('') + '</select></td>' +
       '<td style="padding:8px 10px"><input id="lgrEdMonthly" type="number" min="0" step="50" value="' + (a.monthly_price_aud || '') + '" style="' + inp + '"></td>' +
-      '<td style="padding:8px 10px"><input id="lgrEdFloor" type="number" min="1" step="1" value="' + (a.floor_leads || '') + '" style="' + inp + '"></td>' +
       '<td style="padding:8px 10px;white-space:nowrap">' +
         '<input id="lgrEdMin" type="number" min="1" step="1" value="' + (a.typical_min || '') + '" style="' + inp + ';width:60px">' +
         ' <input id="lgrEdMax" type="number" min="1" step="1" value="' + (a.typical_max || '') + '" style="' + inp + ';width:60px"></td>' +
@@ -3120,7 +3122,7 @@ h1{font-size:18px;font-weight:500}
       tier:              document.getElementById('lgrEdTier').value,
       status:            document.getElementById('lgrEdStatus').value,
       monthly_price_aud: num('lgrEdMonthly'),
-      floor_leads:       num('lgrEdFloor'),
+
       typical_min:       num('lgrEdMin'),
       typical_max:       num('lgrEdMax'),
     };
@@ -3129,8 +3131,8 @@ h1{font-size:18px;font-weight:500}
       toast('Typical minimum cannot exceed the maximum', true);
       return;
     }
-    if (patch.floor_leads && patch.typical_min && patch.floor_leads > patch.typical_min) {
-      toast('The guaranteed floor cannot be above the typical minimum', true);
+    if (patch.typical_min && patch.typical_max && patch.typical_min > patch.typical_max) {
+      toast('The typical minimum cannot be above the typical maximum', true);
       return;
     }
     // Freeing an asset must also clear the tenant, or the fleet still reads as taken.
@@ -3178,17 +3180,17 @@ h1{font-size:18px;font-weight:500}
       // typing a value then sets them all.
       var prices = scope.map(function (a) { return a.monthly_price_aud; })
                         .filter(function (v, i, arr) { return arr.indexOf(v) === i; });
-      var floors = scope.map(function (a) { return a.floor_leads; })
-                        .filter(function (v, i, arr) { return arr.indexOf(v) === i; });
+      var mins = scope.map(function (a) { return a.typical_min; })
+                      .filter(function (v, i, arr) { return arr.indexOf(v) === i; });
       var price = prices.length === 1 ? (prices[0] || '') : '';
-      var floor = floors.length === 1 ? (floors[0] || '') : '';
-      var mixed = (prices.length > 1 || floors.length > 1)
+      var tmin  = mins.length === 1 ? (mins[0] || '') : '';
+      var mixed = (prices.length > 1 || mins.length > 1)
         ? ' <span style="color:var(--muted);font-size:11px">(niches differ)</span>' : '';
 
       return '<div style="display:grid;grid-template-columns:110px repeat(2,1fr) auto;gap:8px;align-items:end;margin-bottom:8px">' +
         '<div style="font-weight:600;padding-bottom:8px">' + lgrTierLabel(t) + mixed + '</div>' +
         '<label class="bank-lbl">Monthly<input id="lgrArea_' + t + '_monthly" class="bank-in" style="' + inp + '" type="number" min="1" step="50" value="' + price + '" placeholder="unchanged"></label>' +
-        '<label class="bank-lbl">Floor<input id="lgrArea_' + t + '_floor" class="bank-in" style="' + inp + '" type="number" min="1" step="1" value="' + floor + '" placeholder="unchanged"></label>' +
+        '<label class="bank-lbl">Typical min<input id="lgrArea_' + t + '_min" class="bank-in" style="' + inp + '" type="number" min="1" step="1" value="' + tmin + '" placeholder="unchanged"></label>' +
         '<button class="btn2 btn-sm" type="button" data-lgr-area="' + t + '" style="margin-bottom:2px">Apply</button>' +
         '</div>' +
         '<div id="lgrAreaNote_' + t + '" style="font-size:11px;color:var(--muted);margin:-4px 0 12px 118px"></div>';
@@ -3210,11 +3212,11 @@ h1{font-size:18px;font-weight:500}
     var note = document.getElementById('lgrAreaNote_' + tier);
     if (!note) return;
     var mEl = document.getElementById('lgrArea_' + tier + '_monthly');
-    var fEl = document.getElementById('lgrArea_' + tier + '_floor');
+    var fEl = document.getElementById('lgrArea_' + tier + '_min');
     if (!mEl || !fEl) return;
-    var m = Number(mEl.value || 0), fl = Number(fEl.value || 0);
-    note.textContent = (m && fl)
-      ? 'Caps at $' + (m / fl).toFixed(2) + ' per lead if only the floor lands.'
+    var m = Number(mEl.value || 0), tmin = Number(fEl.value || 0);
+    note.textContent = (m && tmin)
+      ? 'About $' + (m / tmin).toFixed(2) + ' per lead at the low end of the typical range.'
       : '';
   }
 
@@ -3224,27 +3226,38 @@ h1{font-size:18px;font-weight:500}
     var nicheId = document.getElementById('lgrAreaNiche').value || null;
 
     var mEl = document.getElementById('lgrArea_' + tier + '_monthly');
-    var fEl = document.getElementById('lgrArea_' + tier + '_floor');
+    var fEl = document.getElementById('lgrArea_' + tier + '_min');
     if (!mEl || !fEl) { toast('No assets on that tier here', true); return; }
 
     var price = mEl.value === '' ? null : Number(mEl.value);
-    var floor = fEl.value === '' ? null : Number(fEl.value);
-    if (price === null && floor === null) { toast('Nothing to change', true); return; }
+    var tmin  = fEl.value === '' ? null : Number(fEl.value);
+    if (price === null && tmin === null) { toast('Nothing to change', true); return; }
     if (price !== null && !(price > 0)) { toast('Monthly price must be above zero', true); return; }
-    // Floor divides the fee to give the per-lead cap, so zero would mean an
-    // unbounded price per lead.
-    if (floor !== null && !(floor > 0)) { toast('Floor must be at least 1 lead', true); return; }
+    // typical_min divides the fee to give the top of the per-lead range, so
+    // zero would mean an unbounded price per lead.
+    if (tmin !== null && !(tmin > 0)) { toast('Typical minimum must be at least 1 lead', true); return; }
 
     var areaName = lgrRegionName(regionId);
     if (!confirm('Reprice ' + lgrTierLabel(tier) + ' in ' + areaName + '?\n\n' +
                  'Rented assets keep billing at their agreed rate until the subscription renews.')) return;
 
-    var res = await sb.rpc('set_area_pricing', {
-      p_region_id: regionId, p_tier: tier,
-      p_price: price, p_floor: floor, p_niche_id: nicheId,
-    });
-    if (res.error) { toast('Repricing failed: ' + res.error.message, true); return; }
-    toast(res.data ? res.data + ' asset(s) repriced' : 'Already at those prices');
+    // set_area_pricing dropped p_floor in 20260828120000; it only sets price.
+    // The typical minimum is a per-asset column, so it is applied separately.
+    if (price !== null) {
+      var res = await sb.rpc('set_area_pricing', {
+        p_region_id: regionId, p_tier: tier,
+        p_price: price, p_niche_id: nicheId,
+      });
+      if (res.error) { toast('Repricing failed: ' + res.error.message, true); return; }
+      toast(res.data ? res.data + ' asset(s) repriced' : 'Already at those prices');
+    }
+    if (tmin !== null) {
+      var upd = sb.from('assets').update({ typical_min: tmin })
+        .eq('region_id', regionId).eq('tier', tier).is('deleted_at', null);
+      if (nicheId) upd = upd.eq('niche_id', nicheId);
+      var ures = await upd;
+      if (ures.error) { toast('Typical minimum not saved: ' + ures.error.message, true); return; }
+    }
     await loadLgrFleet();
   }
 
@@ -3261,12 +3274,14 @@ h1{font-size:18px;font-weight:500}
       // "Standard" means whatever that tier charges outside this area, so the
       // reset follows the fleet instead of a hardcoded number.
       var other = lgrAssets.filter(function (a) {
-        return a.tier === t && a.region_id !== regionId && a.monthly_price_aud && a.floor_leads;
+        return a.tier === t && a.region_id !== regionId && a.monthly_price_aud;
       })[0];
       if (!other) continue;
+      // set_area_pricing dropped its p_floor argument in 20260828120000.
+      // Passing it made this call fail on arity every single time.
       var res = await sb.rpc('set_area_pricing', {
         p_region_id: regionId, p_tier: t,
-        p_price: other.monthly_price_aud, p_floor: other.floor_leads,
+        p_price: other.monthly_price_aud,
         p_niche_id: nicheId,
       });
       if (res.error) { toast('Reset failed: ' + res.error.message, true); return; }
@@ -3316,10 +3331,9 @@ h1{font-size:18px;font-weight:500}
     wrap.innerHTML = LGR_TIERS.map(function (t) {
       // Seed each row from an existing asset on that tier so the form opens on today's numbers.
       var sample = lgrAssets.filter(function (a) { return a.tier === t; })[0] || {};
-      return '<div style="display:grid;grid-template-columns:110px repeat(4,1fr) auto;gap:8px;align-items:end;margin-bottom:8px">' +
+      return '<div style="display:grid;grid-template-columns:110px repeat(3,1fr) auto;gap:8px;align-items:end;margin-bottom:8px">' +
         '<div style="font-weight:600;padding-bottom:8px">' + lgrTierLabel(t) + '</div>' +
         '<label class="bank-lbl">Monthly<input id="lgrBulk_' + t + '_monthly" class="bank-in" style="' + inp + '" type="number" min="0" step="50" value="' + (sample.monthly_price_aud || '') + '"></label>' +
-        '<label class="bank-lbl">Floor<input id="lgrBulk_' + t + '_floor" class="bank-in" style="' + inp + '" type="number" min="1" step="1" value="' + (sample.floor_leads || '') + '"></label>' +
         '<label class="bank-lbl">Typical min<input id="lgrBulk_' + t + '_min" class="bank-in" style="' + inp + '" type="number" min="1" step="1" value="' + (sample.typical_min || '') + '"></label>' +
         '<label class="bank-lbl">Typical max<input id="lgrBulk_' + t + '_max" class="bank-in" style="' + inp + '" type="number" min="1" step="1" value="' + (sample.typical_max || '') + '"></label>' +
         '<button class="btn2 btn-sm" type="button" data-lgr-bulk="' + t + '" style="margin-bottom:2px">Apply</button>' +
@@ -3343,10 +3357,11 @@ h1{font-size:18px;font-weight:500}
     var note = document.getElementById('lgrBulkNote_' + tier);
     if (!note) return;
     var m   = Number(document.getElementById('lgrBulk_' + tier + '_monthly').value || 0);
-    var fl  = Number(document.getElementById('lgrBulk_' + tier + '_floor').value || 0);
+    var min = Number(document.getElementById('lgrBulk_' + tier + '_min').value || 0);
     var max = Number(document.getElementById('lgrBulk_' + tier + '_max').value || 0);
-    note.textContent = (m && fl && max)
-      ? 'Clients see $' + (m / max).toFixed(2) + ' - $' + (m / fl).toFixed(2) + ' per lead on this tier.'
+    note.textContent = (m && min && max)
+      ? 'Clients see ' + min + '-' + max + ' leads in a typical month, about $' +
+        (m / max).toFixed(2) + ' - $' + (m / min).toFixed(2) + ' per lead. Typical, not guaranteed.'
       : '';
   }
 
@@ -3357,12 +3372,11 @@ h1{font-size:18px;font-weight:500}
     };
     var patch = {
       monthly_price_aud: num('monthly'),
-      floor_leads:       num('floor'),
       typical_min:       num('min'),
       typical_max:       num('max'),
     };
-    if (patch.monthly_price_aud == null || patch.floor_leads == null) {
-      toast('Monthly price and floor are required', true);
+    if (patch.monthly_price_aud == null) {
+      toast('Monthly price is required', true);
       return;
     }
     if (patch.typical_min && patch.typical_max && patch.typical_min > patch.typical_max) {
@@ -3435,7 +3449,7 @@ h1{font-size:18px;font-weight:500}
       '<thead><tr style="text-align:left;color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.04em">' +
       '<th style="padding:8px 10px">Installer</th><th style="padding:8px 10px">Asset</th>' +
       '<th style="padding:8px 10px">Tier</th><th style="padding:8px 10px">Monthly</th>' +
-    '<th style="padding:8px 10px">Floor</th><th style="padding:8px 10px">Rush</th><th style="padding:8px 10px">Started</th>' +
+    '<th style="padding:8px 10px">Typical</th><th style="padding:8px 10px">Rush</th><th style="padding:8px 10px">Started</th>' +
       '<th style="padding:8px 10px">Ended</th><th style="padding:8px 10px"></th></tr></thead><tbody>' +
       rows.map(function (r) {
         var a = r.assets || {}, i = r.installers || {};
@@ -3452,7 +3466,7 @@ h1{font-size:18px;font-weight:500}
           '<td style="padding:8px 10px">' + asset + '</td>' +
           '<td style="padding:8px 10px">' + escapeHtml(lgrTierLabel(a.tier)) + '</td>' +
           '<td style="padding:8px 10px;font-weight:500">' + lgrMoney(r.monthly_price_aud) + '</td>' +
-          '<td style="padding:8px 10px">' + (r.floor_leads == null ? '-' : r.floor_leads) + '</td>' +
+          '<td style="padding:8px 10px">' + (r.assets && r.assets.typical_min != null && r.assets.typical_max != null ? r.assets.typical_min + '-' + r.assets.typical_max : '-') + '</td>' +
           '<td style="padding:8px 10px">' + rush + '</td>' +
           '<td style="padding:8px 10px;color:var(--muted)">' + (r.started_at ? new Date(r.started_at).toLocaleDateString('en-AU') : '-') + '</td>' +
           '<td style="padding:8px 10px;color:var(--muted)">' + (r.ended_at ? new Date(r.ended_at).toLocaleDateString('en-AU') : '-') + '</td>' +

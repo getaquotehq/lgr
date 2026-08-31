@@ -83,6 +83,29 @@ slot. They are **not**:
 Never publish a specific deployed-spend figure, in copy or in terms. LGR runs
 the campaigns as it sees fit.
 
+### 3.1 The published typical range
+
+Each tier carries a typical monthly range - currently 10-14 / 20-28 / 30-42 for
+solar - stored per engine in `assets.typical_min` / `typical_max` and shown on
+the pricing tiers, the fleet cards and the dashboard market grid. At the
+published prices this is $79-$110 a lead on every tier, which is deliberate: a
+tier is a service level, not a volume discount, so the per-lead economics should
+not move between them.
+
+The range is an **estimate we publish**, and the rules around it are strict:
+
+- It is never called a floor, a minimum, a guarantee, or "recent months". The
+  word is **typical**, and the no-guarantee sentence travels with it on the same
+  card, in the same paragraph. A number without that sentence is a defect.
+- A period that lands below it is not a breach, gives rise to no refund, and
+  needs no explanation beyond the dashboard - §4 is unchanged and absolute.
+- It lives in the data, never derived in the page from price or tier. Changing
+  what is published is then a data change with an audit trail, and an engine we
+  will not stand behind a number for simply has nulls and renders no range.
+
+`estimateLabel()` in `fleet.html` renders nothing when either column is null,
+which stays the correct output for such an engine.
+
 ## 4. What is guaranteed, and what is not
 
 **Guaranteed** (things fully within LGR's control):
@@ -113,12 +136,45 @@ guarantee:
 - month to month, no lock-in, no exit fee, self-serve cancel that frees the slot
 - "the engine is shared, but named consent means your lead is yours alone"
 - transparent published pricing per trade and area, no "contact us" dead ends
-- preview-before-pay: the engine mocked up with their brand before payment
+- preview-before-pay: the *form* a homeowner fills in, with the prospect's own
+  business name filled into the consent line live at checkout, before a card is
+  charged. Never the engine's page, brand name or domain - see §6.
 - a dashboard showing campaign activity alongside leads delivered, so a thin
   period visibly shows LGR did what it promised without LGR having promised a
   number
 
-## 6. Implementation status
+## 6. Engine identity is not public
+
+An engine's **identity** - its brand name, its domain and the live page itself -
+is disclosed to a renter when their slot is paid for, and to nobody else. What
+is public is the **catalogue**: trade, area, tier, price, availability.
+
+The reason is asymmetry. A prospect gains nothing from the domain that the area,
+trade, level, price and the consent-line preview do not already give them. An
+adversary gains everything: with the URL a competitor or an ex-renter can fill a
+funnel we fund the ads for with rubbish, mass-report the ads to the platform, or
+clone it outright. Anti-spam measures raise the cost of each junk submission;
+they do nothing about a report or a clone, and nothing about the fact that the
+target was published. So the identity is withheld and the trust levers in §5 -
+named consent shown live at checkout, published pricing, month-to-month, the
+dashboard - carry the risk instead. None of them require naming the engine.
+
+Enforced in the database, not the markup:
+
+- `public.assets_public` is the catalogue view (trade, area, tier, price,
+  availability). It is what `anon` reads, and it has no identity columns.
+- `anon` has no SELECT on `public.assets` at all.
+- `authenticated` reads a full asset row only through the
+  `renter reads own engines` policy: an asset they hold a live `rentals` row
+  against. A free dashboard account with no rental sees exactly what anon sees.
+- Super admins are unaffected; Mission Control reads and writes the base table.
+
+The consequence for copy: nothing anywhere may promise a prospect that they will
+see the page, the brand or the URL before paying. "You see your name on the
+consent line before you pay" is true and is the promise to make. "You see the
+engine before you pay" is not.
+
+## 7. Implementation status
 
 Phase 1 (copy, positioning, legal) is done. The following are **specified here
 but not yet built** - see the Phase 2 notes in the handover:
@@ -127,6 +183,35 @@ but not yet built** - see the Phase 2 notes in the handover:
   (`assets.rented_by`, `status available|rented`). `fleet.html:slotLabel()`
   deliberately renders a qualitative label rather than inventing a count.
 - No assignment table exists. §2 is not implemented in the lead-capture flow.
+  **This is the biggest gap between this document and the running system.**
+  §1 and §2 describe shared engines with sticky per-person assignment; what
+  actually runs is one renter per asset, with the consent line filled at
+  postcode-lookup time from `assets.rented_by`. That is safe precisely BECAUSE
+  an engine has one renter - there is no second business a person could be
+  handed to. The moment a second slot is sold on one engine, §2.1 stops being
+  documentation and becomes the thing preventing two renters being given the
+  same homeowner. **Do not sell a second slot on an engine before the
+  assignment table exists.**
+
+### 7.1 Live inventory
+
+The fleet is stocked: 108 solar engines, three brands across all 36 regions,
+$1,100 / $2,200 / $3,300, seeded by `20260831140100`. 105 are sellable; the
+three australian-capital-territory rows are held back because that region
+duplicates Canberra's postcodes.
+
+`regions.postcodes` is populated (`20260831140000`). This mattered more than it
+looks: an empty patch means "no coverage" in `submit-lead`, not "everywhere", so
+before that migration no lead could be delivered to anyone under any
+circumstances - a renter could have paid and received nothing, silently.
+
+Battery has a niche and a price list but **no funnel site**, and `submit-lead`
+routes on `brand_domain`. So there are no battery engines and the battery page
+stays coming-soon. Same for HVAC, roofing and renovations: their pages publish
+prices and a qualitative service level, but until a funnel exists for them there
+is nothing to seed and no typical range to publish. Do not seed a niche whose
+funnel does not exist - a listing with no page behind it is a listing that takes
+money and delivers nothing.
 - ~~`assets.floor_leads` / `rentals.floor_leads` still exist~~ **Done.** The
   floor columns are dropped from `assets`, `rentals` and `rental_checkouts`;
   `activate_rental` no longer copies a floor onto the rental; `set_area_pricing`
