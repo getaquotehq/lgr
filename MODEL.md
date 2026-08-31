@@ -83,6 +83,29 @@ slot. They are **not**:
 Never publish a specific deployed-spend figure, in copy or in terms. LGR runs
 the campaigns as it sees fit.
 
+### 3.1 The published typical range
+
+Each tier carries a typical monthly range - currently 10-14 / 20-28 / 30-42 for
+solar - stored per engine in `assets.typical_min` / `typical_max` and shown on
+the pricing tiers, the fleet cards and the dashboard market grid. At the
+published prices this is $79-$110 a lead on every tier, which is deliberate: a
+tier is a service level, not a volume discount, so the per-lead economics should
+not move between them.
+
+The range is an **estimate we publish**, and the rules around it are strict:
+
+- It is never called a floor, a minimum, a guarantee, or "recent months". The
+  word is **typical**, and the no-guarantee sentence travels with it on the same
+  card, in the same paragraph. A number without that sentence is a defect.
+- A period that lands below it is not a breach, gives rise to no refund, and
+  needs no explanation beyond the dashboard - §4 is unchanged and absolute.
+- It lives in the data, never derived in the page from price or tier. Changing
+  what is published is then a data change with an audit trail, and an engine we
+  will not stand behind a number for simply has nulls and renders no range.
+
+`estimateLabel()` in `fleet.html` renders nothing when either column is null,
+which stays the correct output for such an engine.
+
 ## 4. What is guaranteed, and what is not
 
 **Guaranteed** (things fully within LGR's control):
@@ -160,6 +183,35 @@ but not yet built** - see the Phase 2 notes in the handover:
   (`assets.rented_by`, `status available|rented`). `fleet.html:slotLabel()`
   deliberately renders a qualitative label rather than inventing a count.
 - No assignment table exists. §2 is not implemented in the lead-capture flow.
+  **This is the biggest gap between this document and the running system.**
+  §1 and §2 describe shared engines with sticky per-person assignment; what
+  actually runs is one renter per asset, with the consent line filled at
+  postcode-lookup time from `assets.rented_by`. That is safe precisely BECAUSE
+  an engine has one renter - there is no second business a person could be
+  handed to. The moment a second slot is sold on one engine, §2.1 stops being
+  documentation and becomes the thing preventing two renters being given the
+  same homeowner. **Do not sell a second slot on an engine before the
+  assignment table exists.**
+
+### 7.1 Live inventory
+
+The fleet is stocked: 108 solar engines, three brands across all 36 regions,
+$1,100 / $2,200 / $3,300, seeded by `20260831140100`. 105 are sellable; the
+three australian-capital-territory rows are held back because that region
+duplicates Canberra's postcodes.
+
+`regions.postcodes` is populated (`20260831140000`). This mattered more than it
+looks: an empty patch means "no coverage" in `submit-lead`, not "everywhere", so
+before that migration no lead could be delivered to anyone under any
+circumstances - a renter could have paid and received nothing, silently.
+
+Battery has a niche and a price list but **no funnel site**, and `submit-lead`
+routes on `brand_domain`. So there are no battery engines and the battery page
+stays coming-soon. Same for HVAC, roofing and renovations: their pages publish
+prices and a qualitative service level, but until a funnel exists for them there
+is nothing to seed and no typical range to publish. Do not seed a niche whose
+funnel does not exist - a listing with no page behind it is a listing that takes
+money and delivers nothing.
 - ~~`assets.floor_leads` / `rentals.floor_leads` still exist~~ **Done.** The
   floor columns are dropped from `assets`, `rentals` and `rental_checkouts`;
   `activate_rental` no longer copies a floor onto the rental; `set_area_pricing`

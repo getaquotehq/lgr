@@ -381,7 +381,10 @@ Deno.serve(async (req) => {
           if (inst?.id) {
             const { data: rentalRows } = await adminClient
               .from("rentals")
-              .select("id, monthly_price_aud, floor_leads, started_at, ended_at, assets(brand_name, tier, niches(name), regions(name, state))")
+              // floor_leads was dropped from rentals in 20260828120000. Asking
+              // PostgREST for a column that no longer exists fails the whole
+              // select, so impersonation returned no rentals at all.
+              .select("id, monthly_price_aud, started_at, ended_at, assets(brand_name, tier, niches(name), regions(name, state))")
               .eq("installer_id", inst.id)
               .is("ended_at", null)
               .order("started_at", { ascending: false });

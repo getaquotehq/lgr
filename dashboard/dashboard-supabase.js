@@ -1357,9 +1357,12 @@ async function loadActiveOrdersDash() {
   const body  = document.getElementById("activeOrdersBody");
   if (!panel || !body || !currentCompanyId) return;
 
-  // Assets rent at a flat monthly rate with a guaranteed lead floor, so the
-  // useful figures are what you hold, what it's contracted to deliver, and
-  // what's actually landed so far this cycle.
+  // Assets rent at a flat monthly rate and nothing guarantees a lead count, so
+  // the useful figures are what you hold, what has actually landed this cycle,
+  // and the engine's typical range for context. This used to read
+  // "N of FLOOR leads ... FLOOR guaranteed" off rentals.floor_leads - a column
+  // dropped in 20260828120000, so it rendered "0 of -" and, worse, published a
+  // guarantee the terms explicitly disclaim (MODEL.md section 4).
   const { data: insts } = await sb
     .from("installers").select("id").eq("company_id", currentCompanyId);
   const instIds = (insts || []).map((i) => i.id);
@@ -1367,7 +1370,7 @@ async function loadActiveOrdersDash() {
 
   const { data: rentals } = await sb
     .from("rentals")
-    .select("*, assets(id, tier, rented_until, niches(name), regions(name, state))")
+    .select("*, assets(id, tier, rented_until, typical_min, typical_max, niches(name), regions(name, state))")
     .in("installer_id", instIds)
     .is("ended_at", null)
     .order("started_at", { ascending: false });
@@ -1392,16 +1395,15 @@ async function loadActiveOrdersDash() {
   body.innerHTML = rentals.map((r, i) => {
     const a = r.assets || {};
     const delivered = counts[i];
-    const floor = r.floor_leads ?? null;
-    const short = floor != null && delivered < floor;
+    const typical = (a.typical_min && a.typical_max) ? `${a.typical_min}-${a.typical_max} typical` : null;
     return `<div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 0;border-bottom:1px solid var(--border)">
       <div>
         <div style="font-weight:500">${escapeHtml(a.regions?.name || "Asset")}</div>
         <div style="font-size:12px;color:var(--muted)">${escapeHtml(a.niches?.name || "")}</div>
       </div>
       <div style="text-align:right">
-        <div style="font-weight:600">${delivered} of ${floor ?? "-"} leads<span style="color:${short ? "var(--muted)" : "#0f8a4d"}">${short ? "" : " ✓"}</span></div>
-        <div style="font-size:12px;color:var(--muted)">this cycle · ${floor ?? "-"} guaranteed</div>
+        <div style="font-weight:600">${delivered} lead${delivered === 1 ? "" : "s"} this cycle</div>
+        <div style="font-size:12px;color:var(--muted)">${typical ? escapeHtml(typical) + " · " : ""}no volume is guaranteed</div>
       </div>
     </div>`;
   }).join("");
@@ -5717,7 +5719,7 @@ function renderRentGrid() {
 
         <div style="font-size:13px;line-height:1.7">
           ${a.typical_min && a.typical_max
-            ? `<div>Recent months: <strong>${a.typical_min} to ${a.typical_max}</strong> leads</div>` : ''}
+            ? `<div>Typical month: <strong>${a.typical_min} to ${a.typical_max}</strong> leads</div>` : ''}
           ${r ? `<div style="color:var(--muted)">Worked out at $${r.low.toFixed(2)} to $${r.high.toFixed(2)} a lead</div>` : ''}
           <div style="color:var(--muted)">Every lead is named to you and delivered to you alone. No lead count is guaranteed.</div>
         </div>

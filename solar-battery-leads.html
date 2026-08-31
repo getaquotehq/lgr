@@ -961,8 +961,13 @@
     [2250,2263,'central-coast'],[2280,2310,'newcastle'],[2500,2530,'wollongong'],
     [2600,2620,'canberra'],[2900,2920,'canberra'],
     [2340,2349,'tamworth'],[2440,2447,'port-macquarie'],[2448,2456,'coffs-harbour'],[2640,2641,'albury-wodonga'],
-    [3000,3207,'melbourne'],[3335,3341,'melbourne'],[3427,3442,'melbourne'],[3750,3810,'melbourne'],[3910,3920,'melbourne'],[3975,3980,'melbourne'],
+    // Specific ranges FIRST: matchRegion() returns on the first hit, and
+    // Melbourne's 3000-3207 contains Dandenong (3175) and Frankston/Mornington
+    // (3199-3201). Listed after Melbourne, those two areas were unreachable -
+    // 3175 resolved to Melbourne. regions.postcodes in the database resolves
+    // the same overlap by narrowest-range-wins, so the two agree.
     [3175,3175,'dandenong'],[3199,3201,'frankston-mornington-peninsula'],[3211,3230,'geelong'],
+    [3000,3207,'melbourne'],[3335,3341,'melbourne'],[3427,3442,'melbourne'],[3750,3810,'melbourne'],[3910,3920,'melbourne'],[3975,3980,'melbourne'],
     [3350,3360,'ballarat'],[3550,3564,'bendigo'],[3500,3509,'mildura'],[3630,3639,'shepparton'],[3820,3825,'warragul'],
     [4000,4206,'brisbane'],[4300,4305,'brisbane'],[4207,4287,'gold-coast'],
     [4350,4361,'toowoomba'],[4550,4575,'sunshine-coast'],[4655,4662,'hervey-bay'],[4670,4676,'bundaberg'],[4700,4709,'rockhampton'],[4870,4879,'cairns'],

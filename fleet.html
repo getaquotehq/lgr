@@ -604,14 +604,17 @@ function slotLabel(item){
 /* ---------------------------------------------------------------------------
    Per-engine lead estimate.
 
-   Sourced from assets.typical_min / typical_max - numbers WE set per engine,
-   from that engine's own history. Both columns are nullable and both are null
-   until an engine has actually run, in which case this renders nothing at all.
+   Sourced from assets.typical_min / typical_max - numbers WE set per engine.
+   Both columns are nullable and this renders nothing at all when either is
+   missing, which stays the correct output for an engine we will not stand
+   behind a number for.
 
-   Never invent a range here, and never derive one from price or tier. A
-   printed "typical" figure is a representation to the buyer: if it is not
-   backed by that engine's real delivery history it should not be on the page.
-   Blank is the correct output for a new engine.
+   Label it "typical", never "guaranteed", "minimum" or "floor", and never let
+   it sit on the page without the no-guarantee line beside it - MODEL.md section
+   4 is absolute and a printed range is a representation to the buyer. Do not
+   derive a range here from price or tier: the value is whatever we set on the
+   row, so that changing what we publish is a data change with an audit trail
+   rather than an arithmetic accident in the page.
 --------------------------------------------------------------------------- */
 function estimateLabel(item){
   const lo = item.typical_min, hi = item.typical_max;
@@ -633,11 +636,12 @@ function card(item){
       </div>
       <div class="tier-name">${esc(item.tier)}</div>
       <div class="specs">
-        ${estimateLabel(item) ? `<div class="spec"><span class="k">Recent months</span><span class="v">${esc(estimateLabel(item))} leads</span></div>` : ''}
+        ${estimateLabel(item) ? `<div class="spec"><span class="k">Typical month</span><span class="v">${esc(estimateLabel(item))} leads</span></div>` : ''}
         <div class="spec"><span class="k">Renter slots</span><span class="v">${esc(slotLabel(item))}</span></div>
         <div class="spec"><span class="k">Service businesses per lead</span><span class="v">1</span></div>
         <div class="spec"><span class="k">Setup</span><span class="v">Nothing to do</span></div>
       </div>
+      ${estimateLabel(item) ? `<p style="font-size:.68rem;color:var(--faint);margin:-8px 0 12px;line-height:1.45">Typical range, not a guarantee. Volume moves with the ad auction and the season.</p>` : ''}
       <div class="priceline">
         <span class="price">${esc(item.price)}<small> +GST / 30 days</small></span>
       </div>
