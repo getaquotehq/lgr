@@ -182,16 +182,24 @@ but not yet built** - see the Phase 2 notes in the handover:
 - `assets` has no slot-capacity columns; it still models one renter per asset
   (`assets.rented_by`, `status available|rented`). `fleet.html:slotLabel()`
   deliberately renders a qualitative label rather than inventing a count.
-- No assignment table exists. §2 is not implemented in the lead-capture flow.
-  **This is the biggest gap between this document and the running system.**
-  §1 and §2 describe shared engines with sticky per-person assignment; what
-  actually runs is one renter per asset, with the consent line filled at
-  postcode-lookup time from `assets.rented_by`. That is safe precisely BECAUSE
-  an engine has one renter - there is no second business a person could be
-  handed to. The moment a second slot is sold on one engine, §2.1 stops being
-  documentation and becomes the thing preventing two renters being given the
-  same homeowner. **Do not sell a second slot on an engine before the
-  assignment table exists.**
+- ~~No assignment table exists~~ **Done (§2.1).** `lead_assignments` binds a
+  person to the first renter they were delivered to, keyed on phone then email,
+  and `insert_lead` refuses to deliver that person to anyone else afterwards -
+  the lead is recorded as `invalid` with `delivery_error =
+  'assigned_to_another_renter'` so it is auditable rather than silently dropped.
+  Earliest assignment wins, enforced by two partial unique indexes plus a
+  re-read, so it is deterministic under races.
+
+  This mattered more than the one-renter-per-asset shape suggested. Consent-name
+  routing was always correct - one submission, one named business, never shared.
+  But three engines cover each region on identical postcodes, so renting two of
+  them to two installers meant one homeowner could reach both through two
+  separate enquiries. That is now closed.
+
+  Still not built from §2.2: the device/browser identifier for visitors who have
+  not given contact details yet, and merging two records that turn out to be one
+  person. A person using both a different phone and a different email reads as
+  new.
 
 ### 7.1 Live inventory
 
