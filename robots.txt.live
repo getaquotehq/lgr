@@ -1,0 +1,10 @@
+User-agent: *
+Allow: /
+
+# Application surfaces, not marketing pages. Mission Control is the internal
+# admin panel and /dashboard is the client app - both are login-gated, but
+# neither belongs in search results.
+Disallow: /mc/
+Disallow: /dashboard/
+
+Sitemap: https://leadgenrentals.com.au/sitemap.xml
