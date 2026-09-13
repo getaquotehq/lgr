@@ -524,9 +524,9 @@ h1{font-size:18px;font-weight:500}
         <div id="lgrTierEditor" class="hidden" style="margin-bottom:14px;padding:14px;background:var(--surface);border:1px solid var(--border);border-radius:10px">
           <div style="font-weight:600;margin-bottom:4px">Tier pricing</div>
           <p style="font-size:12px;color:var(--muted);margin-bottom:12px">
-            Sets the monthly rent for every asset on a tier. The per-lead range clients see is derived from the rent and the
-            engine's typical range: monthly &divide; typical max is the low end, monthly &divide; typical min is the high end. There is no
-            lead floor and nothing here guarantees volume. Leave the niche filter on "all niches" to reprice the whole fleet.
+            Sets the monthly rent and the
+            guaranteed floor for every asset on a tier. The per-lead range clients see is derived: monthly &divide; typical max is the
+            low end, monthly &divide; floor is the ceiling. Leave the niche filter on "all niches" to reprice the whole fleet.
           </p>
           <div style="margin-bottom:10px">
             <label class="bank-lbl" style="max-width:260px">Apply to niche
@@ -2829,10 +2829,11 @@ h1{font-size:18px;font-weight:500}
   // monthly / typical_max = the low end; monthly / typical_min = the high end.
   function lgrLeadRange(a) {
     var m = Number(a.monthly_price_aud || 0);
-    // floor_leads was dropped in 20260828120000. The high end of the range is
-    // now monthly / typical_min - a typical figure, not a worst case.
-    if (!m || !a.typical_min || !a.typical_max) return '-';
-    return '$' + (m / a.typical_max).toFixed(2) + ' - $' + (m / a.typical_min).toFixed(2);
+    // The floor is the per-lead ceiling: the most a lead can cost if a cycle
+    // only ever delivers the guaranteed minimum.
+    var worst = a.floor_leads || a.typical_min;
+    if (!m || !worst || !a.typical_max) return '-';
+    return '$' + (m / a.typical_max).toFixed(2) + ' - $' + (m / worst).toFixed(2);
   }
 
   function lgrStatusPill(status) {
@@ -3028,7 +3029,7 @@ h1{font-size:18px;font-weight:500}
       '<thead><tr style="text-align:left;color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.04em">' +
       '<th style="padding:8px 10px">Asset</th><th style="padding:8px 10px">Area</th>' +
       '<th style="padding:8px 10px">Niche</th><th style="padding:8px 10px">Tier</th>' +
-      '<th style="padding:8px 10px">Monthly</th>' +
+      '<th style="padding:8px 10px">Monthly</th><th style="padding:8px 10px">Floor</th>' +
       '<th style="padding:8px 10px">Typical</th><th style="padding:8px 10px">$/lead</th>' +
       '<th style="padding:8px 10px">Status</th><th style="padding:8px 10px">Rented by</th>' +
       '<th style="padding:8px 10px"></th></tr></thead><tbody>' +
@@ -3075,6 +3076,7 @@ h1{font-size:18px;font-weight:500}
         '<td style="padding:8px 10px">' + niche + '</td>' +
         '<td style="padding:8px 10px">' + escapeHtml(lgrTierLabel(a.tier)) + '</td>' +
         '<td style="padding:8px 10px;font-weight:500">' + lgrMoney(a.monthly_price_aud) + '</td>' +
+        '<td style="padding:8px 10px;font-weight:500">' + (a.floor_leads == null ? '-' : a.floor_leads) + '</td>' +
         '<td style="padding:8px 10px;color:var(--muted)">' + (a.typical_min || '-') + '–' + (a.typical_max || '-') + '</td>' +
         '<td style="padding:8px 10px;white-space:nowrap">' + lgrLeadRange(a) + '</td>' +
         '<td style="padding:8px 10px">' + (a.sold_out
@@ -3098,6 +3100,7 @@ h1{font-size:18px;font-weight:500}
           return '<option value="' + t + '"' + (a.tier === t ? ' selected' : '') + '>' + lgrTierLabel(t) + '</option>';
         }).join('') + '</select></td>' +
       '<td style="padding:8px 10px"><input id="lgrEdMonthly" type="number" min="0" step="50" value="' + (a.monthly_price_aud || '') + '" style="' + inp + '"></td>' +
+      '<td style="padding:8px 10px"><input id="lgrEdFloor" type="number" min="1" step="1" value="' + (a.floor_leads || '') + '" style="' + inp + '"></td>' +
       '<td style="padding:8px 10px;white-space:nowrap">' +
         '<input id="lgrEdMin" type="number" min="1" step="1" value="' + (a.typical_min || '') + '" style="' + inp + ';width:60px">' +
         ' <input id="lgrEdMax" type="number" min="1" step="1" value="' + (a.typical_max || '') + '" style="' + inp + ';width:60px"></td>' +
@@ -3122,13 +3125,17 @@ h1{font-size:18px;font-weight:500}
       tier:              document.getElementById('lgrEdTier').value,
       status:            document.getElementById('lgrEdStatus').value,
       monthly_price_aud: num('lgrEdMonthly'),
-
+      floor_leads:       num('lgrEdFloor'),
       typical_min:       num('lgrEdMin'),
       typical_max:       num('lgrEdMax'),
     };
 
     if (patch.typical_min && patch.typical_max && patch.typical_min > patch.typical_max) {
       toast('Typical minimum cannot exceed the maximum', true);
+      return;
+    }
+    if (patch.floor_leads && patch.typical_min && patch.floor_leads > patch.typical_min) {
+      toast('The guaranteed floor cannot be above the typical minimum', true);
       return;
     }
     if (patch.typical_min && patch.typical_max && patch.typical_min > patch.typical_max) {
@@ -3277,11 +3284,9 @@ h1{font-size:18px;font-weight:500}
         return a.tier === t && a.region_id !== regionId && a.monthly_price_aud;
       })[0];
       if (!other) continue;
-      // set_area_pricing dropped its p_floor argument in 20260828120000.
-      // Passing it made this call fail on arity every single time.
       var res = await sb.rpc('set_area_pricing', {
         p_region_id: regionId, p_tier: t,
-        p_price: other.monthly_price_aud,
+        p_price: other.monthly_price_aud, p_floor: other.floor_leads,
         p_niche_id: nicheId,
       });
       if (res.error) { toast('Reset failed: ' + res.error.message, true); return; }

@@ -1357,12 +1357,10 @@ async function loadActiveOrdersDash() {
   const body  = document.getElementById("activeOrdersBody");
   if (!panel || !body || !currentCompanyId) return;
 
-  // Assets rent at a flat monthly rate and nothing guarantees a lead count, so
-  // the useful figures are what you hold, what has actually landed this cycle,
-  // and the engine's typical range for context. This used to read
-  // "N of FLOOR leads ... FLOOR guaranteed" off rentals.floor_leads - a column
-  // dropped in 20260828120000, so it rendered "0 of -" and, worse, published a
-  // guarantee the terms explicitly disclaim (MODEL.md section 4).
+  // Each tier carries a guaranteed minimum per cycle, restored in 20260831170000.
+  // rentals.floor_leads is the snapshot taken at checkout, so a renter keeps the
+  // floor they signed up on even if the asset is repriced later; the asset's
+  // floor is the fallback for rentals opened before the column came back.
   const { data: insts } = await sb
     .from("installers").select("id").eq("company_id", currentCompanyId);
   const instIds = (insts || []).map((i) => i.id);
@@ -1370,7 +1368,7 @@ async function loadActiveOrdersDash() {
 
   const { data: rentals } = await sb
     .from("rentals")
-    .select("*, assets(id, tier, rented_until, typical_min, typical_max, niches(name), regions(name, state))")
+    .select("*, assets(id, tier, rented_until, typical_min, typical_max, floor_leads, niches(name), regions(name, state))")
     .in("installer_id", instIds)
     .is("ended_at", null)
     .order("started_at", { ascending: false });
@@ -1395,15 +1393,16 @@ async function loadActiveOrdersDash() {
   body.innerHTML = rentals.map((r, i) => {
     const a = r.assets || {};
     const delivered = counts[i];
-    const typical = (a.typical_min && a.typical_max) ? `${a.typical_min}-${a.typical_max} typical` : null;
+    const floor = r.floor_leads ?? a.floor_leads ?? null;
+    const short = floor != null && delivered < floor;
     return `<div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 0;border-bottom:1px solid var(--border)">
       <div>
         <div style="font-weight:500">${escapeHtml(a.regions?.name || "Asset")}</div>
         <div style="font-size:12px;color:var(--muted)">${escapeHtml(a.niches?.name || "")}</div>
       </div>
       <div style="text-align:right">
-        <div style="font-weight:600">${delivered} lead${delivered === 1 ? "" : "s"} this cycle</div>
-        <div style="font-size:12px;color:var(--muted)">${typical ? escapeHtml(typical) + " · " : ""}no volume is guaranteed</div>
+        <div style="font-weight:600">${delivered}${floor != null ? " of " + floor : ""} lead${delivered === 1 ? "" : "s"} this cycle<span style="color:${short ? "var(--muted)" : "#0f8a4d"}">${short ? "" : " ✓"}</span></div>
+        <div style="font-size:12px;color:var(--muted)">${floor != null ? (short ? "running until your " + floor + " are delivered" : floor + " guaranteed \u2014 met") : "this cycle"}</div>
       </div>
     </div>`;
   }).join("");
@@ -5605,10 +5604,11 @@ function rentTierLabel(t) {
 // guarantee to imply.
 function rentLeadRange(a) {
   const m = Number(a.monthly_price_aud || 0);
-  if (!m || !a.typical_min || !a.typical_max) return null;
+  const worst = a.floor_leads || a.typical_min;
+  if (!m || !worst || !a.typical_max) return null;
   return {
     low:  m / a.typical_max,
-    high: m / a.typical_min,
+    high: m / worst,   // the guaranteed minimum is the per-lead ceiling
   };
 }
 
@@ -5629,7 +5629,7 @@ async function loadBuyLeads() {
   try {
     const { data, error } = await sb
       .from('assets_public')
-      .select('id,tier,monthly_price_aud,typical_min,typical_max,status,niche_id,niche_slug,niche_name,region_id,region_slug,region_name,region_state')
+      .select('id,tier,monthly_price_aud,typical_min,typical_max,floor_leads,status,niche_id,niche_slug,niche_name,region_id,region_slug,region_name,region_state')
       .eq('status', 'available')
       .eq('sold_out', false);
     if (error) throw error;
@@ -5718,10 +5718,11 @@ function renderRentGrid() {
         </div>
 
         <div style="font-size:13px;line-height:1.7">
+          ${a.floor_leads ? `<div><strong>${a.floor_leads}</strong> leads guaranteed each cycle</div>` : ''}
           ${a.typical_min && a.typical_max
-            ? `<div>Typical month: <strong>${a.typical_min} to ${a.typical_max}</strong> leads</div>` : ''}
+            ? `<div style="color:var(--muted)">Typically ${a.typical_min} to ${a.typical_max}</div>` : ''}
           ${r ? `<div style="color:var(--muted)">Worked out at $${r.low.toFixed(2)} to $${r.high.toFixed(2)} a lead</div>` : ''}
-          <div style="color:var(--muted)">Every lead is named to you and delivered to you alone. No lead count is guaranteed.</div>
+          <div style="color:var(--muted)">Every lead is named to you and delivered to you alone. Under the minimum and the engine keeps running, free, until it is met.</div>
         </div>
 
         <div style="font-size:11px;color:var(--muted);display:flex;align-items:center;gap:5px">

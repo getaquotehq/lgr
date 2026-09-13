@@ -94,11 +94,12 @@ not move between them.
 
 The range is an **estimate we publish**, and the rules around it are strict:
 
-- It is never called a floor, a minimum, a guarantee, or "recent months". The
-  word is **typical**, and the no-guarantee sentence travels with it on the same
-  card, in the same paragraph. A number without that sentence is a defect.
-- A period that lands below it is not a breach, gives rise to no refund, and
-  needs no explanation beyond the dashboard - §4 is unchanged and absolute.
+- The typical range and the floor are different numbers and must never be
+  conflated in copy. The floor is the promise; the typical range is what the
+  engine usually does. A card showing a typical range without the floor beside
+  it reads as a promise it is not.
+- A period between the floor and the typical range is normal and is not a
+  breach. A period below the floor triggers the §4 remedy.
 - It lives in the data, never derived in the page from price or tier. Changing
   what is published is then a data change with an audit trail, and an engine we
   will not stand behind a number for simply has nulls and renders no range.
@@ -108,22 +109,34 @@ which stays the correct output for such an engine.
 
 ## 4. What is guaranteed, and what is not
 
-**Guaranteed** (things fully within LGR's control):
+**Guaranteed:**
 
+- a **minimum number of leads per 30-day cycle** on every tier - 10 on starter,
+  20 on growth, 30 on scale. Stored per engine in `assets.floor_leads` and
+  snapshotted onto `rentals.floor_leads` at checkout, so a renter keeps the
+  floor they bought even if the engine is repriced later.
 - every lead named to a renter is delivered to that renter and no other
 - assignment of a person to a renter is permanent (§2.1)
 - the engine runs for each period the renter has paid for
 
-**Not guaranteed, anywhere, on any tier:**
+**The remedy when a cycle falls short:** the engine keeps running past the
+cycle, at no further cost and with no further billing, until the floor has been
+delivered. The next cycle does not start until it has. No cash refund, no
+credit - the obligation is discharged in advertising, which is the thing LGR
+controls.
 
-- any number of leads, or any minimum
+**The rule that protects the product:** a shortfall is filled by *spending
+more*, never by widening the service area, loosening the postcode gate, or
+lowering what counts as a lead. The validation in §5 runs server-side before
+delivery and is not to be relaxed to reach a floor. Filling a floor with weak
+leads spends the only asset this business has.
+
+**Still not guaranteed, on any tier:**
+
 - any cost per lead
 - any outcome - that a lead answers, quotes or converts
-
-There is **no floor, no volume refund, no guarantee tier and no trial**. If
-advertising costs rise, the renter receives fewer leads that period. That is
-the renter's variance, not LGR's. Do not reintroduce a guarantee to make the
-offer feel stronger; it is deliberately absent.
+- any volume *above* the floor. The typical ranges in §3.1 are what an engine
+  usually produces; the floor is the promise.
 
 ## 5. Risk posture
 

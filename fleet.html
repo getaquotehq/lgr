@@ -636,12 +636,13 @@ function card(item){
       </div>
       <div class="tier-name">${esc(item.tier)}</div>
       <div class="specs">
+        ${item.floor_leads ? `<div class="spec"><span class="k">Guaranteed minimum</span><span class="v">${item.floor_leads} leads</span></div>` : ''}
         ${estimateLabel(item) ? `<div class="spec"><span class="k">Typical month</span><span class="v">${esc(estimateLabel(item))} leads</span></div>` : ''}
         <div class="spec"><span class="k">Renter slots</span><span class="v">${esc(slotLabel(item))}</span></div>
         <div class="spec"><span class="k">Service businesses per lead</span><span class="v">1</span></div>
         <div class="spec"><span class="k">Setup</span><span class="v">Nothing to do</span></div>
       </div>
-      ${estimateLabel(item) ? `<p style="font-size:.68rem;color:var(--faint);margin:-8px 0 12px;line-height:1.45">Typical range, not a guarantee. Volume moves with the ad auction and the season.</p>` : ''}
+      ${item.floor_leads ? `<p style="font-size:.68rem;color:var(--faint);margin:-8px 0 12px;line-height:1.45">Land under the minimum and your engine keeps running, free, until it is met. The typical range is what it usually does, not a promise.</p>` : ''}
       <div class="priceline">
         <span class="price">${esc(item.price)}<small> +GST / 30 days</small></span>
       </div>
@@ -836,6 +837,7 @@ function mapRow(a){
     // real history for that engine - estimateLabel() renders nothing then.
     typical_min: (typeof a.typical_min === 'number') ? a.typical_min : null,
     typical_max: (typeof a.typical_max === 'number') ? a.typical_max : null,
+    floor_leads: (typeof a.floor_leads === 'number') ? a.floor_leads : null,
     // Slot capacity is not in the schema yet - see slotLabel() below.
     slots_taken: (typeof a.slots_taken === 'number') ? a.slots_taken : null,
     slot_capacity: (typeof a.slot_capacity === 'number') ? a.slot_capacity : null,
@@ -852,7 +854,7 @@ async function loadInventory(){
     // assets_public, not assets: the base table is no longer readable with the
     // anon key, and the view has no column that names the engine.
     const { data, error } = await sb.from('assets_public')
-      .select('id,tier,monthly_price_aud,typical_min,typical_max,status,region_slug,region_name,region_sort_order,niche_slug')
+      .select('id,tier,monthly_price_aud,typical_min,typical_max,floor_leads,status,region_slug,region_name,region_sort_order,niche_slug')
       .eq('niche_slug', NICHE)
       .eq('sold_out', false)   // held-back areas are not offered
       .order('region_sort_order', { ascending:true })
@@ -903,7 +905,7 @@ loadInventory();
       </div>
     </div>
     <div class="foot">
-      <p class="fine">© 2026 Lead Gen Rentals. Lead Gen Rentals runs paid advertising on its own accounts and its own campaigns. A lead means a form submission containing a name and an Australian mobile number, captured with named consent to be contacted by one identified service business. Every lead delivered to a service business is exclusive to it and named to it, is delivered to no other business, and is never resold. Renting does not grant any exclusive right to an area, a postcode or a region. Lead Gen Rentals does not guarantee any number of leads, any cost per lead, or any outcome. Lead volume varies with market conditions, season and the advertising auction, and Lead Gen Rentals does not guarantee that any lead will answer, quote or convert. Starter, Growth and Scale are service levels. They are not a lead count. Billed month to month in advance - cancel any time before your next cycle begins, no lock-in and no exit fee; cancelling frees your slot. Full terms at <a href="/terms" style="color:inherit;text-decoration:underline">leadgenrentals.com.au/terms</a>.</p>
+      <p class="fine">© 2026 Lead Gen Rentals. Lead Gen Rentals runs paid advertising on its own accounts and its own campaigns. A lead means a form submission containing a name and an Australian mobile number, captured with named consent to be contacted by one identified service business. Every lead delivered to a service business is exclusive to it and named to it, is delivered to no other business, and is never resold. Renting does not grant any exclusive right to an area, a postcode or a region. Each tier carries a minimum number of leads per 30-day cycle - 10 on Starter, 20 on Growth, 30 on Scale. If a cycle delivers fewer, the engine keeps running past the cycle, at no further cost, until the minimum is met. Lead Gen Rentals does not guarantee any cost per lead, or any outcome. Lead volume varies with market conditions, season and the advertising auction, and Lead Gen Rentals does not guarantee that any lead will answer, quote or convert. Starter, Growth and Scale are service levels, each carrying a guaranteed minimum of 10, 20 and 30 leads per cycle. Billed month to month in advance - cancel any time before your next cycle begins, no lock-in and no exit fee; cancelling frees your slot. Full terms at <a href="/terms" style="color:inherit;text-decoration:underline">leadgenrentals.com.au/terms</a>.</p>
     </div>
   </div>
 </footer>
