@@ -1,11 +1,6 @@
 <!DOCTYPE html>
 <html lang="en-AU">
 <head>
-<!-- MAINTENANCE MODE - remove this block to bring the page back -->
-<script>if(!/\/maintenance\.html$/.test(location.pathname)){location.replace('/maintenance.html');}</script>
-<noscript><meta http-equiv="refresh" content="0;url=/maintenance.html"></noscript>
-<!-- END MAINTENANCE MODE -->
-
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <!-- @ga4 -->
@@ -217,6 +212,58 @@
   @media(max-width:520px){.rf-grid{grid-template-columns:1fr}}
 
   /* checkout return banner */
+  /* ---- plans, money split and availability (the offer, not an inventory) ---- */
+  .plans{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:18px;margin:8px 0 0}
+  .plan{background:var(--bg);border:1px solid var(--line);border-radius:14px;padding:26px 24px;
+        display:flex;flex-direction:column;box-shadow:var(--sh-sm)}
+  .plan.featured{border-color:var(--blue-line);box-shadow:var(--sh-lg)}
+  .plan-head{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:16px}
+  .plan-name{font-family:var(--display);font-size:1.15rem;font-weight:700;letter-spacing:-.02em}
+  .plan-tag{font-family:var(--mono);font-size:.6rem;text-transform:uppercase;letter-spacing:.09em;
+            padding:5px 9px;border-radius:20px;background:var(--green-tint);color:#0A6B4B;white-space:nowrap}
+  .plan-tag.muted{background:var(--surface);color:var(--muted)}
+  .plan-price{display:flex;flex-direction:column;gap:2px;margin-bottom:18px}
+  .plan-price .pp-num{font-family:var(--display);font-size:2.3rem;font-weight:700;letter-spacing:-.03em;line-height:1}
+  .plan-price small{color:var(--muted);font-size:.8rem}
+  .plan-budget,.plan-guar{border:1px solid var(--line);border-radius:10px;padding:13px 15px;margin-bottom:12px;
+                          display:flex;flex-direction:column;gap:3px;background:var(--surface)}
+  .plan-guar{border-color:var(--blue-line)}
+  .pb-k,.pg-k{font-family:var(--mono);font-size:.6rem;text-transform:uppercase;letter-spacing:.09em;color:var(--muted)}
+  .pb-v,.pg-v{font-size:1.02rem;font-weight:650;letter-spacing:-.01em}
+  .pg-v{color:var(--blue)}
+  .pb-note,.pg-note{font-size:.76rem;color:var(--muted);line-height:1.5;margin-top:2px}
+  .plan-list{list-style:none;padding:0;margin:6px 0 20px;display:flex;flex-direction:column;gap:9px}
+  .plan-list li{position:relative;padding-left:21px;font-size:.87rem;color:var(--ink-2,var(--muted));line-height:1.5}
+  .plan-list li::before{content:"";position:absolute;left:0;top:.42em;width:11px;height:6px;
+                        border-left:2px solid var(--blue);border-bottom:2px solid var(--blue);
+                        transform:rotate(-45deg)}
+  .plan-cta{width:100%;justify-content:center;margin-top:auto}
+  .plan-fine{font-size:.73rem;color:var(--muted);text-align:center;margin-top:10px;line-height:1.5}
+
+  .money{margin:52px 0 0;padding-top:40px;border-top:1px solid var(--line)}
+  .money h2,.avail h2{font-family:var(--display);font-size:clamp(1.3rem,3vw,1.8rem);
+                      letter-spacing:-.02em;margin-bottom:8px}
+  .money-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px;margin-top:20px}
+  .money-card{border:1px solid var(--line);border-radius:12px;padding:20px 22px;background:var(--bg)}
+  .mc-k{display:block;font-family:var(--mono);font-size:.6rem;text-transform:uppercase;
+        letter-spacing:.09em;color:var(--muted);margin-bottom:6px}
+  .mc-v{display:block;font-family:var(--display);font-size:1.25rem;font-weight:700;
+        letter-spacing:-.02em;margin-bottom:10px}
+  .money-card p{font-size:.86rem;color:var(--muted);line-height:1.6}
+  .money-note{margin-top:16px;font-size:.78rem;color:var(--muted);line-height:1.6}
+
+  .avail{margin:52px 0 64px;padding-top:40px;border-top:1px solid var(--line)}
+  .avail-form{display:flex;gap:12px;align-items:flex-end;flex-wrap:wrap;margin-top:20px}
+  .avail-form .rf-f{max-width:220px;flex:1 1 180px}
+  .whatyoupay{border:1px solid var(--line);border-radius:10px;overflow:hidden;margin-bottom:14px}
+  .wyp-row{display:flex;justify-content:space-between;gap:12px;padding:11px 14px;font-size:.87rem;
+           border-bottom:1px solid var(--line)}
+  .wyp-row span{color:var(--muted)}
+  .wyp-row.guar{background:var(--surface)}
+  .wyp-row.guar b{color:var(--blue)}
+  .wyp-note{padding:11px 14px;font-size:.76rem;color:var(--muted);line-height:1.55;background:var(--surface)}
+  @media(max-width:560px){ .wyp-row{flex-direction:column;gap:2px} }
+
   .banner{border-radius:10px;padding:14px 18px;margin:22px 0 0;font-size:.92rem;
     display:flex;align-items:center;gap:12px;line-height:1.5}
   .banner.ok{background:var(--green-tint);border:1px solid #BCE9D6;color:#0A6B4B}
@@ -355,7 +402,7 @@
         </div>
       </div>
       <a href="/dashboard/" class="nav-l">Dashboard</a>
-      <a href="/#trades" class="btn btn-primary btn-sm">Browse trades</a>
+      <a href="/fleet.html" class="btn btn-primary btn-sm">See pricing</a>
     </div>
     <button class="theme-toggle" aria-label="Toggle dark mode" onclick="toggleTheme()"><svg class="ic-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg><svg class="ic-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4.5"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg></button>
     <button class="nav-burger" id="burger" aria-label="Menu" aria-expanded="false"><span></span><span></span><span></span></button>
@@ -372,48 +419,112 @@
   <a href="/dashboard/">Dashboard</a>
   <a href="/about">About</a>
   <a href="/contact">Contact</a>
-  <a href="/#trades" class="btn btn-primary btn-glossy">Browse trades</a>
+  <a href="/fleet.html" class="btn btn-primary btn-glossy">See pricing</a>
 </div>
-
 <div class="wrap">
 
   <div id="checkoutBanner"></div>
 
   <div class="head">
-    <h1 id="fleetHeading">Live engines near <span id="regionLabel">-</span></h1>
-    <p class="sub" id="fleetSub">Every one of these is a <span id="nicheLabel">lead</span> engine that already exists - landing page built, campaigns tuned, ready to run under your name. Take one and every lead it produces is yours alone. Slots are limited.</p>
-    <p class="sub" style="font-size:.82rem;opacity:.8">We list the trade, the area, the level and the price. We don't publish which page or domain an engine runs on: it is a live funnel we pay to advertise and a paying renter depends on, so the address, the page and the campaign are yours from the moment your slot is paid for.</p>
+    <h1 id="fleetHeading">What it costs, and what we guarantee</h1>
+    <p class="sub">We own the <span id="nicheLabel">lead</span> engine and run the campaigns. You pay us a flat monthly fee and you pay Meta directly for your own ad budget, on your own card. Two payments, two places, and only one of them comes to us.</p>
+    <p class="sub" style="font-size:.82rem;opacity:.8">One business per engine. We do not publish which page or domain an engine runs on: it is a live funnel a paying client depends on, so the address, the page and the ad account are yours from the moment your first fee is paid.</p>
   </div>
 
-  <div class="filters">
-    <div class="ff">
-      <label for="regionSel">Region</label>
-      <select id="regionSel"></select>
-    </div>
-    <div class="ff">
-      <label for="tierSel">Class</label>
-      <select id="tierSel">
-        <option value="all">All classes</option>
-        <option value="Starter">Starter</option>
-        <option value="Growth">Growth</option>
-        <option value="Scale">Scale</option>
-      </select>
-    </div>
-    <div class="ff">
-      <label for="statusSel">Availability</label>
-      <select id="statusSel">
-        <option value="all">All</option>
-        <option value="open">Open slots only</option>
-        <option value="taken">Full</option>
-      </select>
-    </div>
-    <div class="fcount" id="countLine"></div>
+  <!-- PLANS -->
+  <div class="plans" id="plans">
+    <article class="plan featured">
+      <div class="plan-head">
+        <span class="plan-name">Engine</span>
+        <span class="plan-tag" id="availTag">Checking availability</span>
+      </div>
+      <div class="plan-price"><span class="pp-num" id="planFee">$1,250</span><small>+GST per month, to us</small></div>
+      <div class="plan-budget">
+        <span class="pb-k">Plus your own ad budget</span>
+        <span class="pb-v" id="planBudget">$50 / day</span>
+        <span class="pb-note">Charged by Meta to your card, not to us. Around $1,500 over a 30 day cycle, at Meta's prices, with no markup because we never handle it.</span>
+      </div>
+      <div class="plan-guar" id="planGuar">
+        <span class="pg-k">Guaranteed every 30 days</span>
+        <span class="pg-v">10 quotes and $100,000 quoted</span>
+        <span class="pg-note">Sent through your dashboard against leads your engine delivered. Miss either number and our fee for that cycle is refunded in full.</span>
+      </div>
+      <ul class="plan-list">
+        <li>An engine that is already built, tested and running</li>
+        <li>Used by one business at a time. While you are on it, it is yours</li>
+        <li>Access to the Meta ad account so you can see every campaign and every dollar</li>
+        <li>We write the ads, set the targeting and manage the spend</li>
+        <li>Leads named to your business on the consent the homeowner agrees to</li>
+        <li>Automatic reply in your name within about 60 seconds</li>
+        <li>Dashboard with quoting, follow-up and live guarantee tracking</li>
+        <li>Month to month. Cancel yourself before the next cycle</li>
+      </ul>
+      <button class="btn btn-primary btn-glossy plan-cta" id="startEngine" type="button">Check availability &rarr;</button>
+      <p class="plan-fine">Your 30 days start the day the ads go live, not the day you pay.</p>
+    </article>
+
+    <article class="plan">
+      <div class="plan-head">
+        <span class="plan-name">Custom</span>
+        <span class="plan-tag muted">By arrangement</span>
+      </div>
+      <div class="plan-price"><span class="pp-num">from $2,500</span><small>+GST per month, to us</small></div>
+      <div class="plan-budget">
+        <span class="pb-k">Plus your own ad budget</span>
+        <span class="pb-v">Agreed in scope</span>
+        <span class="pb-note">Same arrangement: your card on the ad account, billed by Meta directly, at whatever budget the scope calls for.</span>
+      </div>
+      <div class="plan-guar">
+        <span class="pg-k">Guaranteed every 30 days</span>
+        <span class="pg-v">Written into your scope</span>
+        <span class="pg-note">Bigger targets need a bigger budget behind them, so the number is set with you rather than published here. Same remedy: miss it and the fee comes back.</span>
+      </div>
+      <ul class="plan-list">
+        <li>More than one engine, or more than one trade</li>
+        <li>Higher budgets and wider coverage</li>
+        <li>A guarantee written to the volume you actually need</li>
+        <li>Everything in the Engine plan</li>
+      </ul>
+      <a class="btn btn-ghost plan-cta" href="/contact">Talk to us &rarr;</a>
+      <p class="plan-fine">We will tell you if the Engine plan is the better fit.</p>
+    </article>
   </div>
 
-  <div class="fleet" id="fleet"></div>
+  <!-- HOW THE MONEY WORKS -->
+  <section class="money">
+    <h2>Where each payment goes</h2>
+    <div class="money-grid">
+      <div class="money-card">
+        <span class="mc-k">You pay us</span>
+        <span class="mc-v" id="moneyFee">$1,250 + GST / month</span>
+        <p>Our fee for owning and running the engine, writing and testing the ads, managing the spend and carrying the guarantee. It contains no advertising spend at all. Billed by card, monthly in advance, cancel any time.</p>
+      </div>
+      <div class="money-card">
+        <span class="mc-k">You pay Meta</span>
+        <span class="mc-v" id="moneyBudget">$50 / day</span>
+        <p>Your advertising. We give you access to the ad account that runs your engine and you put your own card on it, so Meta bills you directly at Meta's prices. We never handle it, never invoice it and never mark it up. You can see every charge in your own billing.</p>
+      </div>
+    </div>
+    <p class="money-note">If either number ever appears on its own, it is wrong. The fee is not the cost of advertising with us, and the budget is not a payment to us.</p>
+  </section>
+
+  <!-- AVAILABILITY -->
+  <section class="avail" id="avail">
+    <h2>Is an engine free where you work?</h2>
+    <p class="sub">An engine runs for one business at a time, so this is a real question with a real answer. Give us the postcode you want work in and we will tell you now. You are not buying that postcode and nobody gets exclusive rights to an area. It is just how we know which engine to put you on.</p>
+    <form class="avail-form" id="availForm">
+      <div class="rf-f">
+        <label for="av-postcode">Postcode you want work in<span class="req">*</span></label>
+        <input id="av-postcode" type="text" inputmode="numeric" maxlength="4" placeholder="e.g. 4000" autocomplete="postal-code">
+      </div>
+      <button class="btn btn-primary btn-glossy" id="availBtn" type="submit">Check and continue &rarr;</button>
+    </form>
+    <p class="rf-err" id="availErr"></p>
+  </section>
+
 </div>
 
-<!-- PREVIEW / RENT MODAL -->
+<!-- PREVIEW / CHECKOUT MODAL -->
 <div class="modal" id="modal">
   <div class="modal-in">
     <div class="modal-shot" id="modalShot"></div>
@@ -421,10 +532,10 @@
       <div class="m-meta" id="modalMeta"></div>
       <h3 id="modalTitle"></h3>
 
-      <!-- STEP 1: preview of the landing page homeowners see -->
+      <!-- STEP 1: preview of the form homeowners actually fill in -->
       <div id="modalPreview">
         <p>This is the form a homeowner fills in on your engine. The consent line carries <b>your business name</b>, so exclusivity is proven at the moment they submit rather than promised afterwards. Enter your business name on the next step and you will see it here before you pay anything.</p>
-        <p style="font-size:.8rem;color:var(--muted)">We don't publish which page or which domain an engine runs on. Anyone can read this page, and a live funnel we fund the ads for is not something to hand to your competitors or to whoever fancies filling it with rubbish. You get the address, the live page and the campaign the moment your slot is paid for.</p>
+        <p style="font-size:.8rem;color:var(--muted)">We do not publish which page or which domain an engine runs on. Anyone can read this page, and a live funnel a paying client depends on is not something to hand to their competitors. You get the address, the live page and the ad account once your first fee is paid.</p>
         <div class="mform">
           <div class="t" id="mformTitle">Get your free quote</div>
           <div class="b" id="mfield0">Full name</div>
@@ -440,10 +551,11 @@
         </div>
       </div>
 
-      <!-- STEP 2: rental details (revealed on "Take this engine") -->
+      <!-- STEP 2: details, then Stripe -->
       <form id="rentForm" style="display:none">
-        <p style="margin-bottom:16px">You're renting <b id="rentAssetName"></b>. Enter your details and we'll take you to secure Stripe checkout - your business name goes on every lead's consent.</p>
-      <p style="margin-bottom:16px;font-size:.84rem;color:var(--muted)">Prepaid for the 30 days, cancel any time - cancelling frees your slot. What is promised: leads named to you are yours alone, and your engine runs for the period you have paid for. <a href="/rental-terms" style="color:var(--blue);font-weight:600">Rental terms &rarr;</a></p>
+        <p style="margin-bottom:14px">Enter your details and we will take you to secure Stripe checkout. Your business name goes on every lead's consent line.</p>
+        <div class="whatyoupay" id="whatYouPay"></div>
+        <p style="margin-bottom:16px;font-size:.84rem;color:var(--muted)">Month to month, cancel any time before your next cycle. After you pay we give you access to the ad account, you add your own card to it, and we launch. <a href="/rental-terms" style="color:var(--blue);font-weight:600">Service terms &rarr;</a></p>
         <div class="rf-grid">
           <div class="rf-f"><label for="rf-business">Business name<span class="req">*</span></label><input id="rf-business" type="text" placeholder="e.g. Bright Spark Electrical" autocomplete="organization"><p class="rf-consent" id="rfConsent"><span class="rf-consent-k">This is what your leads agree to</span><span class="rf-consent-v">I agree to be contacted about my <span id="rfConsentNoun">project</span> by <b id="rfConsentName">your business name</b>.</span></p></div>
           <div class="rf-f"><label for="rf-contact">Your name</label><input id="rf-contact" type="text" placeholder="Full name" autocomplete="name"></div>
@@ -456,9 +568,9 @@
 
       <div class="modal-actions">
         <button class="btn btn-ghost" id="modalClose" type="button">Close</button>
-        <button class="btn btn-primary go btn-glossy" id="modalClaim" type="button">Take this engine →</button>
+        <button class="btn btn-primary go btn-glossy" id="modalClaim" type="button">Continue &rarr;</button>
       </div>
-      <p class="rf-secure" id="rentSecure" style="display:none">🔒 Payments processed securely by Stripe · billed monthly in advance · cancel any time</p>
+      <p class="rf-secure" id="rentSecure" style="display:none">🔒 Our fee is processed securely by Stripe, billed monthly in advance, cancel any time. Your ad budget is not charged here: Meta bills it to your own card once your ad account access is set up.</p>
     </div>
   </div>
 </div>
@@ -466,50 +578,57 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="supabase-config.js"></script>
 <script>
-/* ------------------------------------------------------------------
-   Live inventory from Supabase, read from the `assets_public` catalogue view.
-   The view carries trade, area, tier, price and availability and nothing that
-   identifies the engine - no brand name, no domain. Those are revealed to a
-   renter in the dashboard once their slot is paid for.
------------------------------------------------------------------- */
+/* ---------------------------------------------------------------------------
+   This page sells the OFFER, not an inventory list.
+
+   It used to be a browsable grid of engines filtered by region, tier and
+   availability. That is gone, and both reasons are in MODEL.md:
+
+     * Exclusivity is per engine and never per area (1.1). A region filter over
+       engine cards reads as a territory map, and buyers concluded, reasonably,
+       that they were purchasing a postcode. They were not.
+     * A public grid of which areas have engines free is our inventory, handed
+       to anyone who opens the page, competitors included.
+
+   So the page publishes the plan, the fee, the budget the client owes Meta and
+   the guarantee, and the buyer gives us a postcode. allocate_engine() resolves
+   it to an actual engine server-side inside create-rental-checkout, under the
+   service role. The browser never learns which engine it got, or whether any
+   other area has one free.
+--------------------------------------------------------------------------- */
 const $ = s => document.querySelector(s);
 const esc = s => (s==null?'':String(s)).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const money = n => '$' + Number(n).toLocaleString('en-AU');
-const cap = s => s ? s.charAt(0).toUpperCase() + s.slice(1) : s;
-const TIER_CODE = { starter:'T1', growth:'T2', scale:'T3' };
 
-// Per-niche copy - matches the tailored landing pages. Fleet is niche-aware
-// via ?niche=<slug> (defaults to solar).
+// Per-niche copy, matching the tailored landing pages. ?niche=<slug>, solar by default.
 const NICHE_CFG = {
-  solar:       { label:'Residential Solar', noun:'solar project',       quote:'Get your free solar quote',      page:'/solar-leads',       back:'← Solar leads',       fields:['Postcode','Average quarterly power bill','How soon are you looking to install?'] },
-  battery:     { label:'Solar Battery',     noun:'battery install',     quote:'Get your free battery quote',    page:'/solar-battery-leads', back:'← Battery leads',     fields:['Postcode','Existing solar?','How soon are you looking to install?'] },
-  hvac:        { label:'Residential HVAC',  noun:'heating & cooling job', quote:'Get your free HVAC quote',       page:'/hvac-leads',        back:'← HVAC leads',        fields:['Postcode','Type of system','How soon are you looking to install?'] },
-  roofing:     { label:'Residential Roofing', noun:'roofing job',        quote:'Get your free roofing quote',    page:'/roofing-leads',     back:'← Roofing leads',     fields:['Postcode','What does your roof need?','How soon are you looking to start?'] },
-  renovations: { label:'Home Renovations',  noun:'renovation',           quote:'Get your free renovation quote', page:'/renovations-leads', back:'← Renovation leads',  fields:['Postcode','Project type','Approx budget'] },
+  solar:       { label:'Residential Solar',   noun:'solar project',         quote:'Get your free solar quote',      page:'/solar-leads',         back:'← Solar leads',      fields:['Postcode','Average quarterly power bill','How soon are you looking to install?'] },
+  battery:     { label:'Solar Battery',       noun:'battery install',       quote:'Get your free battery quote',    page:'/solar-battery-leads', back:'← Battery leads',    fields:['Postcode','Existing solar?','How soon are you looking to install?'] },
+  hvac:        { label:'Residential HVAC',    noun:'heating & cooling job', quote:'Get your free HVAC quote',       page:'/hvac-leads',          back:'← HVAC leads',       fields:['Postcode','Type of system','How soon are you looking to install?'] },
+  roofing:     { label:'Residential Roofing', noun:'roofing job',           quote:'Get your free roofing quote',    page:'/roofing-leads',       back:'← Roofing leads',    fields:['Postcode','What does your roof need?','How soon are you looking to start?'] },
+  renovations: { label:'Home Renovations',    noun:'renovation',            quote:'Get your free renovation quote', page:'/renovations-leads',   back:'← Renovation leads', fields:['Postcode','Project type','Approx budget'] },
 };
 const NICHE = (new URLSearchParams(location.search).get('niche') || 'solar').toLowerCase();
-// Battery is its own niche, priced separately from solar, so ?niche=battery
-// selects battery engines. ?trade= still carries the sub-trade a visitor came
-// in for (solar vs battery retrofit) purely as context for the copy shown.
-const TRADE = (new URLSearchParams(location.search).get('trade') || '').toLowerCase();
 const NC = NICHE_CFG[NICHE] || NICHE_CFG.solar;
 
-let INVENTORY = [];                 // mapped asset rows
-let REGIONS = [];                   // [{name,slug}] distinct, in order
-let curRegion = null, curTier = 'all', curStatus = 'all', active = null;
+// The plan, read live from the catalogue. The hardcoded figures in the markup
+// are the current published ones and exist so the page is readable before the
+// fetch resolves; whatever the database says wins. Never compute the fee, the
+// budget or the guarantee in here from one another.
+let PLAN = { fee: 1250, budget: 50, quotes: 10, pipeline: 100000, windowDays: 30, available: null };
+let postcode = '';
 
-// niche-aware chrome
-document.title = `Lead Gen Rentals - Available ${NC.label} assets`;
-$('#nicheLabel').textContent = NC.label.replace(/^Residential |^Home /, '').toLowerCase() + ' lead';
+document.title = `Lead Gen Rentals - ${NC.label} pricing and availability`;
+$('#nicheLabel').textContent = NC.label.replace(/^Residential |^Home /, '').toLowerCase();
 const _back = $('#backLink'); if(_back){ _back.textContent = NC.back; _back.href = NC.page; }
 
-// checkout return banner (?checkout=success|cancelled)
+/* ---- checkout return banner (?checkout=success|cancelled) ---- */
 (function(){
   const q = new URLSearchParams(location.search);
   const state = q.get('checkout');
   const el = $('#checkoutBanner'); if(!el || !state) return;
   if(state === 'success'){
-    el.innerHTML = `<div class="banner ok"><span>✓</span><span><b>Payment received - your slot is confirmed.</b> We'll email a welcome note shortly and your engine goes live within days. Every lead it names to you is delivered to you alone.</span></div>`;
+    el.innerHTML = `<div class="banner ok"><span>✓</span><span><b>Fee received. Your engine is allocated.</b> Check your email: the next step is the ad account. We give you access, you put your own card on it, then we launch. Your 30 days start when the ads go live.</span></div>`;
     if(window.lgrMetaTrackPurchase){
       const value = Number(q.get('value'));
       const currency = q.get('currency') || 'AUD';
@@ -518,14 +637,13 @@ const _back = $('#backLink'); if(_back){ _back.textContent = NC.back; _back.href
     const sessionId = q.get('session_id');
     if(sessionId) pollForDashboardLink(sessionId, el);
   } else if(state === 'cancelled'){
-    el.innerHTML = `<div class="banner info"><span>↩</span><span><b>Checkout cancelled - no charge was made.</b> The slot is still open. Pick it below whenever you're ready.</span></div>`;
+    el.innerHTML = `<div class="banner info"><span>↩</span><span><b>Checkout cancelled, nothing was charged.</b> Start again below whenever you are ready.</span></div>`;
   }
 })();
 
-// The webhook that provisions/links the dashboard account fires async after
-// Stripe redirects back here, so poll get-magic-link for a few seconds rather
-// than assume it's ready. If it never lands, the confirmation email carries
-// the same one-click link, so this is a convenience, not the only way in.
+// The webhook that provisions the dashboard account fires async after Stripe
+// redirects back, so poll rather than assume. If it never lands, the
+// confirmation email carries the same one-click link.
 async function pollForDashboardLink(sessionId, bannerEl){
   const cfg = window.LGR_SUPABASE || {};
   if(!cfg.url || !cfg.anonKey) return;
@@ -534,36 +652,33 @@ async function pollForDashboardLink(sessionId, bannerEl){
     await new Promise(r => setTimeout(r, 2500));
     try{
       const res = await fetch(url, { headers: { apikey: cfg.anonKey, Authorization: `Bearer ${cfg.anonKey}` } });
-      if(res.status === 202) continue; // webhook hasn't finished yet
+      if(res.status === 202) continue;
       if(!res.ok) return;
       const data = await res.json();
       if(data.url){
         const cta = document.createElement('div');
         cta.className = 'banner ok';
         cta.style.marginTop = '10px';
-        cta.innerHTML = `<span>→</span><span><b>Your dashboard is ready.</b> <a href="${esc(data.url)}" style="color:inherit;text-decoration:underline;font-weight:600">Go to your dashboard</a> to watch leads land in real time.</span>`;
+        cta.innerHTML = `<span>→</span><span><b>Your dashboard is ready.</b> <a href="${esc(data.url)}" style="color:inherit;text-decoration:underline;font-weight:600">Go to your dashboard</a> to watch leads land and your guarantee track.</span>`;
         bannerEl.appendChild(cta);
       }
       return;
-    }catch(e){ return; } // best-effort - the confirmation email is the fallback
+    }catch(e){ return; }
   }
 }
 
-/* The "vehicle photo": the shape of the landing page, not its identity.
-   The address bar used to print the engine's real domain, and the heading its
-   real brand name. Both are withheld until a slot is paid for - see the
-   assets_public view and the "renter reads own engines" policy. What is drawn
-   here is what the page IS (a quote funnel for this trade, in this area, with
-   the consent line on the form), which is the part a buyer actually needs to
-   judge the offer. */
-function shot(item, big){
+/* The shape of the landing page, not its identity. The address bar used to
+   print the engine's real domain and the heading its real brand name. Both are
+   withheld until the first fee is paid. What is drawn is what the page IS: a
+   quote funnel for this trade, with the consent line on the form. */
+function shot(big){
   return `
   <div class="chrome">
     <div class="chrome-bar">
       <span class="dot"></span><span class="dot"></span><span class="dot"></span>
       <span class="url url-locked">
         <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" aria-hidden="true" focusable="false"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>
-        <span>revealed when your slot is paid for</span>
+        <span>revealed once your first fee is paid</span>
       </span>
     </div>
     <div class="lp">
@@ -579,152 +694,91 @@ function shot(item, big){
   </div>`;
 }
 
-/* There is deliberately no assetDomain()/previewLabel() here any more. The
-   engine's domain is not sent to this page at all: /fleet reads the
-   assets_public catalogue view, which has no brand_domain column to render. */
-
-
-/* ---------------------------------------------------------------------------
-   Renter slots per engine.
-
-   PHASE 2 / TODO: `assets` has no capacity columns yet - the schema still
-   models one renter per asset (assets.rented_by, status available|rented).
-   Until the capacity migration lands there is no honest number to show,
-   so this deliberately renders a qualitative label rather than inventing a
-   count. Once `assets.slot_capacity` and a live count of active rentals per
-   asset are available, mapRow() will populate slots_taken / slot_capacity and
-   this returns the real "6 of 8 slots filled".
-
-   Do NOT hardcode a placeholder count here - a fabricated slot count is a
-   false scarcity claim.
+/* ---- load the published plan + per-trade availability ---------------------
+   engine_availability is a COUNT per trade, never a list. See the view's own
+   comment: a region-by-region breakdown is the territory map by another route.
 --------------------------------------------------------------------------- */
-function slotLabel(item){
-  const t = item.slots_taken, c = item.slot_capacity;
-  if(typeof t === 'number' && typeof c === 'number' && c > 0){
-    return `${t} of ${c} filled`;
+async function loadPlan(){
+  const cfg = window.LGR_SUPABASE || {};
+  if(!cfg.url || !cfg.anonKey || cfg.anonKey.indexOf('__') === 0){ setAvailTag(null); return; }
+  try{
+    const sb = supabase.createClient(cfg.url, cfg.anonKey);
+    const { data, error } = await sb.from('engine_availability')
+      .select('niche_slug,niche_status,engines_available,fee_aud,daily_budget_aud,guarantee_quotes,guarantee_pipeline_aud')
+      .eq('niche_slug', NICHE)
+      .maybeSingle();
+    if(error) throw error;
+    if(data){
+      if(typeof data.fee_aud === 'number')                PLAN.fee      = data.fee_aud;
+      if(typeof data.daily_budget_aud === 'number')       PLAN.budget   = data.daily_budget_aud;
+      if(typeof data.guarantee_quotes === 'number')       PLAN.quotes   = data.guarantee_quotes;
+      if(typeof data.guarantee_pipeline_aud === 'number') PLAN.pipeline = data.guarantee_pipeline_aud;
+      PLAN.available = Number(data.engines_available || 0);
+    } else {
+      PLAN.available = 0;
+    }
+  }catch(e){
+    console.error('plan load failed', e);
+    PLAN.available = null;   // unknown, not zero
   }
-  return item.status === 'open' ? 'Limited' : 'Full';
+  paintPlan();
 }
 
-/* ---------------------------------------------------------------------------
-   Per-engine lead estimate.
-
-   Sourced from assets.typical_min / typical_max - numbers WE set per engine.
-   Both columns are nullable and this renders nothing at all when either is
-   missing, which stays the correct output for an engine we will not stand
-   behind a number for.
-
-   Label it "typical", never "guaranteed", "minimum" or "floor", and never let
-   it sit on the page without the no-guarantee line beside it - MODEL.md section
-   4 is absolute and a printed range is a representation to the buyer. Do not
-   derive a range here from price or tier: the value is whatever we set on the
-   row, so that changing what we publish is a data change with an audit trail
-   rather than an arithmetic accident in the page.
---------------------------------------------------------------------------- */
-function estimateLabel(item){
-  const lo = item.typical_min, hi = item.typical_max;
-  if(typeof lo !== 'number' || typeof hi !== 'number' || lo <= 0 || hi < lo) return null;
-  return `${lo}-${hi}`;
+function paintPlan(){
+  $('#planFee').textContent    = money(PLAN.fee);
+  $('#planBudget').textContent = money(PLAN.budget) + ' / day';
+  $('#moneyFee').textContent   = money(PLAN.fee) + ' + GST / month';
+  $('#moneyBudget').textContent= money(PLAN.budget) + ' / day';
+  const guar = $('#planGuar').querySelector('.pg-v');
+  if(guar) guar.textContent = `${PLAN.quotes} quotes and ${money(PLAN.pipeline)} quoted`;
+  setAvailTag(PLAN.available);
 }
 
-function card(item){
-  const open = item.status === "open";
-  return `<article class="card ${open ? '' : 'taken'}">
-    <div class="shot">
-      <span class="ribbon ${item.status}">${open ? 'SLOTS OPEN' : 'FULL'}</span>
-      ${shot(item, false)}
-    </div>
-    <div class="info">
-      <div class="row1">
-        <span class="area">${esc(item.area)}</span>
-        <span class="tier-code">${item.code}</span>
-      </div>
-      <div class="tier-name">${esc(item.tier)}</div>
-      <div class="specs">
-        ${item.floor_leads ? `<div class="spec"><span class="k">Guaranteed minimum</span><span class="v">${item.floor_leads} leads</span></div>` : ''}
-        ${estimateLabel(item) ? `<div class="spec"><span class="k">Typical month</span><span class="v">${esc(estimateLabel(item))} leads</span></div>` : ''}
-        <div class="spec"><span class="k">Renter slots</span><span class="v">${esc(slotLabel(item))}</span></div>
-        <div class="spec"><span class="k">Service businesses per lead</span><span class="v">1</span></div>
-        <div class="spec"><span class="k">Setup</span><span class="v">Nothing to do</span></div>
-      </div>
-      ${item.floor_leads ? `<p style="font-size:.68rem;color:var(--faint);margin:-8px 0 12px;line-height:1.45">Land under the minimum and your engine keeps running, free, until it is met. The typical range is what it usually does, not a promise.</p>` : ''}
-      <div class="priceline">
-        <span class="price">${esc(item.price)}<small> +GST / 30 days</small></span>
-      </div>
-      <div class="actions">
-        ${open
-          ? `<button class="btn btn-ghost" data-i="${item._i}" data-a="preview">See the form</button>
-             <button class="btn btn-primary btn-glossy" data-i="${item._i}" data-a="claim">Rent</button>`
-          : `<button class="btn btn-mute" data-i="${item._i}" data-a="wait">Join waitlist</button>`}
-      </div>
-    </div>
-  </article>`;
+/* Availability is stated qualitatively. A live count is our inventory, and a
+   number that ticks down is false urgency the moment it stops being accurate. */
+function setAvailTag(n){
+  const tag = $('#availTag');
+  const btn = $('#startEngine');
+  if(n === null || n === undefined){
+    tag.textContent = 'Availability by request';
+    tag.className = 'plan-tag muted';
+    return;
+  }
+  if(n > 0){
+    tag.textContent = 'Engines available';
+    tag.className = 'plan-tag';
+    btn.disabled = false;
+  } else {
+    tag.textContent = 'Fully allocated';
+    tag.className = 'plan-tag muted';
+    btn.disabled = false;   // still let them check: a waitlist is the useful answer
+  }
 }
 
-function skeleton(){
-  $('#fleet').innerHTML = Array.from({length:6}).map(() => `
-    <article class="card" aria-hidden="true">
-      <div class="shot"></div>
-      <div class="info">
-        <div class="row1"><span class="sk-bar" style="width:55%;height:16px"></span></div>
-        <span class="sk-bar" style="width:32%;height:10px;margin:9px 0 15px"></span>
-        <span class="sk-bar" style="width:100%;height:74px;border-radius:8px;margin-bottom:14px"></span>
-        <span class="sk-bar" style="width:42%;height:20px"></span>
-      </div>
-    </article>`).join('');
-}
-
-function fleetError(){
-  $('#fleet').innerHTML = `<div class="empty">Availability data temporarily unavailable.<br>Please refresh in a moment.</div>`;
-  $('#countLine').innerHTML = '';
-}
-
-/* Nothing listed yet: the fleet is unseeded, so say so plainly rather than
-   showing an empty grid behind dead filters. */
-function comingSoon(){
-  const filters = document.querySelector('.filters');
-  if(filters) filters.style.display = 'none';
-  $('#fleetHeading').textContent = `${NC.label} assets are coming soon`;
-  $('#fleetSub').textContent = "We're building the next run of lead engines now. Slots are limited, so they go out in small batches.";
-  $('#countLine').innerHTML = '';
-  $('#fleet').innerHTML = `<div class="empty">
-      <div class="empty-h">Coming soon</div>
-      <p>No assets are listed right now. Tell us your trade and postcode and we'll come to you first when a slot opens.</p>
-      <a href="/contact" class="btn btn-primary btn-glossy">Register your interest</a>
-    </div>`;
-}
-
-function render(){
-  INVENTORY.forEach((x,i) => x._i = i);
-  const list = INVENTORY.filter(x =>
-    (!curRegion || x.region === curRegion) &&
-    (curTier === "all" || x.tier === curTier) &&
-    (curStatus === "all" || x.status === curStatus));
-
-  $('#regionLabel').textContent = curRegion || '-';
-  const open = INVENTORY.filter(x => (!curRegion || x.region === curRegion) && x.status === "open").length;
-  $('#countLine').innerHTML = `<span><b>${open} with open slots</b>&nbsp;in ${esc(curRegion || 'all regions')}</span>`;
-
-  $('#fleet').innerHTML = list.length
-    ? list.map(card).join('')
-    : `<div class="empty">Nothing matches that filter in ${esc(curRegion || 'that area')}.<br>Engines get built to order too - tell us the trade and the postcode.</div>`;
-}
-
-$('#regionSel').addEventListener('change', e => { curRegion = e.target.value || null; render(); });
-$('#tierSel').addEventListener('change',   e => { curTier   = e.target.value; render(); });
-$('#statusSel').addEventListener('change', e => { curStatus = e.target.value; render(); });
-
-document.addEventListener('click', e => {
-  const btn = e.target.closest('[data-a]');
-  if(!btn) return;
-  const item = INVENTORY[+btn.dataset.i];
-  if(btn.dataset.a === 'wait'){ btn.textContent = 'On the list ✓'; btn.disabled = true; return; }
-  openModal(item);
+/* ---- availability check -> modal ---- */
+$('#startEngine').addEventListener('click', () => {
+  document.getElementById('avail').scrollIntoView({ behavior:'smooth', block:'start' });
+  setTimeout(() => $('#av-postcode').focus(), 350);
 });
 
-let rentStep = false;   // false = preview, true = details form
+$('#availForm').addEventListener('submit', e => {
+  e.preventDefault();
+  const err = $('#availErr');
+  const val = $('#av-postcode').value.trim();
+  err.classList.remove('on');
+  $('#av-postcode').classList.remove('err');
+  if(!/^\d{4}$/.test(val)){
+    $('#av-postcode').classList.add('err');
+    err.textContent = 'Enter a 4 digit Australian postcode.';
+    err.classList.add('on');
+    return;
+  }
+  postcode = val;
+  openModal();
+});
 
-// populate the niche-specific preview form once
+let rentStep = false;   // false = preview, true = details
+
 (function initPreviewForm(){
   $('#mformTitle').textContent = NC.quote;
   $('#mConsentNoun').textContent = NC.noun;
@@ -742,12 +796,13 @@ function showPreviewStep(){
   $('#rentForm').style.display = 'none';
   $('#rentSecure').style.display = 'none';
   const claim = $('#modalClaim');
-  claim.disabled = active && active.status !== 'open';
-  claim.textContent = 'Take this engine →';
+  claim.disabled = false;
+  claim.textContent = 'Continue →';
 }
+
 /* Fill the consent line, in the checkout form and in the mocked landing page,
    with whatever the buyer has typed. This is the "see your name on it before
-   you pay" promise, so it must show their real input and fall back to neutral
+   you pay" promise, so it shows their real input and falls back to neutral
    placeholder text rather than a made-up business. */
 function syncConsentName(){
   var typed = ($('#rf-business').value || '').trim();
@@ -762,8 +817,14 @@ function showRentStep(){
   $('#modalPreview').style.display = 'none';
   $('#rentForm').style.display = '';
   $('#rentSecure').style.display = '';
-  $('#rentAssetName').textContent = `the ${active.area} ${NC.label} engine - ${active.tier}`;
-  $('#rentTotal').innerHTML = `${esc(active.price)} <small>+GST per 30 days · prepaid · cancel any time</small>`;
+  // Both numbers, every time. A fee shown on its own reads as the total cost of
+  // advertising with us, and it is not.
+  $('#whatYouPay').innerHTML =
+    `<div class="wyp-row"><span>To us, today</span><b>${money(PLAN.fee)} + GST / month</b></div>` +
+    `<div class="wyp-row"><span>To Meta, on your own card</span><b>${money(PLAN.budget)} / day</b></div>` +
+    `<div class="wyp-row guar"><span>Guaranteed per ${PLAN.windowDays} days</span><b>${PLAN.quotes} quotes &amp; ${money(PLAN.pipeline)} quoted</b></div>` +
+    `<p class="wyp-note">Only the first line is charged now. Meta bills the second directly once your card is on the ad account. Miss the guarantee and the first line is refunded in full.</p>`;
+  $('#rentTotal').innerHTML = `Charged today: <b>${money(PLAN.fee)}</b> <small>+GST, then monthly. Cancel any time.</small>`;
   $('#rentErr').classList.remove('on');
   const claim = $('#modalClaim');
   claim.disabled = false; claim.textContent = 'Continue to secure checkout →';
@@ -772,11 +833,10 @@ function showRentStep(){
   setTimeout(() => $('#rf-business').focus(), 40);
 }
 
-function openModal(item){
-  active = item;
-  $('#modalShot').innerHTML = shot(item, true);
-  $('#modalMeta').textContent = `${item.area} · ${item.tier} (${item.code}) · ${item.price} +GST / 30 days`;
-  $('#modalTitle').textContent = `${item.area} · ${NC.label}`;
+function openModal(){
+  $('#modalShot').innerHTML = shot(true);
+  $('#modalMeta').textContent = `${NC.label} · Engine plan · ${money(PLAN.fee)} +GST / month plus ${money(PLAN.budget)}/day to Meta`;
+  $('#modalTitle').textContent = `Your ${NC.label.toLowerCase()} engine`;
   showPreviewStep();
   $('#modal').classList.add('on');
 }
@@ -785,9 +845,7 @@ $('#modalClose').addEventListener('click', closeModal);
 $('#modal').addEventListener('click', e => { if(e.target.id === 'modal') closeModal(); });
 document.addEventListener('keydown', e => { if(e.key === 'Escape') closeModal(); });
 
-/* Take this engine -> collect details -> Stripe subscription checkout */
 $('#modalClaim').addEventListener('click', async () => {
-  if(!active) return;
   if(!rentStep){ showRentStep(); return; }
   await startCheckout();
 });
@@ -809,10 +867,12 @@ async function startCheckout(){
   const btn = $('#modalClaim');
   btn.disabled = true; btn.textContent = 'Redirecting to Stripe…';
   try{
+    // No asset_id: the server resolves the postcode to an engine. The browser
+    // is never told which one, or whether there were others.
     const res = await fetch(`${cfg.url}/functions/v1/create-rental-checkout`, {
       method:'POST',
       headers:{ 'Content-Type':'application/json', apikey: cfg.anonKey, Authorization: `Bearer ${cfg.anonKey}` },
-      body: JSON.stringify({ asset_id: active.id, business_name: business, contact_name: contact, email, phone })
+      body: JSON.stringify({ niche_slug: NICHE, postcode, business_name: business, contact_name: contact, email, phone })
     });
     const data = await res.json().catch(() => ({}));
     if(!res.ok || !data.url) throw new Error(data.error || 'We could not start checkout. Please try again.');
@@ -825,67 +885,7 @@ async function startCheckout(){
   }
 }
 
-/* ---- map an assets_public row to a card item ----
-   The view is flat (region_name / region_slug rather than a joined `regions`
-   object) and carries no brand_name or brand_domain. */
-function mapRow(a){
-  return {
-    id: a.id,
-    region: a.region_name || '',
-    region_slug: a.region_slug || '',
-    area: a.region_name || '',                     // {{area_name}} slot
-    tier: cap(a.tier),
-    code: TIER_CODE[a.tier] || '',
-    price: money(a.monthly_price_aud),
-    price_aud: a.monthly_price_aud,
-    // Per-engine estimate, set by us on the asset row. Null until we have
-    // real history for that engine - estimateLabel() renders nothing then.
-    typical_min: (typeof a.typical_min === 'number') ? a.typical_min : null,
-    typical_max: (typeof a.typical_max === 'number') ? a.typical_max : null,
-    floor_leads: (typeof a.floor_leads === 'number') ? a.floor_leads : null,
-    // Slot capacity is not in the schema yet - see slotLabel() below.
-    slots_taken: (typeof a.slots_taken === 'number') ? a.slots_taken : null,
-    slot_capacity: (typeof a.slot_capacity === 'number') ? a.slot_capacity : null,
-    status: a.status === 'available' ? 'open' : 'taken'
-  };
-}
-
-async function loadInventory(){
-  const cfg = window.LGR_SUPABASE || {};
-  if(!cfg.url || !cfg.anonKey || cfg.anonKey.indexOf('__') === 0){ fleetError(); return; }
-  skeleton();
-  try{
-    const sb = supabase.createClient(cfg.url, cfg.anonKey);
-    // assets_public, not assets: the base table is no longer readable with the
-    // anon key, and the view has no column that names the engine.
-    const { data, error } = await sb.from('assets_public')
-      .select('id,tier,monthly_price_aud,typical_min,typical_max,floor_leads,status,region_slug,region_name,region_sort_order,niche_slug')
-      .eq('niche_slug', NICHE)
-      .eq('sold_out', false)   // held-back areas are not offered
-      .order('region_sort_order', { ascending:true })
-      .order('tier', { ascending:true });
-    if(error) throw error;
-    INVENTORY = (data || []).map(mapRow);
-    if(!INVENTORY.length){ comingSoon(); return; }
-
-    // distinct regions (in returned order) that actually have assets
-    const seen = new Set(); REGIONS = [];
-    INVENTORY.forEach(i => { if(i.region && !seen.has(i.region)){ seen.add(i.region); REGIONS.push({ name:i.region, slug:i.region_slug }); } });
-
-    // optional ?region=<slug> prefilter (from the solar counter "Claim" link)
-    const wanted = new URLSearchParams(location.search).get('region');
-    const match = REGIONS.find(r => r.slug === wanted);
-    curRegion = match ? match.name : (REGIONS[0] ? REGIONS[0].name : null);
-
-    $('#regionSel').innerHTML = REGIONS.map(r =>
-      `<option value="${esc(r.name)}"${r.name === curRegion ? ' selected' : ''}>${esc(r.name)}</option>`).join('');
-    render();
-  }catch(e){
-    console.error('inventory load failed', e);
-    fleetError();
-  }
-}
-loadInventory();
+loadPlan();
 </script>
 
 <footer>
@@ -910,7 +910,7 @@ loadInventory();
       </div>
     </div>
     <div class="foot">
-      <p class="fine">© 2026 Lead Gen Rentals. Lead Gen Rentals runs paid advertising on its own accounts and its own campaigns. A lead means a form submission containing a name and an Australian mobile number, captured with named consent to be contacted by one identified service business. Every lead delivered to a service business is exclusive to it and named to it, is delivered to no other business, and is never resold. Renting does not grant any exclusive right to an area, a postcode or a region. Each tier carries a minimum number of leads per 30-day cycle - 10 on Starter, 20 on Growth, 30 on Scale. If a cycle delivers fewer, the engine keeps running past the cycle, at no further cost, until the minimum is met. Lead Gen Rentals does not guarantee any cost per lead, or any outcome. Lead volume varies with market conditions, season and the advertising auction, and Lead Gen Rentals does not guarantee that any lead will answer, quote or convert. Starter, Growth and Scale are service levels, each carrying a guaranteed minimum of 10, 20 and 30 leads per cycle. Billed month to month in advance - cancel any time before your next cycle begins, no lock-in and no exit fee; cancelling frees your slot. Full terms at <a href="/terms" style="color:inherit;text-decoration:underline">leadgenrentals.com.au/terms</a>.</p>
+      <p class="fine">© 2026 Lead Gen Rentals. Lead Gen Rentals owns and operates the lead generation engines and the advertising accounts behind them. The monthly fee shown is Lead Gen Rentals' service fee and does not include advertising spend. Advertising is paid by the client directly to Meta Platforms from a payment card the client puts on the ad account, at Meta's own prices; Lead Gen Rentals does not handle, invoice or mark up advertising spend. The Engine plan requires a committed minimum advertising budget of $50 per day. A lead means a form submission containing a name and an Australian mobile number, captured with named consent to be contacted by one identified service business. Every lead delivered to a client is exclusive to it, named to it, delivered to no other business and never resold. An engine is used by one client at a time. Engaging Lead Gen Rentals confers no exclusive right to any area, postcode, suburb or region. Guarantee, Engine plan: if fewer than 10 quotes, or less than $100,000 in total quoted value, are sent through the Lead Gen Rentals dashboard against leads that engine delivered in a 30 day cycle, the service fee for that cycle is refunded in full. The cycle is measured from the day advertising goes live. The guarantee is conditional on the committed advertising budget remaining funded, the ad account not being paused, edited or unlinked by the client, leads being responded to, and quotes being sent through the dashboard. Lead Gen Rentals does not guarantee any cost per lead, cost per quote, that any quote is accepted, or any revenue or other outcome. Billed month to month in advance; cancel any time before your next cycle begins, no lock-in and no exit fee. Full terms at <a href="/terms" style="color:inherit;text-decoration:underline">leadgenrentals.com.au/terms</a>.</p>
     </div>
   </div>
 </footer>

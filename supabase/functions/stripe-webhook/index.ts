@@ -125,6 +125,23 @@ async function activateRental(session: Stripe.Checkout.Session, m: Record<string
 
   const to = m.email || session.customer_details?.email || ''
   const installerId = (data as { installer_id?: string } | null)?.installer_id
+  const rentalId = (data as { rental_id?: string } | null)?.rental_id
+
+  // Open cycle 1 of the guarantee. It opens `pending` with NO dates: the clock
+  // starts when the ads go live, not when the card is charged, so the days we
+  // spend on the ad account handover come out of our time and not the client's
+  // guarantee (MODEL.md section 3.2). mark_ads_live() sets the dates later.
+  //
+  // Idempotent on (rental_id, cycle_no), so a Stripe webhook retry cannot open
+  // two cycles - and best-effort, because a client whose guarantee row failed to
+  // create still has a paid, active engagement. It is recreated by the same call
+  // when the ads are marked live.
+  if (rentalId) {
+    const { error: cycleErr } = await supabase.rpc('open_guarantee_cycle', {
+      p_rental_id: rentalId, p_cycle_no: 1,
+    })
+    if (cycleErr) console.error('open_guarantee_cycle failed (non-fatal):', cycleErr.message)
+  }
 
   // Link this rental to a dashboard (HQ) login - new account if the email is
   // new, otherwise attach to the existing one. Best-effort: a failure here
@@ -262,16 +279,23 @@ async function sendConfirmationEmail(to: string, m: Record<string, string>, magi
 
   const { data: asset } = await supabase
     .from('assets')
-    .select('brand_name, monthly_price_aud, tier, niches(name), regions(name)')
+    .select('brand_name, monthly_price_aud, min_daily_budget_aud, guarantee_quotes, ' +
+            'guarantee_pipeline_aud, guarantee_window_days, tier, niches(name)')
     .eq('id', m.asset_id)
     .maybeSingle()
 
-  const brandName = (asset as any)?.brand_name || 'your lead engine'
+  // The engine's brand is deliberately NOT in this email. Identity is disclosed
+  // once the client is in their dashboard and paid up (MODEL.md section 7), and
+  // a confirmation email is forwarded, screenshotted and quoted in ways a
+  // logged-in page is not.
   const nicheName = (asset as any)?.niches?.name || 'lead'
-  const regionName = (asset as any)?.regions?.name || ''
-  const price = (asset as any)?.monthly_price_aud ?? Number(m.monthly_price_aud || 0)
-  const TIER_LABEL: Record<string, string> = { starter: 'Starter', growth: 'Growth', scale: 'Scale' }
-  const tierLabel = TIER_LABEL[(asset as any)?.tier] || (asset as any)?.tier || 'Starter'
+  const fee = (asset as any)?.monthly_price_aud ?? Number(m.fee_aud || m.monthly_price_aud || 0)
+  const dailyBudget = Number((asset as any)?.min_daily_budget_aud ?? m.min_daily_budget_aud ?? 0)
+  const windowDays = Number((asset as any)?.guarantee_window_days ?? 30)
+  const gQuotes = (asset as any)?.guarantee_quotes ?? Number(m.guarantee_quotes || 0)
+  const gPipeline = (asset as any)?.guarantee_pipeline_aud ?? Number(m.guarantee_pipeline_aud || 0)
+  const TIER_LABEL: Record<string, string> = { engine: 'Engine', custom: 'Custom' }
+  const tierLabel = TIER_LABEL[(asset as any)?.tier] || (asset as any)?.tier || 'Engine'
   const money = (n: number) => '$' + Number(n).toLocaleString('en-AU')
   const esc = (s: string) => String(s ?? '')
     .replace(/&/g, '&amp;')
@@ -283,22 +307,37 @@ async function sendConfirmationEmail(to: string, m: Record<string, string>, magi
 
   const html = `
   <div style="font-family:-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;max-width:560px;margin:0 auto;color:#0D1117">
-    <h2 style="font-size:20px;letter-spacing:-.02em;margin:0 0 6px">You're locked in, ${esc(firstName)}.</h2>
+    <h2 style="font-size:20px;letter-spacing:-.02em;margin:0 0 6px">You're in, ${esc(firstName)}.</h2>
     <p style="font-size:15px;line-height:1.55;color:#3A424D;margin:0 0 18px">
-      Your rental of <strong>${esc(brandName)}</strong>${regionName ? ' in ' + esc(regionName) : ''} is now active.
-      Every lead it produces for you goes to your business and nobody else, with your name on the consent
-      the homeowner agrees to. Yours alone, never resold.
+      Your ${esc(nicheName.toLowerCase())} engine is allocated and it's yours alone while you're on it.
+      Every lead it produces goes to your business and nobody else, with your name on the consent
+      the homeowner agrees to. Never shared, never resold.
     </p>
     <table style="border-collapse:collapse;font-size:14px;width:100%;border:1px solid #E6E8EB;border-radius:10px;overflow:hidden">
-      <tr><td style="padding:11px 14px;color:#656D76;border-bottom:1px solid #F0F2F4">Asset</td><td style="padding:11px 14px;text-align:right;font-weight:600;border-bottom:1px solid #F0F2F4">${esc(brandName)}</td></tr>
-      <tr><td style="padding:11px 14px;color:#656D76;border-bottom:1px solid #F0F2F4">Service level</td><td style="padding:11px 14px;text-align:right;font-weight:600;border-bottom:1px solid #F0F2F4">${esc(tierLabel)}</td></tr>
-      <tr><td style="padding:11px 14px;color:#656D76">Rental</td><td style="padding:11px 14px;text-align:right;font-weight:600">${money(price)} + GST / 30 days</td></tr>
+      <tr><td style="padding:11px 14px;color:#656D76;border-bottom:1px solid #F0F2F4">Plan</td><td style="padding:11px 14px;text-align:right;font-weight:600;border-bottom:1px solid #F0F2F4">${esc(tierLabel)}</td></tr>
+      <tr><td style="padding:11px 14px;color:#656D76;border-bottom:1px solid #F0F2F4">Our fee (this invoice)</td><td style="padding:11px 14px;text-align:right;font-weight:600;border-bottom:1px solid #F0F2F4">${money(fee)} + GST / ${windowDays} days</td></tr>
+      <tr><td style="padding:11px 14px;color:#656D76;border-bottom:1px solid #F0F2F4">Your ad budget <span style="color:#98A0A8">(paid to Meta, not to us)</span></td><td style="padding:11px 14px;text-align:right;font-weight:600;border-bottom:1px solid #F0F2F4">${money(dailyBudget)}/day</td></tr>
+      ${gQuotes && gPipeline ? `<tr><td style="padding:11px 14px;color:#656D76">Guarantee</td><td style="padding:11px 14px;text-align:right;font-weight:600">${gQuotes} quotes &amp; ${money(gPipeline)} pipeline</td></tr>` : ''}
     </table>
-    <p style="font-size:15px;line-height:1.55;color:#3A424D;margin:18px 0 0">
-      <strong>What happens next:</strong> your landing page and paid campaigns go live on our accounts and our budget -
-      nothing to set up. The moment a homeowner submits, our AI texts them in your name within ~60 seconds, and the lead
-      lands with you. First leads typically arrive within a few days.
+    <p style="font-size:13px;line-height:1.55;color:#656D76;margin:12px 0 0">
+      The ${money(fee)} above is our fee and it contains no advertising spend. Your advertising is
+      billed by Meta, to your own card, at Meta's prices - we never touch it and never mark it up.
     </p>
+    <p style="font-size:15px;line-height:1.55;color:#3A424D;margin:18px 0 0">
+      <strong>What happens next - and this bit needs you:</strong>
+    </p>
+    <ol style="font-size:14px;line-height:1.7;color:#3A424D;margin:8px 0 0;padding-left:20px">
+      <li><strong>We give you access to the ad account.</strong> It's ours, it runs your engine, and you'll see every campaign, every dollar and every result in it.</li>
+      <li><strong>You add your own card to it.</strong> Meta bills that card directly for the ${money(dailyBudget)}/day. Nothing can go live until this is done - there's no one for Meta to bill.</li>
+      <li><strong>We build and launch</strong>, targeting the area you gave us.</li>
+      <li><strong>Your 30 days start the day the ads go live</strong> - not today. Getting you launched is our time to lose, not yours.</li>
+    </ol>
+    ${gQuotes && gPipeline ? `
+    <p style="font-size:14px;line-height:1.6;color:#3A424D;margin:16px 0 0;padding:12px 14px;background:#F6F8FA;border-radius:8px">
+      <strong>The guarantee:</strong> ${gQuotes} quotes sent and ${money(gPipeline)} in quoted pipeline in your first ${windowDays} days,
+      or this fee comes back in full. You'll see it tracking daily in your dashboard - you won't be
+      finding out on day 30.
+    </p>` : ''}
     ${magicLink ? `
     <p style="margin:22px 0 0">
       <a href="${esc(magicLink)}" style="display:inline-block;background:#0D1117;color:#ffffff;text-decoration:none;padding:12px 22px;border-radius:8px;font-size:14px;font-weight:600">
@@ -323,7 +362,7 @@ async function sendConfirmationEmail(to: string, m: Record<string, string>, magi
       from: `Lead Gen Rentals <${fromEmail}>`,
       to: [to],
       reply_to: 'contact@leadgenrentals.com.au',
-      subject: `You're locked in - ${brandName} is now yours`,
+      subject: `You're in - your ${nicheName.toLowerCase()} engine is allocated`,
       html,
     }),
   })
@@ -338,7 +377,8 @@ async function notifyRentalPaid(m: Record<string, string>, renterEmail: string, 
 
   const { data: asset } = await supabase
     .from('assets')
-    .select('brand_name, monthly_price_aud, niches(name), regions(name)')
+    .select('brand_name, monthly_price_aud, min_daily_budget_aud, guarantee_quotes, ' +
+            'guarantee_pipeline_aud, niches(name), regions(name)')
     .eq('id', m.asset_id)
     .maybeSingle()
 
@@ -352,24 +392,35 @@ async function notifyRentalPaid(m: Record<string, string>, renterEmail: string, 
   const brandName = (asset as any)?.brand_name || m.asset_id
   const nicheName = (asset as any)?.niches?.name || ''
   const regionName = (asset as any)?.regions?.name || ''
-  const price = (asset as any)?.monthly_price_aud ?? Number(m.monthly_price_aud || 0)
+  const fee = (asset as any)?.monthly_price_aud ?? Number(m.fee_aud || m.monthly_price_aud || 0)
+  const dailyBudget = Number((asset as any)?.min_daily_budget_aud ?? m.min_daily_budget_aud ?? 0)
+  const gQuotes = (asset as any)?.guarantee_quotes ?? Number(m.guarantee_quotes || 0)
+  const gPipeline = (asset as any)?.guarantee_pipeline_aud ?? Number(m.guarantee_pipeline_aud || 0)
   const subId = typeof session.subscription === 'string' ? session.subscription : session.subscription?.id || ''
   const row = (k: string, v: string) =>
     `<tr><td style="padding:4px 14px 4px 0;color:#656D76">${k}</td><td><strong>${v}</strong></td></tr>`
 
   const html = `
-    <h2 style="margin:0 0 14px;font-family:Arial,sans-serif">New rental - payment received</h2>
+    <h2 style="margin:0 0 14px;font-family:Arial,sans-serif">New engagement - fee received</h2>
     <table style="border-collapse:collapse;font-size:14px;font-family:Arial,sans-serif">
       ${row('Business', esc(m.business_name || ''))}
       ${row('Contact', esc(m.contact_name || '') || '-')}
       ${row('Email', `<a href="mailto:${esc(renterEmail)}">${esc(renterEmail)}</a>`)}
       ${row('Phone', esc(m.phone || '') || '-')}
-      ${row('Asset', esc(brandName))}
+      ${row('Engine', esc(brandName))}
       ${row('Trade', esc(nicheName) + (regionName ? ' - ' + esc(regionName) : ''))}
-      ${row('Rental', money(price) + ' + GST / 30 days')}
+      ${row('Service postcode', esc(m.postcode || '') || '-')}
+      ${row('Our fee', money(fee) + ' + GST / 30 days')}
+      ${row('Their Meta budget', money(dailyBudget) + '/day, direct to Meta on their own card')}
+      ${gQuotes && gPipeline ? row('Guarantee', gQuotes + ' quotes &amp; ' + money(gPipeline) + ' pipeline') : ''}
       ${row('Stripe subscription', `<code>${esc(subId)}</code>`)}
     </table>
-    <p style="margin:16px 0 0;font-size:12px;color:#888;font-family:Arial,sans-serif">The asset is now marked rented in Mission Control and the renter has been emailed a confirmation.</p>`
+    <p style="margin:16px 0 0;font-size:14px;font-family:Arial,sans-serif;padding:10px 12px;background:#FFF8E1;border-radius:6px">
+      <strong>Next: the ad account handover.</strong> Grant them access, get their card on the account,
+      then launch and mark the ads live. The guarantee clock is NOT running yet - it starts at
+      ads_live_at - and nothing can deliver until Meta has a card to bill.
+    </p>
+    <p style="margin:12px 0 0;font-size:12px;color:#888;font-family:Arial,sans-serif">The engine is marked rented in Mission Control, guarantee cycle 1 is open and pending, and the client has been emailed.</p>`
 
   const res = await fetch('https://api.resend.com/emails', {
     method: 'POST',
@@ -378,7 +429,7 @@ async function notifyRentalPaid(m: Record<string, string>, renterEmail: string, 
       from: `Lead Gen Rentals <${fromEmail}>`,
       to: ['contact@leadgenrentals.com.au'],
       reply_to: renterEmail || 'contact@leadgenrentals.com.au',
-      subject: `New rental paid - ${m.business_name || brandName}`,
+      subject: `New engagement paid - ${m.business_name || brandName}`,
       html,
     }),
   })

@@ -1357,10 +1357,15 @@ async function loadActiveOrdersDash() {
   const body  = document.getElementById("activeOrdersBody");
   if (!panel || !body || !currentCompanyId) return;
 
-  // Each tier carries a guaranteed minimum per cycle, restored in 20260831170000.
-  // rentals.floor_leads is the snapshot taken at checkout, so a renter keeps the
-  // floor they signed up on even if the asset is repriced later; the asset's
-  // floor is the fallback for rentals opened before the column came back.
+  // This used to count LEADS against a floor snapshotted on the rental. The
+  // floor is gone: the guarantee is now quotes and quoted pipeline, settled per
+  // cycle in guarantee_cycles, and a lead count rendered beside it would read as
+  // a second promise.
+  //
+  // The numbers come from guarantee_progress rather than being recomputed here.
+  // The client and Mission Control have to be looking at the same figure - if
+  // the dashboard counted quotes its own way, the two would disagree on the one
+  // day it matters, which is the day a refund is owed.
   const { data: insts } = await sb
     .from("installers").select("id").eq("company_id", currentCompanyId);
   const instIds = (insts || []).map((i) => i.id);
@@ -1368,7 +1373,7 @@ async function loadActiveOrdersDash() {
 
   const { data: rentals } = await sb
     .from("rentals")
-    .select("*, assets(id, tier, rented_until, typical_min, typical_max, floor_leads, niches(name), regions(name, state))")
+    .select("*, assets(id, tier, niches(name))")
     .in("installer_id", instIds)
     .is("ended_at", null)
     .order("started_at", { ascending: false });
@@ -1376,33 +1381,72 @@ async function loadActiveOrdersDash() {
   if (!rentals?.length) { panel.style.display = "none"; return; }
   panel.style.display = "";
 
-  // Current cycle = the 30 days ending on the asset's next renewal date.
-  const counts = await Promise.all(rentals.map((r) => {
-    const a = r.assets || {};
-    if (!a.id || !a.rented_until) return Promise.resolve(0);
-    const cycleStart = new Date(a.rented_until);
-    cycleStart.setDate(cycleStart.getDate() - 30);
-    return sb.from("asset_leads")
-      .select("id", { count: "exact", head: true })
-      .eq("installer_id", r.installer_id)
-      .eq("asset_id", a.id)
-      .gte("captured_at", cycleStart.toISOString())
-      .then(({ count }) => count || 0);
-  }));
+  const rentalIds = rentals.map(r => r.id);
+  const { data: cycles } = await sb
+    .from("guarantee_progress")
+    .select("*")
+    .in("rental_id", rentalIds)
+    .order("cycle_no", { ascending: false });
 
-  body.innerHTML = rentals.map((r, i) => {
+  const latest = {};
+  (cycles || []).forEach(c => { if (!latest[c.rental_id]) latest[c.rental_id] = c; });
+
+  const money = (n) => "$" + Math.round(Number(n || 0)).toLocaleString("en-AU");
+
+  body.innerHTML = rentals.map((r) => {
     const a = r.assets || {};
-    const delivered = counts[i];
-    const floor = r.floor_leads ?? a.floor_leads ?? null;
-    const short = floor != null && delivered < floor;
+    const c = latest[r.id];
+    const title = escapeHtml(a.niches?.name || "Your engine");
+
+    // Paid, but not launched yet. Said plainly, because the most common
+    // question at this point is "have I started paying for nothing".
+    if (!r.ads_live_at || !c || c.status === "pending") {
+      const waitingOnCard = !r.payment_method_added_at;
+      return `<div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 0;border-bottom:1px solid var(--border)">
+        <div>
+          <div style="font-weight:500">${title}</div>
+          <div style="font-size:12px;color:var(--muted)">${waitingOnCard
+            ? "Waiting on your card being added to the ad account"
+            : "Being built and launched"}</div>
+        </div>
+        <div style="text-align:right">
+          <div style="font-weight:600">Not live yet</div>
+          <div style="font-size:12px;color:var(--muted)">your 30 days start when the ads do</div>
+        </div>
+      </div>`;
+    }
+
+    const qOk = c.quotes_delivered >= c.quotes_required;
+    const pOk = Number(c.pipeline_delivered_aud) >= Number(c.pipeline_required_aud);
+    const met = qOk && pOk;
+    const settled = c.status === "met" || c.status === "shortfall";
+
+    let sub;
+    if (c.status === "shortfall") {
+      sub = "we missed it, so this cycle's fee is refunded in full";
+    } else if (c.status === "met") {
+      sub = "guarantee met";
+    } else if (met) {
+      sub = "guarantee met, and it keeps running";
+    } else if (c.days_remaining != null) {
+      sub = c.days_remaining + " day" + (c.days_remaining === 1 ? "" : "s") + " left in this cycle";
+    } else {
+      sub = "cycle in progress";
+    }
+
     return `<div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 0;border-bottom:1px solid var(--border)">
       <div>
-        <div style="font-weight:500">${escapeHtml(a.regions?.name || "Asset")}</div>
-        <div style="font-size:12px;color:var(--muted)">${escapeHtml(a.niches?.name || "")}</div>
+        <div style="font-weight:500">${title}</div>
+        <div style="font-size:12px;color:var(--muted)">Cycle ${c.cycle_no} &middot; ${c.leads_delivered} lead${c.leads_delivered === 1 ? "" : "s"} delivered</div>
       </div>
       <div style="text-align:right">
-        <div style="font-weight:600">${delivered}${floor != null ? " of " + floor : ""} lead${delivered === 1 ? "" : "s"} this cycle<span style="color:${short ? "var(--muted)" : "#0f8a4d"}">${short ? "" : " ✓"}</span></div>
-        <div style="font-size:12px;color:var(--muted)">${floor != null ? (short ? "running until your " + floor + " are delivered" : floor + " guaranteed \u2014 met") : "this cycle"}</div>
+        <div style="font-weight:600">
+          ${c.quotes_delivered} of ${c.quotes_required} quotes<span style="color:${qOk ? "#0f8a4d" : "var(--muted)"}">${qOk ? " \u2713" : ""}</span>
+        </div>
+        <div style="font-weight:600">
+          ${money(c.pipeline_delivered_aud)} of ${money(c.pipeline_required_aud)}<span style="color:${pOk ? "#0f8a4d" : "var(--muted)"}">${pOk ? " \u2713" : ""}</span>
+        </div>
+        <div style="font-size:12px;color:${c.status === "shortfall" ? "#0f8a4d" : "var(--muted)"}">${sub}</div>
       </div>
     </div>`;
   }).join("");
@@ -5568,25 +5612,30 @@ async function skipReviewRequest(requestId) {
 }
 
 // =============================================================================
-// Rent Assets
+// Start an Engine
 // =============================================================================
-// An asset is one lead generation engine: a funnel for a single trade in a
-// single area. It rents for a flat monthly rate, so there is nothing to price
-// per lead and no quantity to choose - either the asset is available or
-// somebody else already has it.
+// An engine is one lead generation funnel plus the Meta campaigns behind it. We
+// own both. It is used by one business at a time, and there are two payments:
+// our fee, billed by us, and the client's ad budget, billed by Meta to the
+// client's own card. Neither is ever shown without the other.
 //
-// The market grid below reads `assets_public`, the catalogue view, and shows
-// trade, area, tier, price and availability. It does NOT show which page or
-// domain the engine runs on: that is withheld until a slot is paid for, and the
-// base table is not readable by an account holding no live rental. Once the
-// rental exists, "Your Rentals" further down reads the full asset row and links
-// the live page. Signing up for a dashboard account is free, so this grid has
-// to assume its reader is a competitor.
+// Nothing here names the engine. Which page or domain it runs on is withheld
+// until the first fee is paid, and the base table is not readable by an account
+// holding no live engagement. Once the engagement exists, "Your Engine" further
+// down reads the full asset row and links the live page. Signing up for a
+// dashboard account is free, so everything above that line has to assume its
+// reader is a competitor.
 
-const RENT_TIERS = ['starter', 'growth', 'scale'];
+// The plan, read from the per-trade catalogue. There is no market grid of
+// individual engines any more, for the same two reasons the public page lost
+// one: exclusivity is per engine and never per area, so a grid of engines by
+// area is a territory map we do not sell; and a free dashboard signup would
+// otherwise hand a competitor the shape of our inventory. Availability is a
+// count per trade, and turning a postcode into an actual engine happens
+// server-side at checkout.
 
-let _rentAssets = [];
-let _rentMine   = [];
+let _rentPlans = [];
+let _rentMine  = [];
 
 function rentMoney(n) {
   return (n == null || n === '') ? '-' : '$' + Number(n).toLocaleString('en-AU');
@@ -5596,25 +5645,9 @@ function rentTierLabel(t) {
   return t ? t.charAt(0).toUpperCase() + t.slice(1) : '-';
 }
 
-// What a lead has worked out at on this asset: the monthly rate spread across
-// the range that engine has actually produced. Both ends come from
-// typical_min/typical_max, which are null until an engine has real history - in
-// which case this renders nothing, which is the correct output. There is no
-// floor to divide by any more (it was dropped from the schema) and no
-// guarantee to imply.
-function rentLeadRange(a) {
-  const m = Number(a.monthly_price_aud || 0);
-  const worst = a.floor_leads || a.typical_min;
-  if (!m || !worst || !a.typical_max) return null;
-  return {
-    low:  m / a.typical_max,
-    high: m / worst,   // the guaranteed minimum is the per-lead ceiling
-  };
-}
-
-// The live engine URL. Only ever called from "Your Rentals", for a rental this
-// account actually holds - never from the market grid, which has no
-// brand_domain to give it in the first place.
+// The live engine URL. Only ever called from "Your Engine", for an engagement
+// this account actually holds - never from the plan cards, which have no
+// brand_domain to give them in the first place.
 function rentEngineUrl(a) {
   const d = String(a.brand_domain || '').replace(/^https?:\/\//, '').replace(/\/.*$/, '');
   if (!d) return null;
@@ -5624,51 +5657,26 @@ function rentEngineUrl(a) {
 
 async function loadBuyLeads() {
   const loading = document.getElementById('rentLoading');
-  const grid    = document.getElementById('rentGrid');
 
   try {
     const { data, error } = await sb
-      .from('assets_public')
-      .select('id,tier,monthly_price_aud,typical_min,typical_max,floor_leads,status,niche_id,niche_slug,niche_name,region_id,region_slug,region_name,region_state')
-      .eq('status', 'available')
-      .eq('sold_out', false);
+      .from('engine_availability')
+      .select('niche_slug,niche_name,niche_status,engines_available,fee_aud,daily_budget_aud,guarantee_quotes,guarantee_pipeline_aud')
+      .gt('engines_available', 0);
     if (error) throw error;
-
-    // Reshape the flat view rows to look like the joined rows this grid used to
-    // receive, so the filter and render code below is unchanged.
-    _rentAssets = (data || []).map((a) => ({
-      ...a,
-      niches:  { id: a.niche_id,  slug: a.niche_slug,  name: a.niche_name },
-      regions: { id: a.region_id, slug: a.region_slug, name: a.region_name, state: a.region_state },
-    })).sort((a, b) =>
-      (a.regions?.name || '').localeCompare(b.regions?.name || '') ||
-      RENT_TIERS.indexOf(a.tier) - RENT_TIERS.indexOf(b.tier)
-    );
+    _rentPlans = data || [];
   } catch (err) {
-    loading.textContent = 'Could not load available assets: ' + err.message;
+    loading.textContent = 'Could not load availability: ' + err.message;
     return;
   }
 
-  // Build the filters from what is actually on the market, so we can never
-  // offer a trade or area with nothing behind it.
-  const niches = {}, areas = {};
-  _rentAssets.forEach((a) => {
-    if (a.niches) niches[a.niches.id] = a.niches;
-    if (a.regions) areas[a.regions.id] = a.regions;
-  });
-
   const nicheSel = document.getElementById('rentNicheFilter');
-  const areaSel  = document.getElementById('rentAreaFilter');
-  const keepN = nicheSel.value, keepA = areaSel.value;
-
-  nicheSel.innerHTML = '<option value="">All trades</option>' +
-    Object.values(niches).sort((a, b) => a.name.localeCompare(b.name))
-      .map((n) => `<option value="${escapeHtml(n.id)}">${escapeHtml(n.name)}</option>`).join('');
-  areaSel.innerHTML = '<option value="">All areas</option>' +
-    Object.values(areas).sort((a, b) => a.name.localeCompare(b.name))
-      .map((r) => `<option value="${escapeHtml(r.id)}">${escapeHtml(r.name)}${r.state ? ' · ' + escapeHtml(r.state) : ''}</option>`).join('');
-  nicheSel.value = keepN;
-  areaSel.value  = keepA;
+  if (nicheSel) {
+    const keep = nicheSel.value;
+    nicheSel.innerHTML = '<option value="">All trades</option>' +
+      _rentPlans.map((p) => `<option value="${escapeHtml(p.niche_slug)}">${escapeHtml(p.niche_name)}</option>`).join('');
+    nicheSel.value = keep;
+  }
 
   renderRentGrid();
   loadMyRentals();
@@ -5679,15 +5687,9 @@ function renderRentGrid() {
   const grid    = document.getElementById('rentGrid');
   const empty   = document.getElementById('rentEmpty');
 
-  const niche = document.getElementById('rentNicheFilter').value;
-  const area  = document.getElementById('rentAreaFilter').value;
-  const tier  = document.getElementById('rentTierFilter').value;
-
-  const rows = _rentAssets.filter((a) =>
-    (!niche || a.niche_id === niche) &&
-    (!area  || a.region_id === area) &&
-    (!tier  || a.tier === tier)
-  );
+  const nicheSel = document.getElementById('rentNicheFilter');
+  const niche = nicheSel ? nicheSel.value : '';
+  const rows = _rentPlans.filter((p) => !niche || p.niche_slug === niche);
 
   loading.classList.add('hidden');
   if (!rows.length) {
@@ -5699,56 +5701,72 @@ function renderRentGrid() {
   grid.classList.remove('hidden');
 
   grid.innerHTML =
-    '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px">' +
-    rows.map((a) => {
-      const r = rentLeadRange(a);
-      return `
-      <div style="border:1px solid var(--border);border-radius:12px;padding:16px;background:var(--surface,transparent);display:flex;flex-direction:column;gap:10px">
+    '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:14px">' +
+    rows.map((p) => `
+      <div style="border:1px solid var(--border);border-radius:12px;padding:16px;background:var(--surface,transparent);display:flex;flex-direction:column;gap:12px">
         <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px">
           <div>
-            <div style="font-weight:600">${escapeHtml(a.regions?.name || 'Area')}</div>
-            <div style="font-size:12px;color:var(--muted)">${escapeHtml(a.niches?.name || '')}${a.regions?.state ? ' · ' + escapeHtml(a.regions.state) : ''}</div>
+            <div style="font-weight:600">${escapeHtml(p.niche_name || 'Trade')}</div>
+            <div style="font-size:12px;color:var(--muted)">One business per engine</div>
           </div>
-          <span style="font-size:11px;font-weight:600;padding:3px 9px;border-radius:999px;background:rgba(245,158,11,.14);color:#B45309">${escapeHtml(rentTierLabel(a.tier))}</span>
+          <span style="font-size:11px;font-weight:600;padding:3px 9px;border-radius:999px;background:rgba(16,185,129,.14);color:#0f8a4d">Available</span>
         </div>
 
-        <div style="display:flex;align-items:baseline;gap:6px">
-          <span style="font-size:26px;font-weight:700">${rentMoney(a.monthly_price_aud)}</span>
-          <span style="font-size:12px;color:var(--muted)">per month + GST</span>
+        <div>
+          <div style="display:flex;align-items:baseline;gap:6px">
+            <span style="font-size:26px;font-weight:700">${rentMoney(p.fee_aud)}</span>
+            <span style="font-size:12px;color:var(--muted)">per month + GST, to us</span>
+          </div>
+          <div style="font-size:13px;margin-top:2px"><strong>plus ${rentMoney(p.daily_budget_aud)} a day</strong>
+            <span style="color:var(--muted)">charged to your own card by Meta</span></div>
         </div>
 
         <div style="font-size:13px;line-height:1.7">
-          ${a.floor_leads ? `<div><strong>${a.floor_leads}</strong> leads guaranteed each cycle</div>` : ''}
-          ${a.typical_min && a.typical_max
-            ? `<div style="color:var(--muted)">Typically ${a.typical_min} to ${a.typical_max}</div>` : ''}
-          ${r ? `<div style="color:var(--muted)">Worked out at $${r.low.toFixed(2)} to $${r.high.toFixed(2)} a lead</div>` : ''}
-          <div style="color:var(--muted)">Every lead is named to you and delivered to you alone. Under the minimum and the engine keeps running, free, until it is met.</div>
+          ${p.guarantee_quotes && p.guarantee_pipeline_aud
+            ? `<div><strong>${p.guarantee_quotes} quotes and ${rentMoney(p.guarantee_pipeline_aud)} quoted</strong> guaranteed every 30 days</div>
+               <div style="color:var(--muted)">Miss either number and our fee for that cycle is refunded in full.</div>` : ''}
+          <div style="color:var(--muted)">Our fee contains no ad spend. You pay Meta directly, at Meta's prices, and we never handle it.</div>
         </div>
 
         <div style="font-size:11px;color:var(--muted);display:flex;align-items:center;gap:5px">
           <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" aria-hidden="true"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>
-          <span>The live page and its address are shown here once your slot is paid for.</span>
+          <span>The live page and its address are shown here once your first fee is paid.</span>
         </div>
 
-        <button class="btn-primary" type="button" data-rent="${escapeHtml(a.id)}" style="margin-top:auto">Rent this asset</button>
-      </div>`;
-    }).join('') + '</div>';
+        <button class="btn-primary" type="button" data-rent="${escapeHtml(p.niche_slug)}" style="margin-top:auto">Start this engine</button>
+      </div>`).join('') + '</div>';
 
   grid.querySelectorAll('[data-rent]').forEach((b) =>
     b.addEventListener('click', () => startRental(b.getAttribute('data-rent')))
   );
 }
 
-// Checkout is the same edge function the public fleet page uses, so a rental
-// started here and one started from the website produce identical records.
-async function startRental(assetId) {
-  const asset = _rentAssets.find((a) => a.id === assetId);
-  if (!asset) return;
+// Checkout is the same edge function the public pricing page uses, so an
+// engagement started here and one started from the website produce identical
+// records. The postcode is asked for here rather than assumed, because it is
+// what the server resolves to an engine.
+async function startRental(nicheSlug) {
+  const plan = _rentPlans.find((p) => p.niche_slug === nicheSlug);
+  if (!plan) return;
 
-  const label = `${asset.regions?.name || ''} ${asset.niches?.name || ''}`.trim();
-  if (!confirm(`Rent the ${label} asset for ${rentMoney(asset.monthly_price_aud)} + GST a month?\n\nYou will be taken to Stripe to set up the subscription. The asset is held for you the moment payment succeeds.`)) return;
+  const postcode = (prompt(
+    `What postcode do you want ${plan.niche_name} work in?\n\n` +
+    `This is not a territory you are buying, and it gives you no exclusive rights to an area. ` +
+    `We use it to put you on an engine that covers you and to target your campaigns.`
+  ) || '').trim();
+  if (!postcode) return;
+  if (!/^\d{4}$/.test(postcode)) { toast('Enter a 4 digit Australian postcode.', true); return; }
 
-  const btn = document.querySelector(`[data-rent="${assetId}"]`);
+  if (!confirm(
+    `Start a ${plan.niche_name} engine?\n\n` +
+    `To us: ${rentMoney(plan.fee_aud)} + GST a month, charged now by Stripe.\n` +
+    `To Meta: ${rentMoney(plan.daily_budget_aud)} a day, charged to your own card once your ad account access is set up. This is not charged by us.\n\n` +
+    (plan.guarantee_quotes
+      ? `Guaranteed: ${plan.guarantee_quotes} quotes and ${rentMoney(plan.guarantee_pipeline_aud)} quoted every 30 days, or our fee for that cycle is refunded in full.`
+      : '')
+  )) return;
+
+  const btn = document.querySelector(`[data-rent="${nicheSlug}"]`);
   if (btn) { btn.disabled = true; btn.textContent = 'Opening checkout…'; }
 
   try {
@@ -5762,7 +5780,8 @@ async function startRental(assetId) {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_ANON_KEY },
       body: JSON.stringify({
-        asset_id: assetId,
+        niche_slug: nicheSlug,
+        postcode,
         business_name: company?.name || '',
         contact_name: '',
         email: company?.email || '',
@@ -5774,8 +5793,30 @@ async function startRental(assetId) {
     window.location.href = out.url;
   } catch (err) {
     toast(err.message, true);
-    if (btn) { btn.disabled = false; btn.textContent = 'Rent this asset'; }
+    if (btn) { btn.disabled = false; btn.textContent = 'Start this engine'; }
   }
+}
+
+// What the client sees of the ad account handover. Step two is theirs, and
+// saying so plainly is the point: an engagement that sits unlaunched for a week
+// is almost always waiting on a card nobody told them to add.
+function launchStatusCell(r) {
+  if (r.ended_at) return '<span style="color:var(--muted)">-</span>';
+  const d = (t) => new Date(t).toLocaleDateString('en-AU');
+  if (r.ads_live_at) {
+    return `<span style="color:#0f8a4d;font-weight:600">Ads live</span>
+      <div style="font-size:11px;color:var(--muted)">since ${d(r.ads_live_at)}</div>`;
+  }
+  if (!r.access_granted_at) {
+    return `<span style="font-weight:600">Setting up</span>
+      <div style="font-size:11px;color:var(--muted)">we are preparing your ad account access</div>`;
+  }
+  if (!r.payment_method_added_at) {
+    return `<span style="font-weight:600;color:#B45309">Waiting on your card</span>
+      <div style="font-size:11px;color:var(--muted)">add your card to the ad account so Meta can bill your spend. Nothing runs until it is on</div>`;
+  }
+  return `<span style="font-weight:600">Building your campaigns</span>
+    <div style="font-size:11px;color:var(--muted)">your 30 days start the day they go live</div>`;
 }
 
 async function loadMyRentals() {
@@ -5807,8 +5848,14 @@ async function loadMyRentals() {
   }
 
   const active = _rentMine.filter((r) => !r.ended_at);
+  // Both numbers, always. A monthly total on its own reads as the cost of
+  // advertising with us, and it is not - it is our fee. The Meta side is the
+  // client's own spend and is shown beside it, never folded into it.
+  const feeTotal    = active.reduce((t, r) => t + Number(r.monthly_price_aud || 0), 0);
+  const budgetTotal = active.reduce((t, r) => t + Number(r.agreed_daily_budget_aud || 0), 0);
   count.textContent = active.length
-    ? `${active.length} active · ${rentMoney(active.reduce((t, r) => t + Number(r.monthly_price_aud || 0), 0))} a month`
+    ? `${active.length} active · ${rentMoney(feeTotal)} a month to us` +
+      (budgetTotal ? ` · ${rentMoney(budgetTotal)} a day to Meta on your own card` : '')
     : 'None active';
 
   loading.classList.add('hidden');
@@ -5823,9 +5870,10 @@ async function loadMyRentals() {
   list.innerHTML =
     '<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:13px">' +
     '<thead><tr style="text-align:left;color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.04em">' +
-    '<th style="padding:8px 10px">Asset</th><th style="padding:8px 10px">Tier</th>' +
-    '<th style="padding:8px 10px">Monthly</th><th style="padding:8px 10px">Your engine</th>' +
-    '<th style="padding:8px 10px">Started</th><th style="padding:8px 10px">Status</th>' +
+    '<th style="padding:8px 10px">Engine</th><th style="padding:8px 10px">Plan</th>' +
+    '<th style="padding:8px 10px">Our fee</th><th style="padding:8px 10px">Your Meta budget</th>' +
+    '<th style="padding:8px 10px">Your engine</th>' +
+    '<th style="padding:8px 10px">Launch</th><th style="padding:8px 10px">Status</th>' +
     '</tr></thead><tbody>' +
     _rentMine.map((r) => {
       const a = r.assets || {};
@@ -5835,19 +5883,20 @@ async function loadMyRentals() {
           <div style="font-size:11px;color:var(--muted)">${escapeHtml(a.niches?.name || '')}</div>
         </td>
         <td style="padding:8px 10px">${escapeHtml(rentTierLabel(a.tier))}</td>
-        <td style="padding:8px 10px;font-weight:500">${rentMoney(r.monthly_price_aud)}</td>
+        <td style="padding:8px 10px;font-weight:500">${rentMoney(r.monthly_price_aud)}<div style="font-size:11px;color:var(--muted)">+ GST, to us</div></td>
+        <td style="padding:8px 10px;font-weight:500">${r.agreed_daily_budget_aud ? rentMoney(r.agreed_daily_budget_aud) + ' / day' : '-'}<div style="font-size:11px;color:var(--muted)">billed by Meta to your card</div></td>
         <td style="padding:8px 10px">${
           rentEngineUrl(a)
             ? `<a href="${escapeHtml(rentEngineUrl(a))}" target="_blank" rel="noopener" style="color:var(--accent,#F59E0B)">${escapeHtml(a.brand_name || 'Open the live page')} &rarr;</a>`
             : '<span style="color:var(--muted)">Going live shortly</span>'
         }</td>
-        <td style="padding:8px 10px;color:var(--muted)">${r.started_at ? new Date(r.started_at).toLocaleDateString('en-AU') : '-'}</td>
+        <td style="padding:8px 10px">${launchStatusCell(r)}</td>
         <td style="padding:8px 10px">${r.ended_at ? 'Ended ' + new Date(r.ended_at).toLocaleDateString('en-AU') : '<span style="color:#0f8a4d;font-weight:600">Active</span>'}</td>
       </tr>`;
     }).join('') + '</tbody></table></div>';
 }
 
-['rentNicheFilter', 'rentAreaFilter', 'rentTierFilter'].forEach((id) => {
+['rentNicheFilter'].forEach((id) => {
   document.addEventListener('DOMContentLoaded', () => {
     document.getElementById(id)?.addEventListener('change', renderRentGrid);
   });

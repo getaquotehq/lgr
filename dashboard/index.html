@@ -635,7 +635,7 @@ tbody tr:hover{background:var(--side-hover);transition:background .1s}
                 <span id="oc_step2_icon" style="font-size:18px;flex-shrink:0">○</span>
                 <div>
                   <strong style="font-size:13px">Receive your first lead</strong>
-                  <span class="muted" style="display:block;font-size:12px">Leads are delivered automatically from your rented assets and inbound SMS</span>
+                  <span class="muted" style="display:block;font-size:12px">Leads are delivered automatically from your engine and inbound SMS</span>
                 </div>
               </div>
               <div id="oc_step3" class="check-row" style="cursor:pointer" onclick="navigateTo('buy-leads')">
@@ -644,7 +644,7 @@ tbody tr:hover{background:var(--side-hover);transition:background .1s}
                   <strong style="font-size:13px">Fund your first engine</strong>
                   <span class="muted" style="display:block;font-size:12px">Deploy budget on a live engine and start receiving exclusive named leads</span>
                 </div>
-                <span style="margin-left:auto;font-size:12px;color:var(--accent,#F59E0B)">Rent assets →</span>
+                <span style="margin-left:auto;font-size:12px;color:var(--accent,#F59E0B)">Start an engine →</span>
               </div>
             </div>
           </div>
@@ -700,7 +700,7 @@ tbody tr:hover{background:var(--side-hover);transition:background .1s}
               <p>Assets you're renting, and how many leads have landed this cycle.</p>
             </div>
             <div class="actions">
-              <button class="btn" type="button" onclick="navigateTo('buy-leads')">Manage rentals →</button>
+              <button class="btn" type="button" onclick="navigateTo('buy-leads')">Your engine →</button>
             </div>
           </div>
           <div class="panel-b" id="activeOrdersBody"><div class="notice">Loading…</div></div>
@@ -783,7 +783,7 @@ tbody tr:hover{background:var(--side-hover);transition:background .1s}
               <h3>No leads yet</h3>
               <p>Leads flow in automatically in real-time.</p>
               <div style="display:flex;gap:8px;margin-top:4px">
-                <button class="btn" type="button" onclick="navigateTo('buy-leads')">Rent assets →</button>
+                <button class="btn" type="button" onclick="navigateTo('buy-leads')">Start an engine →</button>
               </div>
             </div>
             <div id="leadsPagination" style="display:flex;justify-content:center;gap:10px;margin-top:14px"></div>
@@ -1622,41 +1622,35 @@ tbody tr:hover{background:var(--side-hover);transition:background .1s}
         </div>
       </div>
 
-      <!-- Rent Assets -->
+      <!-- Start an Engine -->
       <div id="page-buy-leads" class="page hidden">
         <div class="stack">
           <section class="panel">
             <div class="panel-h">
               <div>
-                <h2>Rent an Asset</h2>
-                <p>An asset is a lead generation engine for one trade in one area. Rent it and every lead it produces is yours alone, for a flat monthly rate. Which page and domain an engine runs on is shown under Your Rentals once your slot is paid for &mdash; we don't publish live funnels to accounts that aren't renting them.</p>
+                <h2>Start an Engine</h2>
+                <p>An engine is a lead generation funnel and the Meta campaigns behind it. We own it and run it, and it is used by one business at a time. You pay us a flat monthly fee and you pay Meta directly for your own ad budget, on your own card. Which page and domain an engine runs on is shown under Your Engine once your first fee is paid: we do not publish live funnels to accounts that are not paying for them.</p>
               </div>
               <div style="display:flex;gap:6px;flex-wrap:wrap">
                 <select id="rentNicheFilter" class="filter-select"><option value="">All trades</option></select>
-                <select id="rentAreaFilter" class="filter-select"><option value="">All areas</option></select>
-                <select id="rentTierFilter" class="filter-select">
-                  <option value="">All tiers</option>
-                  <option value="starter">Starter</option>
-                  <option value="growth">Growth</option>
-                  <option value="scale">Scale</option>
-                </select>
+
               </div>
             </div>
             <div class="panel-b">
-              <div id="rentLoading" class="notice">Loading available assets…</div>
+              <div id="rentLoading" class="notice">Loading availability…</div>
               <div id="rentGrid" class="hidden"></div>
-              <div id="rentEmpty" class="notice hidden">Nothing available matching that. Try a different trade or area.</div>
+              <div id="rentEmpty" class="notice hidden">Every engine is taken right now. Email contact@leadgenrentals.com.au and we will come to you first when one frees up.</div>
             </div>
           </section>
 
           <section class="panel">
             <div class="panel-h">
-              <div><h2>Your Rentals</h2><p id="rentMineCount">Loading…</p><p style="font-size:12px;color:var(--muted);margin-top:4px">Your engine links through to the live page homeowners land on.</p></div>
+              <div><h2>Your Engine</h2><p id="rentMineCount">Loading…</p><p style="font-size:12px;color:var(--muted);margin-top:4px">Your engine links through to the live page homeowners land on. The fee column is ours; the Meta column is billed to your own card and never passes through us.</p></div>
             </div>
             <div class="panel-b">
               <div id="rentMineLoading" class="notice">Loading…</div>
               <div id="rentMine" class="hidden"></div>
-              <div id="rentMineEmpty" class="notice hidden">You are not renting an asset yet.</div>
+              <div id="rentMineEmpty" class="notice hidden">You do not have an engine running yet.</div>
             </div>
           </section>
         </div>

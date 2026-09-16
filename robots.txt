@@ -1,4 +1,18 @@
-# MAINTENANCE MODE - the live version is kept at robots.txt.live
-# Restore with: mv robots.txt.live robots.txt
 User-agent: *
-Disallow: /
+Allow: /
+
+# Application surfaces, not marketing pages. Mission Control is the internal
+# admin panel and /dashboard is the client app - both are login-gated, but
+# neither belongs in search results.
+Disallow: /mc/
+Disallow: /dashboard/
+
+# Internal reference documents. GitHub Pages serves every file in the repo, so
+# these are reachable by URL whether or not they are linked. MODEL.md in
+# particular is the internal description of the commercial model and is not
+# written for a prospect to read.
+Disallow: /MODEL.md
+Disallow: /DASHBOARD.md
+Disallow: /README.md
+
+Sitemap: https://leadgenrentals.com.au/sitemap.xml

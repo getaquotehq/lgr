@@ -503,9 +503,8 @@ h1{font-size:18px;font-weight:500}
           <select id="lgrRegionFilter" class="filter-select"><option value="">All areas</option></select>
           <select id="lgrTierFilter" class="filter-select">
             <option value="">All tiers</option>
-            <option value="starter">Starter</option>
-            <option value="growth">Growth</option>
-            <option value="scale">Scale</option>
+            <option value="engine">Engine</option>
+            <option value="custom">Custom</option>
           </select>
           <select id="lgrStatusFilter" class="filter-select">
             <option value="">All statuses</option>
@@ -524,9 +523,10 @@ h1{font-size:18px;font-weight:500}
         <div id="lgrTierEditor" class="hidden" style="margin-bottom:14px;padding:14px;background:var(--surface);border:1px solid var(--border);border-radius:10px">
           <div style="font-weight:600;margin-bottom:4px">Tier pricing</div>
           <p style="font-size:12px;color:var(--muted);margin-bottom:12px">
-            Sets the monthly rent and the
-            guaranteed floor for every asset on a tier. The per-lead range clients see is derived: monthly &divide; typical max is the
-            low end, monthly &divide; floor is the ceiling. Leave the niche filter on "all niches" to reprice the whole fleet.
+            Sets OUR MONTHLY FEE for every engine on a tier. This is not what the client spends on
+            advertising: that goes to Meta on the client's own card and never passes through us. The
+            committed daily budget and the guarantee are set per engine in the table below. Leave the
+            niche filter on "all niches" to reprice the whole fleet.
           </p>
           <div style="margin-bottom:10px">
             <label class="bank-lbl" style="max-width:260px">Apply to niche
@@ -543,9 +543,9 @@ h1{font-size:18px;font-weight:500}
         <div id="lgrAreaEditor" class="hidden" style="margin-bottom:14px;padding:14px;background:var(--surface);border:1px solid var(--border);border-radius:10px">
           <div style="font-weight:600;margin-bottom:4px">Area pricing</div>
           <p style="font-size:12px;color:var(--muted);margin-bottom:12px">
-            Prices one area on its own, when it should not sit on the standard tier price. Blank boxes are left untouched.
-            The high end of the per-lead range is monthly &divide; the engine's typical minimum &mdash; a typical figure, not a worst case,
-            because no volume is guaranteed. You can also hold the whole area back from sale without renting it out.
+            Prices one area on its own, when it should not sit on the standard tier fee. Blank boxes are left untouched.
+            This sets OUR FEE only. The client's Meta budget and the guarantee are set per engine in the table below.
+            You can also hold the whole area back from sale without putting a client on it.
           </p>
           <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:10px">
             <label class="bank-lbl" style="max-width:260px">Area
@@ -2817,23 +2817,23 @@ h1{font-size:18px;font-weight:500}
   // ══ Lead Gen Rentals ════════════════════════════════════════════════════════
   // Rental assets are priced per tier, not per lead: the client pays a flat
   // monthly rent and no volume is guaranteed (MODEL.md section 4). The per-lead
-  // figure shown on the site is derived from the rent and the engine's typical
-  // range, so editing either here moves what the public pages quote - and what
-  // they quote is a typical range, never a floor.
+  // monthly_price_aud is OUR FEE and contains no ad spend; min_daily_budget_aud
+  // is what the client commits to on their own card, billed by Meta. They are
+  // edited side by side on purpose, because a fee shown alone reads as the total
+  // cost of advertising with us. typical_min/max are internal forecasting and
+  // are no longer published anywhere.
   var lgrAssets = [], lgrNiches = [], lgrRentals = [], lgrPending = [], lgrEditAsset = null;
-  var LGR_TIERS = ['starter', 'growth', 'scale'];
+  var LGR_TIERS = ['engine', 'custom'];
 
   function lgrMoney(n) { return (n == null || n === '') ? '-' : '$' + Number(n).toLocaleString('en-AU'); }
   function lgrTierLabel(t) { return t ? t.charAt(0).toUpperCase() + t.slice(1) : '-'; }
 
-  // monthly / typical_max = the low end; monthly / typical_min = the high end.
-  function lgrLeadRange(a) {
-    var m = Number(a.monthly_price_aud || 0);
-    // The floor is the per-lead ceiling: the most a lead can cost if a cycle
-    // only ever delivers the guaranteed minimum.
-    var worst = a.floor_leads || a.typical_min;
-    if (!m || !worst || !a.typical_max) return '-';
-    return '$' + (m / a.typical_max).toFixed(2) + ' - $' + (m / worst).toFixed(2);
+  // The guarantee, as one short cell. Both numbers or neither: an engine
+  // promising quotes without a pipeline figure, or the reverse, is a half
+  // promise nobody can settle.
+  function lgrGuarantee(a) {
+    if (!a.guarantee_quotes || !a.guarantee_pipeline_aud) return '-';
+    return a.guarantee_quotes + ' quotes / ' + lgrMoney(a.guarantee_pipeline_aud);
   }
 
   function lgrStatusPill(status) {
@@ -3029,8 +3029,8 @@ h1{font-size:18px;font-weight:500}
       '<thead><tr style="text-align:left;color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.04em">' +
       '<th style="padding:8px 10px">Asset</th><th style="padding:8px 10px">Area</th>' +
       '<th style="padding:8px 10px">Niche</th><th style="padding:8px 10px">Tier</th>' +
-      '<th style="padding:8px 10px">Monthly</th><th style="padding:8px 10px">Floor</th>' +
-      '<th style="padding:8px 10px">Typical</th><th style="padding:8px 10px">$/lead</th>' +
+      '<th style="padding:8px 10px">Our fee</th><th style="padding:8px 10px">Their $/day to Meta</th>' +
+      '<th style="padding:8px 10px">Typical leads</th><th style="padding:8px 10px">Guarantee</th>' +
       '<th style="padding:8px 10px">Status</th><th style="padding:8px 10px">Rented by</th>' +
       '<th style="padding:8px 10px"></th></tr></thead><tbody>' +
       rows.map(lgrAssetRow).join('') + '</tbody></table></div>';
@@ -3076,9 +3076,9 @@ h1{font-size:18px;font-weight:500}
         '<td style="padding:8px 10px">' + niche + '</td>' +
         '<td style="padding:8px 10px">' + escapeHtml(lgrTierLabel(a.tier)) + '</td>' +
         '<td style="padding:8px 10px;font-weight:500">' + lgrMoney(a.monthly_price_aud) + '</td>' +
-        '<td style="padding:8px 10px;font-weight:500">' + (a.floor_leads == null ? '-' : a.floor_leads) + '</td>' +
-        '<td style="padding:8px 10px;color:var(--muted)">' + (a.typical_min || '-') + '–' + (a.typical_max || '-') + '</td>' +
-        '<td style="padding:8px 10px;white-space:nowrap">' + lgrLeadRange(a) + '</td>' +
+        '<td style="padding:8px 10px;font-weight:500">' + (a.min_daily_budget_aud == null ? '-' : lgrMoney(a.min_daily_budget_aud)) + '</td>' +
+        '<td style="padding:8px 10px;color:var(--muted)">' + (a.typical_min || '-') + ' to ' + (a.typical_max || '-') + '</td>' +
+        '<td style="padding:8px 10px;white-space:nowrap">' + lgrGuarantee(a) + '</td>' +
         '<td style="padding:8px 10px">' + (a.sold_out
             ? '<span class="pill" style="background:#7f1d1d;color:#fff">sold out</span>'
             : lgrStatusPill(a.status)) + '</td>' +
@@ -3100,11 +3100,13 @@ h1{font-size:18px;font-weight:500}
           return '<option value="' + t + '"' + (a.tier === t ? ' selected' : '') + '>' + lgrTierLabel(t) + '</option>';
         }).join('') + '</select></td>' +
       '<td style="padding:8px 10px"><input id="lgrEdMonthly" type="number" min="0" step="50" value="' + (a.monthly_price_aud || '') + '" style="' + inp + '"></td>' +
-      '<td style="padding:8px 10px"><input id="lgrEdFloor" type="number" min="1" step="1" value="' + (a.floor_leads || '') + '" style="' + inp + '"></td>' +
+      '<td style="padding:8px 10px"><input id="lgrEdBudget" type="number" min="0" step="5" value="' + (a.min_daily_budget_aud || '') + '" style="' + inp + '"></td>' +
       '<td style="padding:8px 10px;white-space:nowrap">' +
         '<input id="lgrEdMin" type="number" min="1" step="1" value="' + (a.typical_min || '') + '" style="' + inp + ';width:60px">' +
         ' <input id="lgrEdMax" type="number" min="1" step="1" value="' + (a.typical_max || '') + '" style="' + inp + ';width:60px"></td>' +
-      '<td style="padding:8px 10px;color:var(--muted)">recalculated</td>' +
+      '<td style="padding:8px 10px;white-space:nowrap">' +
+        '<input id="lgrEdGQuotes" type="number" min="0" step="1" value="' + (a.guarantee_quotes || '') + '" style="' + inp + ';width:55px" title="Quotes guaranteed per cycle">' +
+        ' <input id="lgrEdGPipe" type="number" min="0" step="1000" value="' + (a.guarantee_pipeline_aud || '') + '" style="' + inp + ';width:85px" title="Quoted pipeline guaranteed per cycle"></td>' +
       '<td style="padding:8px 10px"><select id="lgrEdStatus" style="' + inp + ';width:110px">' +
         ['available', 'rented', 'paused', 'retired'].map(function (st) {
           return '<option value="' + st + '"' + (a.status === st ? ' selected' : '') + '>' + st + '</option>';
@@ -3124,22 +3126,23 @@ h1{font-size:18px;font-weight:500}
     var patch = {
       tier:              document.getElementById('lgrEdTier').value,
       status:            document.getElementById('lgrEdStatus').value,
-      monthly_price_aud: num('lgrEdMonthly'),
-      floor_leads:       num('lgrEdFloor'),
-      typical_min:       num('lgrEdMin'),
-      typical_max:       num('lgrEdMax'),
+      monthly_price_aud:      num('lgrEdMonthly'),
+      min_daily_budget_aud:   num('lgrEdBudget'),
+      guarantee_quotes:       num('lgrEdGQuotes'),
+      guarantee_pipeline_aud: num('lgrEdGPipe'),
+      typical_min:            num('lgrEdMin'),
+      typical_max:            num('lgrEdMax'),
     };
 
     if (patch.typical_min && patch.typical_max && patch.typical_min > patch.typical_max) {
       toast('Typical minimum cannot exceed the maximum', true);
       return;
     }
-    if (patch.floor_leads && patch.typical_min && patch.floor_leads > patch.typical_min) {
-      toast('The guaranteed floor cannot be above the typical minimum', true);
-      return;
-    }
-    if (patch.typical_min && patch.typical_max && patch.typical_min > patch.typical_max) {
-      toast('The typical minimum cannot be above the typical maximum', true);
+    // Both guarantee numbers or neither. One on its own cannot be settled:
+    // settle_guarantee_cycle needs a quotes target AND a pipeline target, and an
+    // engine carrying half a promise opens no cycle at all.
+    if (!!patch.guarantee_quotes !== !!patch.guarantee_pipeline_aud) {
+      toast('Set both guarantee numbers, or neither', true);
       return;
     }
     // Freeing an asset must also clear the tenant, or the fleet still reads as taken.
@@ -3248,12 +3251,14 @@ h1{font-size:18px;font-weight:500}
     if (!confirm('Reprice ' + lgrTierLabel(tier) + ' in ' + areaName + '?\n\n' +
                  'Rented assets keep billing at their agreed rate until the subscription renews.')) return;
 
-    // set_area_pricing dropped p_floor in 20260828120000; it only sets price.
+    // set_area_pricing takes p_fee now, not p_price - renamed with the model so
+    // a call site cannot quietly mean "total cost". It can also set the daily
+    // budget and the guarantee; this control only moves the fee.
     // The typical minimum is a per-asset column, so it is applied separately.
     if (price !== null) {
       var res = await sb.rpc('set_area_pricing', {
         p_region_id: regionId, p_tier: tier,
-        p_price: price, p_niche_id: nicheId,
+        p_fee: price, p_niche_id: nicheId,
       });
       if (res.error) { toast('Repricing failed: ' + res.error.message, true); return; }
       toast(res.data ? res.data + ' asset(s) repriced' : 'Already at those prices');
@@ -3286,7 +3291,8 @@ h1{font-size:18px;font-weight:500}
       if (!other) continue;
       var res = await sb.rpc('set_area_pricing', {
         p_region_id: regionId, p_tier: t,
-        p_price: other.monthly_price_aud, p_floor: other.floor_leads,
+        p_fee: other.monthly_price_aud,
+        p_daily_budget: other.min_daily_budget_aud,
         p_niche_id: nicheId,
       });
       if (res.error) { toast('Reset failed: ' + res.error.message, true); return; }
@@ -3338,7 +3344,10 @@ h1{font-size:18px;font-weight:500}
       var sample = lgrAssets.filter(function (a) { return a.tier === t; })[0] || {};
       return '<div style="display:grid;grid-template-columns:110px repeat(3,1fr) auto;gap:8px;align-items:end;margin-bottom:8px">' +
         '<div style="font-weight:600;padding-bottom:8px">' + lgrTierLabel(t) + '</div>' +
-        '<label class="bank-lbl">Monthly<input id="lgrBulk_' + t + '_monthly" class="bank-in" style="' + inp + '" type="number" min="0" step="50" value="' + (sample.monthly_price_aud || '') + '"></label>' +
+        '<label class="bank-lbl">Our fee /mo<input id="lgrBulk_' + t + '_monthly" class="bank-in" style="' + inp + '" type="number" min="0" step="50" value="' + (sample.monthly_price_aud || '') + '"></label>' +
+        '<label class="bank-lbl">Their $/day to Meta<input id="lgrBulk_' + t + '_budget" class="bank-in" style="' + inp + '" type="number" min="0" step="5" value="' + (sample.min_daily_budget_aud || '') + '"></label>' +
+        '<label class="bank-lbl">Guarantee quotes<input id="lgrBulk_' + t + '_gquotes" class="bank-in" style="' + inp + '" type="number" min="0" step="1" value="' + (sample.guarantee_quotes || '') + '"></label>' +
+        '<label class="bank-lbl">Guarantee pipeline<input id="lgrBulk_' + t + '_gpipe" class="bank-in" style="' + inp + '" type="number" min="0" step="1000" value="' + (sample.guarantee_pipeline_aud || '') + '"></label>' +
         '<label class="bank-lbl">Typical min<input id="lgrBulk_' + t + '_min" class="bank-in" style="' + inp + '" type="number" min="1" step="1" value="' + (sample.typical_min || '') + '"></label>' +
         '<label class="bank-lbl">Typical max<input id="lgrBulk_' + t + '_max" class="bank-in" style="' + inp + '" type="number" min="1" step="1" value="' + (sample.typical_max || '') + '"></label>' +
         '<button class="btn2 btn-sm" type="button" data-lgr-bulk="' + t + '" style="margin-bottom:2px">Apply</button>' +
@@ -3361,12 +3370,18 @@ h1{font-size:18px;font-weight:500}
   function updateLgrBulkNote(tier) {
     var note = document.getElementById('lgrBulkNote_' + tier);
     if (!note) return;
+    // Deliberately no derived cost-per-lead any more. It was computed from our
+    // fee, which no longer buys any advertising, so the figure it produced was
+    // meaningless. What the client actually spends per lead depends on their own
+    // Meta budget, which is their bill and not ours to quote.
     var m   = Number(document.getElementById('lgrBulk_' + tier + '_monthly').value || 0);
-    var min = Number(document.getElementById('lgrBulk_' + tier + '_min').value || 0);
-    var max = Number(document.getElementById('lgrBulk_' + tier + '_max').value || 0);
-    note.textContent = (m && min && max)
-      ? 'Clients see ' + min + '-' + max + ' leads in a typical month, about $' +
-        (m / max).toFixed(2) + ' - $' + (m / min).toFixed(2) + ' per lead. Typical, not guaranteed.'
+    var b   = Number(document.getElementById('lgrBulk_' + tier + '_budget').value || 0);
+    var gq  = Number(document.getElementById('lgrBulk_' + tier + '_gquotes').value || 0);
+    var gp  = Number(document.getElementById('lgrBulk_' + tier + '_gpipe').value || 0);
+    note.textContent = m
+      ? 'Client pays us ' + lgrMoney(m) + ' + GST a month' +
+        (b ? ', and Meta ' + lgrMoney(b) + ' a day on their own card (about ' + lgrMoney(b * 30) + ' a cycle)' : '') +
+        (gq && gp ? '. Guaranteed ' + gq + ' quotes and ' + lgrMoney(gp) + ' quoted, or that fee is refunded in full.' : '.')
       : '';
   }
 
@@ -3376,12 +3391,19 @@ h1{font-size:18px;font-weight:500}
       return v === '' ? null : Number(v);
     };
     var patch = {
-      monthly_price_aud: num('monthly'),
-      typical_min:       num('min'),
-      typical_max:       num('max'),
+      monthly_price_aud:      num('monthly'),
+      min_daily_budget_aud:   num('budget'),
+      guarantee_quotes:       num('gquotes'),
+      guarantee_pipeline_aud: num('gpipe'),
+      typical_min:            num('min'),
+      typical_max:            num('max'),
     };
     if (patch.monthly_price_aud == null) {
-      toast('Monthly price is required', true);
+      toast('Our monthly fee is required', true);
+      return;
+    }
+    if (!!patch.guarantee_quotes !== !!patch.guarantee_pipeline_aud) {
+      toast('Set both guarantee numbers, or neither', true);
       return;
     }
     if (patch.typical_min && patch.typical_max && patch.typical_min > patch.typical_max) {
@@ -3398,8 +3420,10 @@ h1{font-size:18px;font-weight:500}
     var nicheName = nicheId
       ? (lgrNiches.filter(function (n) { return n.id === nicheId; })[0] || {}).name
       : 'every niche';
-    if (!confirm('Reprice ' + scope.length + ' ' + tier + ' asset(s) across ' + nicheName + '?\n\n' +
-                 'Rented assets keep billing at their agreed rate until the subscription renews.')) return;
+    if (!confirm('Reprice ' + scope.length + ' ' + tier + ' engine(s) across ' + nicheName + '?\n\n' +
+                 'This changes OUR FEE, the committed Meta budget and the guarantee on the catalogue.\n\n' +
+                 'Live engagements are unaffected: rentals snapshot the fee, budget and guarantee they were sold, ' +
+                 'and open guarantee cycles keep the numbers they opened with.')) return;
 
     // Update in one statement rather than per-row so a partial failure can't
     // leave the tier priced two different ways.

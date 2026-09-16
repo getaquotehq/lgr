@@ -4,239 +4,380 @@ Reference for how the product actually works. Marketing copy, legal terms and
 the schema all have to agree with this document. If a change disagrees with
 this file, one of the two is wrong.
 
-## 1. Shared engines, lead-level exclusivity
+> **This replaced the shared-slot rental model in September 2026.** The old
+> model is described at the bottom (§10) so that anything still carrying its
+> language can be recognised and removed. Nothing in §10 is current.
 
-An **engine** is a landing page for one trade and area plus the paid campaigns
-behind it, run and funded on LGR's own ad accounts.
+---
 
-Engines are **shared**. Several service businesses rent slots on the same
-engine at the same time. Renting a slot conveys:
+## 1. What LGR sells
 
-- no exclusivity over an area, postcode, region, or the engine itself
-- no right to prevent LGR renting the remaining slots to competitors
+LGR owns an **engine**: a lead funnel - brand, domain, landing page, forms,
+tracking - and the Meta advertising system behind it. LGR built it, LGR runs
+it, LGR keeps it.
 
-What is exclusive is the **lead**. Exclusivity is enforced at the moment of
-capture by named consent (§2), not by geography.
+A client buys two things and only two things:
 
-## 2. Named consent, and how a visitor is assigned
+1. **Exclusive use of one engine's output.** While their engagement is live, no
+   other business is put on that engine. Every lead it produces is theirs.
+2. **LGR running the campaigns on it** - targeting, creative, budget pacing,
+   optimisation, and the platform the leads land in.
 
-Before the enquiry form is rendered, the engine picks exactly one renter and
-writes that renter's business name into the consent line. The homeowner
-consents to be contacted by **that business, by name**. The resulting lead is
-delivered to that business alone.
+The client does not buy the engine. The brand, the domain, the page, the pixel
+history, the ad account and the audiences stay with LGR when they leave. That
+is the asset, and it is the reason this business exists rather than an agency.
 
-### 2.1 Assignment is sticky per person, forever
+### 1.1 Exclusivity is per engine
 
-**Once a person is assigned to a renter, they are never reassigned.** Every
+**One client per engine.** That is the whole exclusivity story and it is the
+only one that may be told.
+
+LGR does **not** sell territory, and no copy, quote, email or contract may
+suggest it does. An engine is not a postcode, a suburb, a city or a state, and
+renting one grants no right over any area. Two LGR engines may well be running
+in the same place. What a client is promised is that *their* engine is theirs.
+
+Regions exist in the schema because a funnel brand needs a page per area and
+leads have to be routed to the right client. That is plumbing. It is not a
+public axis, it is not in the catalogue, and it is not something a client
+chooses from a dropdown. The client tells us the area they service; we put them
+on an engine that covers it.
+
+---
+
+## 2. The money: two flows, deliberately separate
+
+This is the part everything else hangs off. Get it wrong in copy and the whole
+offer misrepresents itself.
+
+### 2.1 The service fee - paid to LGR
+
+A **fixed monthly fee**, prepaid by card, month to month.
+
+| Tier | Fee (ex GST) | What it is |
+| --- | --- | --- |
+| Engine | **$1,250 / month** | The standard product. One engine, run by us, with the §3 guarantee. |
+| Custom | **from $2,500 / month** | Scoped engagement - multiple engines, a higher budget, a bespoke guarantee. Quoted, not published as a self-serve price. |
+
+The fee covers LGR's work and LGR's asset. **It contains no advertising
+spend.** It is never described as "including ad spend", "ad spend inclusive",
+"all in", or anything that could be read that way.
+
+### 2.2 The media spend - paid to Meta
+
+The client pays Meta **directly**. LGR never handles, holds, invoices, fronts
+or marks up a cent of it.
+
+Mechanically:
+
+1. LGR grants the client access to the LGR-owned Meta ad account that runs
+   their engine.
+2. The client adds **their own payment card** as that ad account's payment
+   method.
+3. Meta charges that card for the campaigns. The client sees every charge in
+   Meta's own billing, at Meta's own prices.
+
+Access is granted at the narrowest Meta role that gives the client both:
+(a) visibility of every campaign, every dollar and every result, and (b)
+ownership of the payment method on the account. **The client does not get
+campaign edit rights** - they can see everything and change nothing, which is
+what stops a well-meaning edit breaking a guarantee we are carrying.
+
+The **Engine** tier commits to a minimum of **$50 / day** ($1,500 per 30-day
+cycle) on that card. Custom-tier budgets are agreed in scope.
+
+### 2.3 Why it is built this way
+
+- **Transparency without trust.** The client does not have to believe a spend
+  report. They are looking at Meta's invoice for their own card.
+- **No markup, and none to be accused of.** LGR earns a stated fee. There is no
+  incentive to inflate a budget, and no way to.
+- **Risk stays bounded.** LGR's exposure is its own fee plus the cost of
+  delivering the guarantee - not a media budget it has fronted for someone
+  else. A client who stops paying Meta stops their own ads, not our cash flow.
+- **The asset compounds.** Every dollar the client spends runs through LGR's
+  pixel, on LGR's domain, into LGR's audiences. The client gets the leads; LGR
+  gets a better engine. Both are real and both are disclosed.
+
+### 2.4 The rule that keeps it honest
+
+Whenever a price appears anywhere - a page, an email, a Stripe line item, a
+contract - the ad budget appears beside it. A fee without the budget next to it
+reads as the total cost, and it is not.
+
+---
+
+## 3. The guarantee
+
+### 3.1 Engine tier: 10 quotes and $100,000 of quoted pipeline, every 30 days
+
+In each 30-day cycle LGR guarantees the client will send **10 quotes** totalling
+**$100,000 or more** in quoted pipeline, from leads their engine produced.
+
+**Miss either number and the fee for that cycle is refunded in full.** No
+pro-rata, no credit note, no make-good month. The money goes back. The client
+keeps every lead, quote and job the cycle produced.
+
+It applies to **every cycle**, not just the first. That is deliberate: our
+exposure is capped at one month's fee at a time, and a guarantee that expires
+after the trial month is a trial offer wearing a guarantee's clothes.
+
+### 3.2 Definitions - and they are load-bearing
+
+- A **quote** is a priced quote issued to a named homeowner through the LGR
+  dashboard, with a total and a `sent_at` timestamp.
+- **Quoted pipeline** is the sum of those quotes' totals.
+- Only quotes against **leads the engine delivered** count. A client's own
+  referrals and walk-ins are their business and do not discharge our guarantee.
+- The cycle runs **30 days from the day the ads go live**, not from the day the
+  card was charged. Onboarding time is ours to lose, not theirs.
+
+### 3.3 What the client has to hold up
+
+The guarantee is conditional, the conditions are short, and every one of them
+is stated on the page and in the terms rather than buried:
+
+- the agreed minimum budget stays funded on the card for the whole cycle;
+- the ad account is not paused, edited, unlinked or have its card removed;
+- leads get a response - the platform sends the first one automatically, so in
+  practice this means not switching it off;
+- quotes are sent through the dashboard, because that is how they are counted.
+
+If the client's card declines and Meta stops delivery, the **clock pauses**. It
+does not fail. A cycle interrupted by something the client can fix is resumed,
+not forfeited - we are not looking for a technicality to escape on.
+
+### 3.4 What is not guaranteed, on any tier
+
+- any cost per lead, per quote or per job
+- that a quote is accepted, or that any revenue results
+- any number above the guarantee
+- anything at all on the Custom tier beyond what its own scope document says
+
+### 3.5 The rule that protects the product
+
+A shortfall is closed by **spending more and selling better** - never by
+widening the targeting past what the client services, loosening the lead
+validation, or counting something that is not a real priced quote to a real
+homeowner. Server-side validation runs before delivery and is not relaxed to
+reach a number. A guarantee met with junk costs more than a refund.
+
+---
+
+## 4. How a client comes on
+
+1. **They tell us their trade and the area they service.** Not a territory
+   choice - an input, so we can allocate an engine that covers it.
+2. **They pay the first fee.** Stripe, monthly subscription, card.
+3. **We grant ad account access. They add their card.** This is the step the
+   whole model turns on, so it is tracked as its own fulfilment state and
+   nothing is called live until it is done.
+4. **We build and launch.** Targeting set to their service area, creative and
+   copy from the engine's existing library.
+5. **Ads go live - the cycle clock starts here.** §3.2.
+6. **Leads land in the dashboard**, named to them on the consent the homeowner
+   agreed to, and the platform responds within about 60 seconds.
+
+Cancellation is self-serve in the dashboard before the next cycle. On
+cancellation the ad account access is removed, the client takes their card off
+it, and the engine returns to inventory.
+
+---
+
+## 5. Lead exclusivity and named consent
+
+Before the enquiry form is rendered, the engine writes the client's business
+name into the consent line. The homeowner consents to be contacted by **that
+business, by name**, and the lead is delivered to that business alone. It is
+never resold and never shared.
+
+With one client per engine this is mostly bookkeeping - there is nobody else on
+the engine to confuse it with. It still matters for the case that crosses
+engines.
+
+### 5.1 Assignment is sticky per person, forever
+
+**Once a person is assigned to a client, they are never reassigned.** Every
 later visit and every later submission by that person - on the same engine or
-any other LGR engine - stays bound to the renter they were first assigned to.
+any other LGR engine - stays bound to the client they were first assigned to.
 
-This is the rule that makes shared engines safe. Two renters can never be
-given the same homeowner, and a homeowner is never contacted by two LGR
-renters about the same enquiry.
+This is what stops one homeowner reaching two LGR clients through two different
+funnel brands. LGR runs several brands over the same areas, so without it a
+single homeowner could genuinely be sold to two businesses. Closed by
+`lead_assignments` (see §8).
 
-### 2.2 Identity resolution order
+### 5.2 Identity resolution order
 
-A person is identified by the strongest signal available, in this order:
+A person is identified by the strongest signal available:
 
 1. **Phone number** (normalised to E.164) - strongest, since it is the
    delivered contact field and is carrier-validated at capture.
 2. **Email address** (lowercased, trimmed).
-3. **Device/browser identifier** - a first-party cookie plus a fallback
-   fingerprint, used only before a person has given contact details.
+3. **Device/browser identifier** - first-party cookie plus fallback
+   fingerprint, used only before contact details exist. *Not built.*
 
-A visitor with no prior record is assigned at first render and the assignment
-is written against whichever identifiers are known at that moment. When a
-previously anonymous visitor later submits contact details, the
-device-scoped assignment is upgraded to a phone/email-scoped one. Where two
-records turn out to be the same person (same phone arriving under a different
-device), the **earliest** assignment wins and the later record is merged into
-it. Earliest-wins is what makes the rule deterministic under races.
+Where two records turn out to be the same person, the **earliest** assignment
+wins and the later merges into it. Earliest-wins is what makes it deterministic
+under races.
 
-### 2.3 Choosing a renter for a genuinely new person
+### 5.3 Duplicate submissions
 
-Only new people get chosen for. The selection is over the renters with an
-active, paid, non-cancelled slot on that engine, and should equalise assigned
-volume across slots over time rather than strictly alternate. Weighted
-least-assigned (pick the active slot with the fewest assignments in the
-current period, ties broken at random) is the intended policy.
+The same person submitting again within 30 days is a duplicate of the first. It
+goes to the same client or to nobody. It is never delivered to a different
+business.
 
-Note the consequence for capacity: the slot cap exists precisely because this
-divides a finite stream of visitors. More slots means fewer assignments per
-slot. Raising a cap dilutes every existing renter, which is why caps are hard.
+---
 
-### 2.4 Duplicate submissions
+## 6. Risk posture
 
-Where the same person submits again within 30 days, the later submission is a
-duplicate of the first. It is delivered to the same renter or not at all. It
-is never delivered to a different business.
+**LGR's downside is one month's fee per client per cycle, and the cost of the
+work.** Billing is prepaid via Stripe; the guarantee remedy is a refund of that
+same prepayment. There is no media spend on LGR's balance sheet to lose, and no
+outcome promised beyond §3.
 
-## 3. Tiers are service levels
+**The client's downside is one cycle of media spend**, which they can see the
+whole of in Meta's billing, against a fee that comes back if we miss.
 
-`starter` / `growth` / `scale` describe how much campaign weight sits behind a
-slot. They are **not**:
+The soft levers that carry perceived risk:
 
-- a lead count
-- a floor or minimum
-- a commitment to spend any stated or auditable amount
-
-Never publish a specific deployed-spend figure, in copy or in terms. LGR runs
-the campaigns as it sees fit.
-
-### 3.1 The published typical range
-
-Each tier carries a typical monthly range - currently 10-14 / 20-28 / 30-42 for
-solar - stored per engine in `assets.typical_min` / `typical_max` and shown on
-the pricing tiers, the fleet cards and the dashboard market grid. At the
-published prices this is $79-$110 a lead on every tier, which is deliberate: a
-tier is a service level, not a volume discount, so the per-lead economics should
-not move between them.
-
-The range is an **estimate we publish**, and the rules around it are strict:
-
-- The typical range and the floor are different numbers and must never be
-  conflated in copy. The floor is the promise; the typical range is what the
-  engine usually does. A card showing a typical range without the floor beside
-  it reads as a promise it is not.
-- A period between the floor and the typical range is normal and is not a
-  breach. A period below the floor triggers the §4 remedy.
-- It lives in the data, never derived in the page from price or tier. Changing
-  what is published is then a data change with an audit trail, and an engine we
-  will not stand behind a number for simply has nulls and renders no range.
-
-`estimateLabel()` in `fleet.html` renders nothing when either column is null,
-which stays the correct output for such an engine.
-
-## 4. What is guaranteed, and what is not
-
-**Guaranteed:**
-
-- a **minimum number of leads per 30-day cycle** on every tier - 10 on starter,
-  20 on growth, 30 on scale. Stored per engine in `assets.floor_leads` and
-  snapshotted onto `rentals.floor_leads` at checkout, so a renter keeps the
-  floor they bought even if the engine is repriced later.
-- every lead named to a renter is delivered to that renter and no other
-- assignment of a person to a renter is permanent (§2.1)
-- the engine runs for each period the renter has paid for
-
-**The remedy when a cycle falls short:** the engine keeps running past the
-cycle, at no further cost and with no further billing, until the floor has been
-delivered. The next cycle does not start until it has. No cash refund, no
-credit - the obligation is discharged in advertising, which is the thing LGR
-controls.
-
-**The rule that protects the product:** a shortfall is filled by *spending
-more*, never by widening the service area, loosening the postcode gate, or
-lowering what counts as a lead. The validation in §5 runs server-side before
-delivery and is not to be relaxed to reach a floor. Filling a floor with weak
-leads spends the only asset this business has.
-
-**Still not guaranteed, on any tier:**
-
-- any cost per lead
-- any outcome - that a lead answers, quotes or converts
-- any volume *above* the floor. The typical ranges in §3.1 are what an engine
-  usually produces; the floor is the promise.
-
-## 5. Risk posture
-
-**LGR's risk is zero by construction.** Billing is prepaid via Stripe - no
-period runs that has not been paid for - and nothing promises an outcome.
-
-**The renter's perceived risk is carried entirely by soft levers**, never by a
-guarantee:
-
-- month to month, no lock-in, no exit fee, self-serve cancel that frees the slot
-- "the engine is shared, but named consent means your lead is yours alone"
-- transparent published pricing per trade and area, no "contact us" dead ends
+- month to month, no lock-in, no exit fee, self-serve cancel
+- the fee is refunded if the guarantee is missed - the strongest lever, and the
+  reason the others do less work than they used to
+- every advertising dollar visible in the client's own Meta account
+- transparent published pricing, with the budget stated beside the fee
 - preview-before-pay: the *form* a homeowner fills in, with the prospect's own
-  business name filled into the consent line live at checkout, before a card is
-  charged. Never the engine's page, brand name or domain - see §6.
-- a dashboard showing campaign activity alongside leads delivered, so a thin
-  period visibly shows LGR did what it promised without LGR having promised a
-  number
+  business name in the consent line, live at checkout. Never the engine's page,
+  brand or domain - see §7
+- a dashboard showing campaign activity beside leads, quotes and pipeline, so
+  guarantee progress is visible daily rather than argued about on day 30
 
-## 6. Engine identity is not public
+---
 
-An engine's **identity** - its brand name, its domain and the live page itself -
-is disclosed to a renter when their slot is paid for, and to nobody else. What
-is public is the **catalogue**: trade, area, tier, price, availability.
+## 7. Engine identity is not public
 
-The reason is asymmetry. A prospect gains nothing from the domain that the area,
-trade, level, price and the consent-line preview do not already give them. An
-adversary gains everything: with the URL a competitor or an ex-renter can fill a
-funnel we fund the ads for with rubbish, mass-report the ads to the platform, or
-clone it outright. Anti-spam measures raise the cost of each junk submission;
-they do nothing about a report or a clone, and nothing about the fact that the
-target was published. So the identity is withheld and the trust levers in §5 -
-named consent shown live at checkout, published pricing, month-to-month, the
-dashboard - carry the risk instead. None of them require naming the engine.
+An engine's **identity** - brand name, domain, and the live page - is disclosed
+to a client once they are paid up, and to nobody else. What is public is the
+**catalogue**: trade, tier, fee, budget and whether anything is available.
+
+The reason is asymmetry. A prospect gains nothing from the domain that the
+trade, tier, price, guarantee and consent-line preview do not already give
+them. An adversary gains everything: with the URL, a competitor or an ex-client
+can pour junk into a funnel the client is paying to run, mass-report the ads,
+or clone it outright. Anti-spam raises the cost of a junk submission; it does
+nothing about a report or a clone.
 
 Enforced in the database, not the markup:
 
-- `public.assets_public` is the catalogue view (trade, area, tier, price,
-  availability). It is what `anon` reads, and it has no identity columns.
+- `public.assets_public` is the catalogue view - trade, tier, fee, budget,
+  guarantee, availability. It is what `anon` reads and it has **no identity
+  columns and no region columns**.
 - `anon` has no SELECT on `public.assets` at all.
-- `authenticated` reads a full asset row only through the
-  `renter reads own engines` policy: an asset they hold a live `rentals` row
-  against. A free dashboard account with no rental sees exactly what anon sees.
+- `authenticated` reads a full asset row only through `renter reads own
+  engines`: an asset they hold a live `rentals` row against. A free dashboard
+  account with no engagement sees exactly what anon sees.
 - Super admins are unaffected; Mission Control reads and writes the base table.
 
-The consequence for copy: nothing anywhere may promise a prospect that they will
-see the page, the brand or the URL before paying. "You see your name on the
-consent line before you pay" is true and is the promise to make. "You see the
-engine before you pay" is not.
+**The consequence for copy:** nothing may promise a prospect they will see the
+page, the brand or the URL before paying. "You see your name on the consent
+line before you pay" is true and is the promise to make. "You see the engine
+before you pay" is not.
 
-## 7. Implementation status
+---
 
-Phase 1 (copy, positioning, legal) is done. The following are **specified here
-but not yet built** - see the Phase 2 notes in the handover:
+## 8. How this is implemented
 
-- `assets` has no slot-capacity columns; it still models one renter per asset
-  (`assets.rented_by`, `status available|rented`). `fleet.html:slotLabel()`
-  deliberately renders a qualitative label rather than inventing a count.
-- ~~No assignment table exists~~ **Done (§2.1).** `lead_assignments` binds a
-  person to the first renter they were delivered to, keyed on phone then email,
-  and `insert_lead` refuses to deliver that person to anyone else afterwards -
-  the lead is recorded as `invalid` with `delivery_error =
-  'assigned_to_another_renter'` so it is auditable rather than silently dropped.
-  Earliest assignment wins, enforced by two partial unique indexes plus a
-  re-read, so it is deterministic under races.
+### 8.1 Schema
 
-  This mattered more than the one-renter-per-asset shape suggested. Consent-name
-  routing was always correct - one submission, one named business, never shared.
-  But three engines cover each region on identical postcodes, so renting two of
-  them to two installers meant one homeowner could reach both through two
-  separate enquiries. That is now closed.
+| Thing | Where it lives |
+| --- | --- |
+| The engine | `assets` - `tier` is `engine` or `custom`, `monthly_price_aud` is the **fee only**, `min_daily_budget_aud` is what the client commits to Meta |
+| The guarantee, per engine | `assets.guarantee_quotes`, `guarantee_pipeline_aud`, `guarantee_window_days` |
+| The engagement | `rentals` - snapshots fee, budget and guarantee at checkout so repricing the engine never moves a live client's deal |
+| Ad account handover | `rentals.meta_ad_account_id`, `access_granted_at`, `payment_method_added_at`, `ads_live_at`, `ads_paused_at` |
+| The promise and the outcome | `guarantee_cycles` - one row per 30-day cycle, with what was required, what was delivered, and what remedy was paid |
+| Public catalogue | `assets_public` - no identity, **no region** |
+| Person → client binding | `lead_assignments` (§5.1) |
 
-  Still not built from §2.2: the device/browser identifier for visitors who have
-  not given contact details yet, and merging two records that turn out to be one
-  person. A person using both a different phone and a different email reads as
-  new.
+`assets.monthly_price_aud` is a **fee**, not a total. Do not reintroduce a
+column or a label that implies otherwise, and do not resurrect `floor_leads` -
+the guarantee is quotes and pipeline now, and two competing guarantee numbers
+is how a business ends up honouring the wrong one.
 
-### 7.1 Live inventory
+### 8.2 The cycle
 
-The fleet is stocked: 108 solar engines, three brands across all 36 regions,
-$1,100 / $2,200 / $3,300, seeded by `20260831140100`. 105 are sellable; the
-three australian-capital-territory rows are held back because that region
-duplicates Canberra's postcodes.
+`guarantee_cycles` is opened `pending` at checkout with no dates. It starts when
+`rentals.ads_live_at` is stamped, which is also what sets `starts_at` /
+`ends_at`. `public.recalc_guarantee_cycle()` recomputes delivered quotes and
+pipeline from the dashboard's own `quotes` table; `public.settle_guarantee_cycle()`
+closes a finished cycle as `met` or `shortfall` and records the refund.
 
-`regions.postcodes` is populated (`20260831140000`). This mattered more than it
-looks: an empty patch means "no coverage" in `submit-lead`, not "everywhere", so
-before that migration no lead could be delivered to anyone under any
-circumstances - a renter could have paid and received nothing, silently.
+Measuring quotes requires engine leads to exist as dashboard leads, so
+`deliver-lead` mirrors each delivered `asset_leads` row into `public.leads` via
+`public.sync_asset_lead_to_company()`, tagged `source = 'lgr_engine'`. Without
+that mirror the guarantee is unmeasurable, which is why it is not optional.
 
-Battery has a niche and a price list but **no funnel site**, and `submit-lead`
-routes on `brand_domain`. So there are no battery engines and the battery page
-stays coming-soon. Same for HVAC, roofing and renovations: their pages publish
-prices and a qualitative service level, but until a funnel exists for them there
-is nothing to seed and no typical range to publish. Do not seed a niche whose
-funnel does not exist - a listing with no page behind it is a listing that takes
-money and delivers nothing.
-- ~~`assets.floor_leads` / `rentals.floor_leads` still exist~~ **Done.** The
-  floor columns are dropped from `assets`, `rentals` and `rental_checkouts`;
-  `activate_rental` no longer copies a floor onto the rental; `set_area_pricing`
-  lost its `p_floor` argument; and `area_pricing_overview` no longer computes
-  `worst_case_per_lead`. Mission Control's below-floor alerting, pace table and
-  "outstanding to floor" tracking are gone with them. Tiers were left exactly as
-  they were - `assets_tier_check` is still a plain starter/growth/scale enum.
+### 8.3 Not built
+
+- the device/browser identifier in §5.2, and record merging. A person using
+  both a different phone and a different email still reads as new.
+- automatic Stripe refunds on settlement. `settle_guarantee_cycle` records the
+  remedy as owed; issuing it is a person in Mission Control. Deliberate for
+  now - the first refunds should be looked at by a human.
+
+### 8.4 Live inventory
+
+108 solar engines: three brands (AU Solar Quotes, Clear Solar Quotes, Premium
+Solar Quotes) across all 36 regions, all on the Engine tier at $1,250 + $50/day.
+105 are sellable; the three `australian-capital-territory` rows are held back
+because that region duplicates Canberra's postcodes.
+
+Brand no longer implies tier. It used to - starter/growth/scale mapped one to
+one onto the three funnel brands - and that was a pricing ladder dressed as
+inventory. Tier is now the service level; brand is which funnel a client sits
+on, and the client never sees it anyway (§7).
+
+Battery, HVAC, roofing and renovations have niches and price lists but **no
+funnel site**, and `submit-lead` routes on `brand_domain`, so there are no
+engines to sell and their pages stay coming-soon. Do not seed a niche whose
+funnel does not exist - a listing with no page behind it takes money and
+delivers nothing.
+
+---
+
+## 9. Copy rules, in one place
+
+Things that are true and may be said:
+
+- "We own the engine and run the ads. You pay us a fixed fee and pay Meta
+  directly for the advertising."
+- "10 quotes and $100,000 in quoted pipeline in 30 days, or your fee is
+  refunded in full."
+- "Your engine is yours alone while you're on it."
+- "Every advertising dollar is charged to your card by Meta. We never touch it."
+- "You see your business name on the consent line before you pay."
+
+Things that are false, or true-but-forbidden, and may never be said:
+
+- anything implying the fee includes advertising spend
+- any territory, area, postcode, suburb or region exclusivity
+- any promise that the prospect will see the engine, brand or domain before
+  paying
+- any guaranteed cost per lead, or any guaranteed outcome beyond §3.1
+- any specific deployed-spend figure of LGR's own
+- "guaranteed leads", "minimum leads", or a lead floor of any kind
+
+---
+
+## 10. What this replaced (historical - not current)
+
+Until September 2026 LGR sold **slots on shared engines**: several service
+businesses rented the same engine at once, LGR funded the advertising out of a
+flat monthly rental of $1,100/$2,200/$3,300, tiers were named
+starter/growth/scale and mapped to the three funnel brands, and the guarantee
+was a **lead floor** - 10/20/30 leads per 30-day cycle, remedied by running the
+engine on past the cycle unbilled rather than by a refund. A "typical range"
+(10-14 / 20-28 / 30-42) was published beside the floor.
+
+All of it is gone: the floor, the typical ranges, the three-tier ladder, the
+slot-sharing, and LGR funding media. If you find that language anywhere, it is
+a leftover, not a second product.

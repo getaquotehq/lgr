@@ -1,7 +1,7 @@
 # Lead Gen Rentals - Client Dashboard
 
-The installer-facing platform: renters log in here to see their leads, run the
-AI SMS agent, dispute bad leads and manage their account.
+The client-facing platform: clients log in here to see their leads, watch their
+guarantee track, run the AI SMS agent, send quotes and manage their account.
 
 The Lead Gen Rentals client platform. It
 lives inside this repo rather than a separate one, served from the same domain:
@@ -63,7 +63,13 @@ Edge functions and migrations live with the rest of the project in
   ported workflow was removed; deploy from the Supabase dashboard or CLI.
 - Email copy inside the functions still reads as generic platform text - worth
   a pass for LGR tone before go-live.
-- There is no lgr <-> dashboard sync layer yet. The pieces
-  (`sync-to-hq` / `sync-from-mc` and the dispute/scrub round trip) would need
-  porting if you want the same two-way lead-credit flow. Since both sides now
-  share one database, most of that could be done in SQL instead.
+- **Engine leads are mirrored into the platform** by
+  `sync_asset_lead_to_company()` (migration `20260916000200`), called by
+  `deliver-lead`. This is not optional plumbing: the guarantee is measured in
+  quotes, `quotes.lead_id` points at `public.leads`, and an engine lead that
+  never reaches that table can never count toward it. A delivered engine lead
+  with a null `mirrored_lead_id` means an installer with no linked company, and
+  that engagement's guarantee is unmeasurable until it is linked.
+- The dispute/scrub round trip from the old `sync-to-hq` / `sync-from-mc` pair
+  is still unported. Since both sides share one database, most of it could be
+  done in SQL.

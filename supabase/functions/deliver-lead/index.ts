@@ -7,6 +7,10 @@
 // over the installer's preferred channel(s) and writes each attempt into
 // lead_delivery_log, then stamps leads.delivered_at.
 //
+// It then MIRRORS the lead into public.leads for the installer's company, so it
+// appears in their dashboard and so quotes written against it count toward the
+// quote guarantee. See sync_asset_lead_to_company (20260916000200).
+//
 // Request:  POST { "lead_id": "<uuid>" }   (installer_id optional override)
 // Secrets:  SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY (auto-injected),
 //           RESEND_API_KEY, RESEND_FROM_EMAIL,
@@ -219,7 +223,36 @@ Deno.serve(async (req: Request) => {
       delivery_error: anyOk ? null : firstErr,
     }).eq("id", lead_id);
 
-    return jsonResponse({ success: anyOk, lead_id, installer_id: recipientId, results });
+    // ── mirror the lead into the client platform ────────────────────────────
+    // Email and SMS get the lead to the client; this gets it into their
+    // dashboard, where the AI agent works it and where a quote can be written
+    // against it. That last part is not cosmetic: the guarantee is measured in
+    // quotes, quotes hang off public.leads, and an engine lead that never
+    // reaches that table can never count toward it (MODEL.md section 8.2).
+    //
+    // Idempotent on asset_leads.mirrored_lead_id, so a redelivery does not
+    // double the client's lead count. Best-effort and last: a mirror failure
+    // must not make a lead that was successfully emailed and texted look
+    // undelivered. It is retried by the next delivery attempt, and an engine
+    // lead sitting unmirrored is indexed for Mission Control to find.
+    let mirroredLeadId: string | null = null;
+    try {
+      const { data: mirrored, error: mirrorErr } = await supabase
+        .rpc("sync_asset_lead_to_company", { p_asset_lead_id: lead_id });
+      if (mirrorErr) throw mirrorErr;
+      mirroredLeadId = (mirrored as string) ?? null;
+      if (!mirroredLeadId) {
+        // Null means the installer has no dashboard company linked. The lead was
+        // still delivered - but this engagement's guarantee is unmeasurable
+        // until the account is linked, so it is logged loudly rather than
+        // shrugged off.
+        console.warn(`deliver-lead: lead ${lead_id} not mirrored - installer ${recipientId} has no linked company`);
+      }
+    } catch (e) {
+      console.error("deliver-lead: sync_asset_lead_to_company failed (non-fatal):", e);
+    }
+
+    return jsonResponse({ success: anyOk, lead_id, installer_id: recipientId, mirrored_lead_id: mirroredLeadId, results });
   } catch (err) {
     return jsonResponse({ error: err instanceof Error ? err.message : "Internal server error" }, 500);
   }

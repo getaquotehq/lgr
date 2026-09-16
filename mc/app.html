@@ -373,7 +373,7 @@ td.mono{font-family:var(--mono);font-size:12px}
           <input type="search" id="af-search" placeholder="Search brand or domain…" oninput="renderAssets()">
           <select class="fs" id="af-niche" onchange="renderAssets()" style="width:auto"><option value="">All niches</option></select>
           <select class="fs" id="af-region" onchange="renderAssets()" style="width:auto"><option value="">All regions</option></select>
-          <select class="fs" id="af-tier" onchange="renderAssets()" style="width:auto"><option value="">All tiers</option><option value="starter">Starter</option><option value="growth">Growth</option><option value="scale">Scale</option></select>
+          <select class="fs" id="af-tier" onchange="renderAssets()" style="width:auto"><option value="">All tiers</option><option value="engine">Engine</option><option value="custom">Custom</option></select>
           <select class="fs" id="af-status" onchange="renderAssets()" style="width:auto"><option value="">All statuses</option><option value="available">Available</option><option value="rented">Rented</option><option value="maintenance">Maintenance</option><option value="__soldout">Sold out (held)</option></select>
           <button class="btn btn-xs" onclick="bulkAreaSoldOut(true)" title="Mark every asset in the selected area as sold out">Hold area</button>
           <button class="btn btn-xs" onclick="bulkAreaSoldOut(false)" title="Put every asset in the selected area back on sale">Release area</button>
@@ -399,8 +399,8 @@ td.mono{font-family:var(--mono);font-size:12px}
         </div>
         <div class="twrap">
           <table>
-            <thead><tr><th>Asset</th><th>Installer</th><th>Started</th><th>Ended</th><th>Monthly</th><th>Status</th><th></th></tr></thead>
-            <tbody id="rentals-tbody"><tr><td colspan="7" class="empty">Loading…</td></tr></tbody>
+            <thead><tr><th>Engine</th><th>Client</th><th>Started</th><th>Our fee</th><th>Launch</th><th>Guarantee</th><th>Status</th><th></th></tr></thead>
+            <tbody id="rentals-tbody"><tr><td colspan="8" class="empty">Loading…</td></tr></tbody>
           </table>
         </div>
       </div>
@@ -601,10 +601,10 @@ td.mono{font-family:var(--mono);font-size:12px}
           <table>
             <thead><tr>
               <th>Area</th>
-              <th>Starter</th><th>Growth</th><th>Scale</th>
+              <th>Engine (our fee)</th><th>Custom (our fee)</th>
               <th></th>
             </tr></thead>
-            <tbody id="pricing-tbody"><tr><td colspan="5" class="empty">Loading…</td></tr></tbody>
+            <tbody id="pricing-tbody"><tr><td colspan="4" class="empty">Loading…</td></tr></tbody>
           </table>
         </div>
       </div>
@@ -634,11 +634,14 @@ td.mono{font-family:var(--mono);font-size:12px}
       <div class="frow"><label class="flabel">Brand domain <a id="ma-preview-link" href="#" target="_blank" rel="noopener" style="display:none;float:right;font-weight:600;color:var(--acc);text-decoration:none">Open preview ↗</a></label><input class="fi" id="ma-domain" placeholder="yourbrand.com.au" oninput="syncPreviewLink()"></div>
       <div class="frow"><label class="flabel">Niche *</label><select class="fs" id="ma-niche"></select></div>
       <div class="frow"><label class="flabel">Region *</label><select class="fs" id="ma-region"></select></div>
-      <div class="frow"><label class="flabel">Tier *</label><select class="fs" id="ma-tier" onchange="applyTierDefaults()"><option value="starter">Starter</option><option value="growth">Growth</option><option value="scale">Scale</option></select><div class="fhint">Auto-fills the standard price (overridable)</div></div>
+      <div class="frow"><label class="flabel">Tier *</label><select class="fs" id="ma-tier" onchange="applyTierDefaults()"><option value="engine">Engine</option><option value="custom">Custom</option></select><div class="fhint">Auto-fills the standard fee, budget and guarantee (all overridable)</div></div>
       <div class="frow"><label class="flabel">Status *</label><select class="fs" id="ma-status" onchange="onAssetStatusChange()"><option value="available">Available</option><option value="rented">Rented</option><option value="maintenance">Maintenance</option></select></div>
-      <div class="frow"><label class="flabel">Monthly price (AUD) *</label><input class="fi" id="ma-price" type="number" min="0"></div>
-      <div class="frow"><label class="flabel">Typical min / mo</label><input class="fi" id="ma-tmin" type="number" min="0"></div>
-      <div class="frow"><label class="flabel">Typical max / mo</label><input class="fi" id="ma-tmax" type="number" min="0"></div>
+      <div class="frow"><label class="flabel">Our fee, AUD/mo *</label><input class="fi" id="ma-price" type="number" min="0"><div class="fhint">Ex GST. Our fee only - contains no ad spend</div></div>
+      <div class="frow"><label class="flabel">Their Meta budget, AUD/day</label><input class="fi" id="ma-budget" type="number" min="0" step="5"><div class="fhint">Committed minimum, billed by Meta to the client's own card. Never invoiced by us</div></div>
+      <div class="frow"><label class="flabel">Guarantee: quotes / cycle</label><input class="fi" id="ma-gquotes" type="number" min="0"><div class="fhint">Blank = no guarantee on this engine</div></div>
+      <div class="frow"><label class="flabel">Guarantee: pipeline AUD / cycle</label><input class="fi" id="ma-gpipe" type="number" min="0" step="1000"><div class="fhint">Miss either number and the cycle fee is refunded in full</div></div>
+      <div class="frow"><label class="flabel">Typical leads min / mo</label><input class="fi" id="ma-tmin" type="number" min="0"><div class="fhint">Internal forecasting only. Not published</div></div>
+      <div class="frow"><label class="flabel">Typical leads max / mo</label><input class="fi" id="ma-tmax" type="number" min="0"><div class="fhint">Internal forecasting only. Not published</div></div>
       <div class="frow" id="ma-rentedby-row"><label class="flabel">Rented by</label><select class="fs" id="ma-rentedby"><option value="">- none -</option></select></div>
       <div class="frow" id="ma-renteduntil-row"><label class="flabel">Rented until</label><input class="fi" id="ma-until" type="date"></div>
     </div>
@@ -801,7 +804,15 @@ td.mono{font-family:var(--mono);font-size:12px}
 'use strict';
 const CFG = window.LGR_MC_SUPABASE || {};
 let db, currentUser;
-const TIER_DEFAULTS = { starter:{price:1100}, growth:{price:2200}, scale:{price:3300} };
+/* The published plans. `price` is OUR FEE and contains no advertising spend -
+   the client pays Meta directly from their own card. budget is what they commit
+   to on that card, and it is stored beside the fee so the two can never be
+   shown apart. quotes/pipeline are the guarantee; miss either and the fee for
+   that cycle is refunded in full. See MODEL.md sections 2 and 3. */
+const TIER_DEFAULTS = {
+  engine: { price:1250, budget:50,   quotes:10, pipeline:100000 },
+  custom: { price:2500, budget:null, quotes:null, pipeline:null },
+};
 
 /* caches */
 let _niches=[], _regions=[], _installers=[], _assets=[];
@@ -1003,10 +1014,16 @@ function nav(panel, el){
    set_area_pricing(), which is one atomic statement gated on super-admin in
    the database rather than only here.
 
-   There is no floor and no per-lead ceiling: the fee is the whole commercial
-   promise, and no lead volume is guaranteed on any tier.
+   The number in these boxes is OUR FEE. It is not what the client spends on
+   advertising: that goes to Meta, on the client's own card, and never passes
+   through us. The committed daily budget and the guarantee are set per engine
+   in the asset editor, not here, because they move far less often than price.
+
+   There is no lead floor. The guarantee is quotes and quoted pipeline, settled
+   per cycle in guarantee_cycles, and a second volume promise living in the
+   pricing screen is how the wrong one ends up being honoured.
    ════════════════════════════════════════════════════════════════════════ */
-const PR_TIERS = ['starter','growth','scale'];
+const PR_TIERS = ['engine','custom'];
 let _pricing = [];
 
 async function loadPricing(){
@@ -1015,11 +1032,13 @@ async function loadPricing(){
             .is('deleted_at', null);
   if(niche) q = q.eq('niche_id', niche);
   const { data, error } = await q;
-  if(error){ $('pricing-tbody').innerHTML = `<tr><td colspan="6" class="empty" style="color:var(--red)">${esc(error.message)}</td></tr>`; return; }
+  if(error){ $('pricing-tbody').innerHTML = `<tr><td colspan="4" class="empty" style="color:var(--red)">${esc(error.message)}</td></tr>`; return; }
   _pricing = data || [];
 
   const g = PR_TIERS.map(t=>`${t} ${fmtAud(TIER_DEFAULTS[t].price)}`).join(' \u00b7 ');
-  $('pr-general').innerHTML = `<b>General price:</b> ${esc(g)} per 30 days. Anything differing from it is highlighted.`;
+  $('pr-general').innerHTML = `<b>General fee:</b> ${esc(g)} per 30 days, ex GST. This is OUR fee only - `
+    + `the client's ad budget is paid to Meta on their own card and is set per engine. `
+    + `Anything differing from the general fee is highlighted.`;
   renderPricing();
 }
 
@@ -1057,7 +1076,7 @@ function renderPricing(){
         <button class="btn btn-xs" onclick="resetAreaToGeneral('${rid}')" title="Put this area back on the standard tier price">Reset</button>
       </td>
     </tr>`;
-  }).join('') : '<tr><td colspan="5" class="empty">No assets to price.</td></tr>';
+  }).join('') : '<tr><td colspan="4" class="empty">No assets to price.</td></tr>';
 }
 
 function prDirty(el){ el.classList.add('dirty'); }
@@ -1074,8 +1093,10 @@ async function saveAreaPricing(regionId){
     if(price===null) continue;
     if(isNaN(price)||price<=0){ toast(`${t}: price must be above zero`, true); return; }
     touched++;
+    // p_fee, not p_price: the argument was renamed with the model so that a
+    // call site cannot quietly mean "total cost" any more.
     const { data, error } = await db.rpc('set_area_pricing', {
-      p_region_id: regionId, p_tier: t, p_price: price, p_niche_id: niche,
+      p_region_id: regionId, p_tier: t, p_fee: price, p_niche_id: niche,
     });
     if(error){ toast(error.message, true); return; }
     changed += (data||0);
@@ -1104,7 +1125,7 @@ async function prApplyGeneral(regionIds){
     for(const t of PR_TIERS){
       const { data, error } = await db.rpc('set_area_pricing', {
         p_region_id: rid, p_tier: t,
-        p_price: TIER_DEFAULTS[t].price,
+        p_fee: TIER_DEFAULTS[t].price,
         p_niche_id: niche,
       });
       if(error){ toast(error.message, true); return; }
@@ -1181,7 +1202,7 @@ const ASSET_COLS = [
   {k:'niche', label:'Niche'},
   {k:'region', label:'Region'},
   {k:'tier', label:'Tier'},
-  {k:'monthly_price_aud', label:'Monthly'},
+  {k:'monthly_price_aud', label:'Our fee'},
   {k:'status', label:'Status'},
   {k:'rented_until', label:'Rented until'},
 ];
@@ -1239,7 +1260,7 @@ function renderAssets(){
       <td>${esc(nicheName(a.niche_id))}</td>
       <td>${esc(regionName(a.region_id))}</td>
       <td><span class="tierpill">${esc(a.tier)}</span></td>
-      <td class="mono">${fmtAud(a.monthly_price_aud)}</td>
+      <td class="mono">${fmtAud(a.monthly_price_aud)}${a.min_daily_budget_aud?`<span class="dim" style="display:block;font-size:10px">+ ${fmtAud(a.min_daily_budget_aud)}/day to Meta</span>`:''}</td>
       <td><span class="badge ${badge}">${a.sold_out?'sold out':esc(a.status)}</span></td>
       <td class="mono dim">${fmtDate(a.rented_until)}</td>
       <td class="acts">${a.deleted_at
@@ -1267,14 +1288,17 @@ function openAssetModal(id){
   const a = id ? _assets.find(x=>x.id===id) : null;
   setVal('ma-id', a?a.id:'');
   setText('ma-title', a?'Edit asset':'New asset');
-  setText('ma-sub', a?esc(a.brand_name):'Create a rentable funnel');
+  setText('ma-sub', a?esc(a.brand_name):'Create an engine');
   setVal('ma-brand', a?.brand_name);
   setVal('ma-domain', a?.brand_domain);
   $('ma-niche').value = a?.niche_id || (_niches[0]?.id||'');
   $('ma-region').value = a?.region_id || (_regions[0]?.id||'');
-  $('ma-tier').value = a?.tier || 'starter';
+  $('ma-tier').value = a?.tier || 'engine';
   $('ma-status').value = a?.status || 'available';
-  setVal('ma-price', a?.monthly_price_aud ?? TIER_DEFAULTS.starter.price);
+  setVal('ma-price',   a?.monthly_price_aud ?? TIER_DEFAULTS.engine.price);
+  setVal('ma-budget',  a?.min_daily_budget_aud ?? TIER_DEFAULTS.engine.budget);
+  setVal('ma-gquotes', a?.guarantee_quotes ?? TIER_DEFAULTS.engine.quotes);
+  setVal('ma-gpipe',   a?.guarantee_pipeline_aud ?? TIER_DEFAULTS.engine.pipeline);
   setVal('ma-tmin', a?.typical_min);
   setVal('ma-tmax', a?.typical_max);
   $('ma-rentedby').value = a?.rented_by || '';
@@ -1294,7 +1318,10 @@ function syncPreviewLink(){
 }
 function applyTierDefaults(){
   const d = TIER_DEFAULTS[$('ma-tier').value]; if(!d) return;
-  setVal('ma-price', d.price);
+  setVal('ma-price',   d.price);
+  setVal('ma-budget',  d.budget);
+  setVal('ma-gquotes', d.quotes);
+  setVal('ma-gpipe',   d.pipeline);
 }
 function onAssetStatusChange(){
   const rented = $('ma-status').value==='rented';
@@ -1313,6 +1340,9 @@ async function saveAsset(){
     tier: $('ma-tier').value,
     status,
     monthly_price_aud: parseInt($('ma-price').value,10),
+    min_daily_budget_aud:   $('ma-budget').value  ? Number($('ma-budget').value)        : null,
+    guarantee_quotes:       $('ma-gquotes').value ? parseInt($('ma-gquotes').value,10)  : null,
+    guarantee_pipeline_aud: $('ma-gpipe').value   ? parseInt($('ma-gpipe').value,10)    : null,
     typical_min: $('ma-tmin').value?parseInt($('ma-tmin').value,10):null,
     typical_max: $('ma-tmax').value?parseInt($('ma-tmax').value,10):null,
     rented_by: status==='rented' ? rentedBy : null,
@@ -1356,6 +1386,8 @@ async function duplicateAsset(id){
   const copy = { niche_id:a.niche_id, region_id:a.region_id, tier:a.tier,
     brand_name:a.brand_name+' (copy)', brand_domain:a.brand_domain,
     monthly_price_aud:a.monthly_price_aud,
+    min_daily_budget_aud:a.min_daily_budget_aud,
+    guarantee_quotes:a.guarantee_quotes, guarantee_pipeline_aud:a.guarantee_pipeline_aud,
     typical_min:a.typical_min, typical_max:a.typical_max, status:'available' };
   const { error } = await db.from('assets').insert(copy);
   if(error){ toast('Error: '+error.message, true); return; }
@@ -1426,10 +1458,22 @@ async function loadRentals(){
     ? _assets.map(a=>`<option value="${a.id}">${esc(a.brand_name)}</option>`).join('')
     : '');
   if(!_assets.length){ const r=await db.from('assets').select('*'); _assets=r.data||[]; fillSelect('rf-asset','All assets',_assets.map(a=>`<option value="${a.id}">${esc(a.brand_name)}</option>`).join('')); }
-  $('rentals-tbody').innerHTML='<tr><td colspan="7" class="empty">Loading…</td></tr>';
+  $('rentals-tbody').innerHTML='<tr><td colspan="8" class="empty">Loading…</td></tr>';
   const { data, error } = await db.from('rentals').select('*').order('started_at',{ascending:false});
-  if(error){ $('rentals-tbody').innerHTML=`<tr><td colspan="7" class="empty" style="color:var(--red)">${esc(error.message)}</td></tr>`; return; }
-  _rentals=data||[]; renderRentals();
+  if(error){ $('rentals-tbody').innerHTML=`<tr><td colspan="8" class="empty" style="color:var(--red)">${esc(error.message)}</td></tr>`; return; }
+  _rentals=data||[];
+  // Guarantee cycles for every engagement on screen, in one round trip. Read
+  // separately rather than embedded because a rental can have many cycles and
+  // only the newest is worth a table cell.
+  const { data: cyc } = await db.from('guarantee_cycles')
+    .select('*').order('cycle_no',{ascending:false});
+  _cycles = cyc||[];
+  renderRentals();
+}
+
+let _cycles = [];
+function latestCycle(rentalId){
+  return _cycles.find(c=>c.rental_id===rentalId) || null;
 }
 const assetName = id => (_assets.find(x=>x.id===id)||{}).brand_name || '-';
 function renderRentals(){
@@ -1446,14 +1490,109 @@ function renderRentals(){
     return `<tr>
       <td><strong>${esc(assetName(r.asset_id))}</strong></td>
       <td>${esc(installerName(r.installer_id))}</td>
-      <td class="mono dim">${fmtDate(r.started_at)}</td>
-      <td class="mono dim">${r.ended_at?fmtDate(r.ended_at):'-'}</td>
-      <td class="mono">${fmtAud(r.monthly_price_aud)}</td>
+      <td class="mono dim">${fmtDate(r.started_at)}${r.ended_at?`<span style="display:block">ended ${fmtDate(r.ended_at)}</span>`:''}</td>
+      <td class="mono">${fmtAud(r.monthly_price_aud)}${r.agreed_daily_budget_aud?`<span class="dim" style="display:block;font-size:10px">+ ${fmtAud(r.agreed_daily_budget_aud)}/day to Meta</span>`:''}</td>
+      <td>${launchCell(r)}</td>
+      <td>${guaranteeCell(r)}</td>
       <td><span class="badge ${active?'bg-grn':'bg-gray'}">${active?'active':'ended'}</span>${r.stripe_subscription_id?` <span class="badge bg-blu" title="${esc(r.stripe_subscription_id)}">Stripe</span>`:''}</td>
-      <td>${active?`<button class="btn btn-xs" onclick="endRental('${r.id}','${r.asset_id}')">End rental</button> `:''}<button class="btn btn-xs btn-red" onclick="deleteRental('${r.id}')">Delete</button></td>
+      <td>${active?`<button class="btn btn-xs" onclick="endRental('${r.id}','${r.asset_id}')">End</button> `:''}<button class="btn btn-xs btn-red" onclick="deleteRental('${r.id}')">Delete</button></td>
     </tr>`;
-  }).join('') : '<tr><td colspan="7" class="empty">No rentals match.</td></tr>';
+  }).join('') : '<tr><td colspan="8" class="empty">No engagements match.</td></tr>';
 }
+/* ════════════════════════════════════════════════════════════════════════
+   THE AD ACCOUNT HANDOVER, AND THE GUARANTEE
+
+   This is the operational heart of the model and the place an engagement
+   actually stalls. Payment is not delivery: after the fee clears we still have
+   to grant ad account access and the client still has to put their own card on
+   it. Until that card is on, nothing can go live, because there is nobody for
+   Meta to bill.
+
+   So the three steps are three separate timestamps rather than one "onboarded"
+   flag - a client stuck between "we granted access" and "their card is on it"
+   is the most common failure and it is invisible if the two collapse into one.
+
+   Marking the ads live is what STARTS THE GUARANTEE CLOCK (mark_ads_live opens
+   and dates cycle 1). It is not a cosmetic status. Do not tick it before
+   delivery has actually begun: every day it is early is a day of guarantee the
+   client paid for and did not get.
+   ════════════════════════════════════════════════════════════════════════ */
+function launchCell(r){
+  if(r.ended_at) return '<span class="dim">-</span>';
+  const step = (done, label, fn) => done
+    ? `<span class="badge bg-grn" title="${esc(fmtDate(done))}">${label}</span>`
+    : `<button class="btn btn-xs" onclick="${fn}">${label}</button>`;
+  return `<div style="display:flex;flex-direction:column;gap:3px;align-items:flex-start">
+    ${step(r.access_granted_at,       'Access granted', `markHandover('${r.id}','access_granted_at')`)}
+    ${step(r.payment_method_added_at, 'Card on account', `markHandover('${r.id}','payment_method_added_at')`)}
+    ${r.ads_live_at
+        ? `<span class="badge bg-blu" title="${esc(fmtDate(r.ads_live_at))}">Ads live</span>`
+        : `<button class="btn btn-xs btn-p" onclick="markAdsLive('${r.id}')" ${r.payment_method_added_at?'':'disabled title="Their card has to be on the ad account first - Meta has nobody to bill"'}>Mark ads live</button>`}
+  </div>`;
+}
+
+function guaranteeCell(r){
+  const c = latestCycle(r.id);
+  if(!c) return '<span class="dim">none</span>';
+  const money = n => fmtAud(Math.round(Number(n||0)));
+  if(c.status === 'pending'){
+    return `<span class="dim">cycle ${c.cycle_no} waiting on launch</span>`;
+  }
+  const qOk = c.quotes_delivered >= c.quotes_required;
+  const pOk = Number(c.pipeline_delivered_aud) >= Number(c.pipeline_required_aud);
+  const bar = `<span class="${qOk?'':'dim'}">${c.quotes_delivered}/${c.quotes_required} quotes</span> ·
+               <span class="${pOk?'':'dim'}">${money(c.pipeline_delivered_aud)}/${money(c.pipeline_required_aud)}</span>`;
+  if(c.status === 'met')   return `<span class="badge bg-grn">met</span><div style="font-size:10px">${bar}</div>`;
+  if(c.status === 'void')  return `<span class="badge bg-gray" title="${esc(c.void_reason||'')}">void</span>`;
+  if(c.status === 'shortfall'){
+    const owed = c.remedy === 'fee_refunded' && !c.remedy_issued_at;
+    return `<span class="badge bg-red">shortfall</span>
+      <div style="font-size:10px">${bar}</div>
+      ${owed?`<div style="font-size:10px;color:var(--red)"><strong>refund ${money(c.remedy_amount_aud)} owed</strong></div>`:''}`;
+  }
+  // running / paused
+  const days = c.ends_at ? Math.max(0, Math.ceil((new Date(c.ends_at) - Date.now())/86400000)) : null;
+  return `<span class="badge ${c.status==='paused'?'bg-gray':'bg-blu'}">${c.status}</span>
+    <div style="font-size:10px">${bar}</div>
+    <div style="font-size:10px" class="dim">${days!==null?`${days}d left`:''}
+      <button class="btn btn-xs" onclick="refreshCycle('${c.id}')">Refresh</button>
+      ${days===0?`<button class="btn btn-xs btn-p" onclick="settleCycle('${c.id}')">Settle</button>`:''}
+    </div>`;
+}
+
+async function markHandover(rentalId, field){
+  const labels = {
+    access_granted_at: 'Confirm the client has been granted access to the Meta ad account?',
+    payment_method_added_at: "Confirm the client's own payment card is now the ad account's payment method?\n\nCheck this in Meta before ticking it. Until their card is genuinely on the account, nothing can deliver.",
+  };
+  if(!confirm(labels[field])) return;
+  const { error } = await db.from('rentals').update({ [field]: new Date().toISOString() }).eq('id', rentalId);
+  if(error){ toast('Error: '+error.message, true); return; }
+  toast('Recorded ✓'); loadRentals();
+}
+
+async function markAdsLive(rentalId){
+  if(!confirm('Mark advertising as LIVE for this engagement?\n\nThis starts the 30 day guarantee clock from right now. Only do it once delivery has actually begun - every day it is early is a day of guarantee the client paid for and did not get.')) return;
+  const { error } = await db.rpc('mark_ads_live', { p_rental_id: rentalId });
+  if(error){ toast('Error: '+error.message, true); return; }
+  toast('Ads live, guarantee cycle 1 started ✓'); loadRentals();
+}
+
+async function refreshCycle(cycleId){
+  const { error } = await db.rpc('recalc_guarantee_cycle', { p_cycle_id: cycleId });
+  if(error){ toast('Error: '+error.message, true); return; }
+  toast('Recalculated ✓'); loadRentals();
+}
+
+async function settleCycle(cycleId){
+  if(!confirm('Settle this guarantee cycle?\n\nIt recalculates from the quotes table, then closes as met or shortfall. A shortfall records that the full cycle fee is owed back to the client. Issuing the Stripe refund is still a separate, deliberate step.')) return;
+  const { data, error } = await db.rpc('settle_guarantee_cycle', { p_cycle_id: cycleId });
+  if(error){ toast('Error: '+error.message, true); return; }
+  const c = Array.isArray(data) ? data[0] : data;
+  toast(c?.status === 'met' ? 'Cycle met ✓' : `Shortfall - ${fmtAud(c?.remedy_amount_aud||0)} refund owed`, c?.status !== 'met');
+  loadRentals();
+}
+
 async function deleteRental(id){
   if(!confirm('PERMANENTLY delete this rental record?\n\nThis removes the history row only (the asset and business stay). This cannot be undone.')) return;
   const { error } = await db.from('rentals').delete().eq('id',id);
