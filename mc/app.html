@@ -638,8 +638,7 @@ td.mono{font-family:var(--mono);font-size:12px}
       <div class="frow"><label class="flabel">Status *</label><select class="fs" id="ma-status" onchange="onAssetStatusChange()"><option value="available">Available</option><option value="rented">Rented</option><option value="maintenance">Maintenance</option></select></div>
       <div class="frow"><label class="flabel">Our fee, AUD/mo *</label><input class="fi" id="ma-price" type="number" min="0"><div class="fhint">Ex GST. Our fee only - contains no ad spend</div></div>
       <div class="frow"><label class="flabel">Their Meta budget, AUD/day</label><input class="fi" id="ma-budget" type="number" min="0" step="5"><div class="fhint">Committed minimum, billed by Meta to the client's own card. Never invoiced by us</div></div>
-      <div class="frow"><label class="flabel">Guarantee: quotes / cycle</label><input class="fi" id="ma-gquotes" type="number" min="0"><div class="fhint">Blank = no guarantee on this engine</div></div>
-      <div class="frow"><label class="flabel">Guarantee: pipeline AUD / cycle</label><input class="fi" id="ma-gpipe" type="number" min="0" step="1000"><div class="fhint">Miss either number and the cycle fee is refunded in full</div></div>
+      <div class="frow"><label class="flabel">Guarantee: quoted jobs / cycle</label><input class="fi" id="ma-gquotes" type="number" min="0"><div class="fhint">Blank = no guarantee. Fall short and the cycle fee is refunded in full on a claim. There is deliberately no dollar target</div></div>
       <div class="frow"><label class="flabel">Typical leads min / mo</label><input class="fi" id="ma-tmin" type="number" min="0"><div class="fhint">Internal forecasting only. Not published</div></div>
       <div class="frow"><label class="flabel">Typical leads max / mo</label><input class="fi" id="ma-tmax" type="number" min="0"><div class="fhint">Internal forecasting only. Not published</div></div>
       <div class="frow" id="ma-rentedby-row"><label class="flabel">Rented by</label><select class="fs" id="ma-rentedby"><option value="">- none -</option></select></div>
@@ -810,8 +809,8 @@ let db, currentUser;
    shown apart. quotes/pipeline are the guarantee; miss either and the fee for
    that cycle is refunded in full. See MODEL.md sections 2 and 3. */
 const TIER_DEFAULTS = {
-  engine: { price:1250, budget:50,   quotes:10, pipeline:100000 },
-  custom: { price:2500, budget:null, quotes:null, pipeline:null },
+  engine: { price:1250, budget:50,   quotes:10 },
+  custom: { price:2500, budget:null, quotes:null },
 };
 
 /* caches */
@@ -1019,9 +1018,9 @@ function nav(panel, el){
    through us. The committed daily budget and the guarantee are set per engine
    in the asset editor, not here, because they move far less often than price.
 
-   There is no lead floor. The guarantee is quotes and quoted pipeline, settled
-   per cycle in guarantee_cycles, and a second volume promise living in the
-   pricing screen is how the wrong one ends up being honoured.
+   There is no lead floor and no dollar target. The guarantee is QUOTED JOBS,
+   settled per cycle in guarantee_cycles, and a second volume promise living in
+   the pricing screen is how the wrong one ends up being honoured.
    ════════════════════════════════════════════════════════════════════════ */
 const PR_TIERS = ['engine','custom'];
 let _pricing = [];
@@ -1298,7 +1297,6 @@ function openAssetModal(id){
   setVal('ma-price',   a?.monthly_price_aud ?? TIER_DEFAULTS.engine.price);
   setVal('ma-budget',  a?.min_daily_budget_aud ?? TIER_DEFAULTS.engine.budget);
   setVal('ma-gquotes', a?.guarantee_quotes ?? TIER_DEFAULTS.engine.quotes);
-  setVal('ma-gpipe',   a?.guarantee_pipeline_aud ?? TIER_DEFAULTS.engine.pipeline);
   setVal('ma-tmin', a?.typical_min);
   setVal('ma-tmax', a?.typical_max);
   $('ma-rentedby').value = a?.rented_by || '';
@@ -1321,7 +1319,6 @@ function applyTierDefaults(){
   setVal('ma-price',   d.price);
   setVal('ma-budget',  d.budget);
   setVal('ma-gquotes', d.quotes);
-  setVal('ma-gpipe',   d.pipeline);
 }
 function onAssetStatusChange(){
   const rented = $('ma-status').value==='rented';
@@ -1342,7 +1339,6 @@ async function saveAsset(){
     monthly_price_aud: parseInt($('ma-price').value,10),
     min_daily_budget_aud:   $('ma-budget').value  ? Number($('ma-budget').value)        : null,
     guarantee_quotes:       $('ma-gquotes').value ? parseInt($('ma-gquotes').value,10)  : null,
-    guarantee_pipeline_aud: $('ma-gpipe').value   ? parseInt($('ma-gpipe').value,10)    : null,
     typical_min: $('ma-tmin').value?parseInt($('ma-tmin').value,10):null,
     typical_max: $('ma-tmax').value?parseInt($('ma-tmax').value,10):null,
     rented_by: status==='rented' ? rentedBy : null,
@@ -1387,7 +1383,7 @@ async function duplicateAsset(id){
     brand_name:a.brand_name+' (copy)', brand_domain:a.brand_domain,
     monthly_price_aud:a.monthly_price_aud,
     min_daily_budget_aud:a.min_daily_budget_aud,
-    guarantee_quotes:a.guarantee_quotes, guarantee_pipeline_aud:a.guarantee_pipeline_aud,
+    guarantee_quotes:a.guarantee_quotes,
     typical_min:a.typical_min, typical_max:a.typical_max, status:'available' };
   const { error } = await db.from('assets').insert(copy);
   if(error){ toast('Error: '+error.message, true); return; }
@@ -1538,21 +1534,29 @@ function guaranteeCell(r){
   if(c.status === 'pending'){
     return `<span class="dim">cycle ${c.cycle_no} waiting on launch</span>`;
   }
-  const qOk = c.quotes_delivered >= c.quotes_required;
-  const pOk = Number(c.pipeline_delivered_aud) >= Number(c.pipeline_required_aud);
-  const bar = `<span class="${qOk?'':'dim'}">${c.quotes_delivered}/${c.quotes_required} quotes</span> ·
-               <span class="${pOk?'':'dim'}">${money(c.pipeline_delivered_aud)}/${money(c.pipeline_required_aud)}</span>`;
+  // ONE number settles it: quoted jobs, which is distinct leads either quoted or
+  // confirmed. The pipeline value is shown because it is useful to know, and is
+  // measured against nothing.
+  const jobs = c.quoted_jobs_delivered ?? 0;
+  const ok = jobs >= c.quotes_required;
+  const bar = `<span class="${ok?'':'dim'}">${jobs}/${c.quotes_required} quoted jobs</span>`
+            + `<span class="dim" style="display:block">${c.quotes_delivered||0} quoted · ${c.confirmations_delivered||0} confirmed · ${money(c.pipeline_delivered_aud)} value</span>`;
   if(c.status === 'met')   return `<span class="badge bg-grn">met</span><div style="font-size:10px">${bar}</div>`;
   if(c.status === 'void')  return `<span class="badge bg-gray" title="${esc(c.void_reason||'')}">void</span>`;
   if(c.status === 'shortfall'){
-    const owed = c.remedy === 'fee_refunded' && !c.remedy_issued_at;
+    // A shortfall is not automatically a payout. The refund is claimed in
+    // writing within 7 days, so an unclaimed shortfall shows as exactly that
+    // rather than as money owed.
+    const claimed = !!c.claim_submitted_at;
+    const owed = c.remedy === 'fee_refunded' && claimed && !c.remedy_issued_at;
     return `<span class="badge bg-red">shortfall</span>
       <div style="font-size:10px">${bar}</div>
-      ${owed?`<div style="font-size:10px;color:var(--red)"><strong>refund ${money(c.remedy_amount_aud)} owed</strong></div>`:''}`;
+      ${owed  ? `<div style="font-size:10px;color:var(--red)"><strong>claimed · refund ${money(c.remedy_amount_aud)} owed</strong></div>` : ''}
+      ${!claimed ? `<div style="font-size:10px" class="dim">no claim submitted</div>` : ''}
+      ${c.remedy_issued_at ? `<div style="font-size:10px" class="dim">refunded ${fmtDate(c.remedy_issued_at)}</div>` : ''}`;
   }
-  // running / paused
   const days = c.ends_at ? Math.max(0, Math.ceil((new Date(c.ends_at) - Date.now())/86400000)) : null;
-  return `<span class="badge ${c.status==='paused'?'bg-gray':'bg-blu'}">${c.status}</span>
+  return `<span class="badge bg-blu">${c.status}</span>
     <div style="font-size:10px">${bar}</div>
     <div style="font-size:10px" class="dim">${days!==null?`${days}d left`:''}
       <button class="btn btn-xs" onclick="refreshCycle('${c.id}')">Refresh</button>
@@ -1585,11 +1589,13 @@ async function refreshCycle(cycleId){
 }
 
 async function settleCycle(cycleId){
-  if(!confirm('Settle this guarantee cycle?\n\nIt recalculates from the quotes table, then closes as met or shortfall. A shortfall records that the full cycle fee is owed back to the client. Issuing the Stripe refund is still a separate, deliberate step.')) return;
+  if(!confirm('Settle this guarantee cycle?\n\nIt recounts quoted jobs (leads quoted OR confirmed), then closes as met or shortfall.\n\nA shortfall records that the full cycle fee is REFUNDABLE. It is not owed until the client claims it in writing within 7 days, and issuing the Stripe refund is a separate, deliberate step after that.')) return;
   const { data, error } = await db.rpc('settle_guarantee_cycle', { p_cycle_id: cycleId });
   if(error){ toast('Error: '+error.message, true); return; }
   const c = Array.isArray(data) ? data[0] : data;
-  toast(c?.status === 'met' ? 'Cycle met ✓' : `Shortfall - ${fmtAud(c?.remedy_amount_aud||0)} refund owed`, c?.status !== 'met');
+  toast(c?.status === 'met'
+    ? 'Cycle met ✓'
+    : `Shortfall - ${fmtAud(c?.remedy_amount_aud||0)} refundable on a claim within 7 days`, c?.status !== 'met');
   loadRentals();
 }
 

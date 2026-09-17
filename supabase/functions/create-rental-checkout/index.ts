@@ -172,7 +172,7 @@ serve(async (req) => {
     const { data: asset, error: assetErr } = await supabase
       .from('assets')
       .select('id, tier, brand_name, monthly_price_aud, min_daily_budget_aud, ' +
-              'guarantee_quotes, guarantee_pipeline_aud, guarantee_window_days, ' +
+              'guarantee_quotes, guarantee_window_days, ' +
               'status, sold_out, deleted_at, niches(name)')
       .eq('id', assetId)
       .maybeSingle()
@@ -190,15 +190,17 @@ serve(async (req) => {
     const dailyBudget = Number(asset.min_daily_budget_aud ?? 0)
     const windowDays = Number(asset.guarantee_window_days ?? 30)
     const gQuotes = asset.guarantee_quotes
-    const gPipeline = asset.guarantee_pipeline_aud
+    const gPipeline = null  // retired: the guarantee is quoted jobs only
     const nicheName = (asset as any).niches?.name || 'Leads'
     const tierName = TIER_NAME[asset.tier] || asset.tier
 
     // The guarantee sentence, built once and reused on the Stripe line item, in
     // the metadata and in the internal notice, so the three can never drift into
     // promising three slightly different things.
-    const guaranteeLine = (gQuotes && gPipeline)
-      ? `${gQuotes} quotes and ${money(gPipeline)} in quoted pipeline per ${windowDays} days, or this fee is refunded in full.`
+    // Quoted jobs only. No dollar figure: a pipeline number on a Stripe receipt
+    // is a term the client can hold us to, and it is not the promise.
+    const guaranteeLine = gQuotes
+      ? `${gQuotes} quoted jobs per ${windowDays} days, or this fee is refunded in full.`
       : 'Guarantee per the scope agreed in writing.'
 
     const productName = `${tierName} lead engine - ${nicheName} (LGR service fee)`
@@ -250,7 +252,6 @@ serve(async (req) => {
         fee_aud: String(fee),
         min_daily_budget_aud: String(dailyBudget),
         guarantee_quotes: String(gQuotes ?? ''),
-        guarantee_pipeline_aud: String(gPipeline ?? ''),
         service_type: serviceType,
       },
       subscription_data: {
@@ -272,7 +273,6 @@ serve(async (req) => {
       monthly_price_aud: fee,
       min_daily_budget_aud: dailyBudget || null,
       guarantee_quotes: gQuotes ?? null,
-      guarantee_pipeline_aud: gPipeline ?? null,
       service_type: serviceType,
       stripe_session_id: session.id,
       stripe_customer_id: customerId || null,

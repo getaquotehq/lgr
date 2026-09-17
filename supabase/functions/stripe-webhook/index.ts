@@ -280,7 +280,7 @@ async function sendConfirmationEmail(to: string, m: Record<string, string>, magi
   const { data: asset } = await supabase
     .from('assets')
     .select('brand_name, monthly_price_aud, min_daily_budget_aud, guarantee_quotes, ' +
-            'guarantee_pipeline_aud, guarantee_window_days, tier, niches(name)')
+            'guarantee_window_days, tier, niches(name)')
     .eq('id', m.asset_id)
     .maybeSingle()
 
@@ -293,7 +293,7 @@ async function sendConfirmationEmail(to: string, m: Record<string, string>, magi
   const dailyBudget = Number((asset as any)?.min_daily_budget_aud ?? m.min_daily_budget_aud ?? 0)
   const windowDays = Number((asset as any)?.guarantee_window_days ?? 30)
   const gQuotes = (asset as any)?.guarantee_quotes ?? Number(m.guarantee_quotes || 0)
-  const gPipeline = (asset as any)?.guarantee_pipeline_aud ?? Number(m.guarantee_pipeline_aud || 0)
+  const gPipeline = 0  // retired: the guarantee is quoted jobs only
   const TIER_LABEL: Record<string, string> = { engine: 'Engine', custom: 'Custom' }
   const tierLabel = TIER_LABEL[(asset as any)?.tier] || (asset as any)?.tier || 'Engine'
   const money = (n: number) => '$' + Number(n).toLocaleString('en-AU')
@@ -317,7 +317,7 @@ async function sendConfirmationEmail(to: string, m: Record<string, string>, magi
       <tr><td style="padding:11px 14px;color:#656D76;border-bottom:1px solid #F0F2F4">Plan</td><td style="padding:11px 14px;text-align:right;font-weight:600;border-bottom:1px solid #F0F2F4">${esc(tierLabel)}</td></tr>
       <tr><td style="padding:11px 14px;color:#656D76;border-bottom:1px solid #F0F2F4">Our fee (this invoice)</td><td style="padding:11px 14px;text-align:right;font-weight:600;border-bottom:1px solid #F0F2F4">${money(fee)} + GST / ${windowDays} days</td></tr>
       <tr><td style="padding:11px 14px;color:#656D76;border-bottom:1px solid #F0F2F4">Your ad budget <span style="color:#98A0A8">(paid to Meta, not to us)</span></td><td style="padding:11px 14px;text-align:right;font-weight:600;border-bottom:1px solid #F0F2F4">${money(dailyBudget)}/day</td></tr>
-      ${gQuotes && gPipeline ? `<tr><td style="padding:11px 14px;color:#656D76">Guarantee</td><td style="padding:11px 14px;text-align:right;font-weight:600">${gQuotes} quotes &amp; ${money(gPipeline)} pipeline</td></tr>` : ''}
+      ${gQuotes ? `<tr><td style="padding:11px 14px;color:#656D76">Guarantee</td><td style="padding:11px 14px;text-align:right;font-weight:600">${gQuotes} quoted jobs</td></tr>` : ''}
     </table>
     <p style="font-size:13px;line-height:1.55;color:#656D76;margin:12px 0 0">
       The ${money(fee)} above is our fee and it contains no advertising spend. Your advertising is
@@ -332,11 +332,12 @@ async function sendConfirmationEmail(to: string, m: Record<string, string>, magi
       <li><strong>We build and launch</strong>, targeting the area you gave us.</li>
       <li><strong>Your 30 days start the day the ads go live</strong> - not today. Getting you launched is our time to lose, not yours.</li>
     </ol>
-    ${gQuotes && gPipeline ? `
+    ${gQuotes ? `
     <p style="font-size:14px;line-height:1.6;color:#3A424D;margin:16px 0 0;padding:12px 14px;background:#F6F8FA;border-radius:8px">
-      <strong>The guarantee:</strong> ${gQuotes} quotes sent and ${money(gPipeline)} in quoted pipeline in your first ${windowDays} days,
-      or this fee comes back in full. You'll see it tracking daily in your dashboard - you won't be
-      finding out on day 30.
+      <strong>The guarantee:</strong> ${gQuotes} quoted jobs in your first ${windowDays} days, or this fee
+      comes back in full. A lead counts as a quoted job when you quote it, or as soon as it replies
+      to the follow-up confirming it wants one. You'll see it tracking daily in your dashboard, so
+      you won't be finding out on day 30.
     </p>` : ''}
     ${magicLink ? `
     <p style="margin:22px 0 0">
@@ -378,7 +379,7 @@ async function notifyRentalPaid(m: Record<string, string>, renterEmail: string, 
   const { data: asset } = await supabase
     .from('assets')
     .select('brand_name, monthly_price_aud, min_daily_budget_aud, guarantee_quotes, ' +
-            'guarantee_pipeline_aud, niches(name), regions(name)')
+            'niches(name), regions(name)')
     .eq('id', m.asset_id)
     .maybeSingle()
 
@@ -395,7 +396,7 @@ async function notifyRentalPaid(m: Record<string, string>, renterEmail: string, 
   const fee = (asset as any)?.monthly_price_aud ?? Number(m.fee_aud || m.monthly_price_aud || 0)
   const dailyBudget = Number((asset as any)?.min_daily_budget_aud ?? m.min_daily_budget_aud ?? 0)
   const gQuotes = (asset as any)?.guarantee_quotes ?? Number(m.guarantee_quotes || 0)
-  const gPipeline = (asset as any)?.guarantee_pipeline_aud ?? Number(m.guarantee_pipeline_aud || 0)
+  const gPipeline = 0  // retired: the guarantee is quoted jobs only
   const subId = typeof session.subscription === 'string' ? session.subscription : session.subscription?.id || ''
   const row = (k: string, v: string) =>
     `<tr><td style="padding:4px 14px 4px 0;color:#656D76">${k}</td><td><strong>${v}</strong></td></tr>`
@@ -412,7 +413,7 @@ async function notifyRentalPaid(m: Record<string, string>, renterEmail: string, 
       ${row('Service postcode', esc(m.postcode || '') || '-')}
       ${row('Our fee', money(fee) + ' + GST / 30 days')}
       ${row('Their Meta budget', money(dailyBudget) + '/day, direct to Meta on their own card')}
-      ${gQuotes && gPipeline ? row('Guarantee', gQuotes + ' quotes &amp; ' + money(gPipeline) + ' pipeline') : ''}
+      ${gQuotes ? row('Guarantee', gQuotes + ' quoted jobs') : ''}
       ${row('Stripe subscription', `<code>${esc(subId)}</code>`)}
     </table>
     <p style="margin:16px 0 0;font-size:14px;font-family:Arial,sans-serif;padding:10px 12px;background:#FFF8E1;border-radius:6px">

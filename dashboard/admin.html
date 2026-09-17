@@ -2831,9 +2831,12 @@ h1{font-size:18px;font-weight:500}
   // The guarantee, as one short cell. Both numbers or neither: an engine
   // promising quotes without a pipeline figure, or the reverse, is a half
   // promise nobody can settle.
+  // Quoted jobs only. There is deliberately no dollar target: see the guarantee
+  // section of the terms, and 20260917000000 for why a second number was a bug
+  // rather than a feature.
   function lgrGuarantee(a) {
-    if (!a.guarantee_quotes || !a.guarantee_pipeline_aud) return '-';
-    return a.guarantee_quotes + ' quotes / ' + lgrMoney(a.guarantee_pipeline_aud);
+    if (!a.guarantee_quotes) return '-';
+    return a.guarantee_quotes + ' quoted jobs';
   }
 
   function lgrStatusPill(status) {
@@ -3105,8 +3108,7 @@ h1{font-size:18px;font-weight:500}
         '<input id="lgrEdMin" type="number" min="1" step="1" value="' + (a.typical_min || '') + '" style="' + inp + ';width:60px">' +
         ' <input id="lgrEdMax" type="number" min="1" step="1" value="' + (a.typical_max || '') + '" style="' + inp + ';width:60px"></td>' +
       '<td style="padding:8px 10px;white-space:nowrap">' +
-        '<input id="lgrEdGQuotes" type="number" min="0" step="1" value="' + (a.guarantee_quotes || '') + '" style="' + inp + ';width:55px" title="Quotes guaranteed per cycle">' +
-        ' <input id="lgrEdGPipe" type="number" min="0" step="1000" value="' + (a.guarantee_pipeline_aud || '') + '" style="' + inp + ';width:85px" title="Quoted pipeline guaranteed per cycle"></td>' +
+        '<input id="lgrEdGQuotes" type="number" min="0" step="1" value="' + (a.guarantee_quotes || '') + '" style="' + inp + ';width:70px" title="Quoted jobs guaranteed per cycle"></td>' +
       '<td style="padding:8px 10px"><select id="lgrEdStatus" style="' + inp + ';width:110px">' +
         ['available', 'rented', 'paused', 'retired'].map(function (st) {
           return '<option value="' + st + '"' + (a.status === st ? ' selected' : '') + '>' + st + '</option>';
@@ -3129,7 +3131,6 @@ h1{font-size:18px;font-weight:500}
       monthly_price_aud:      num('lgrEdMonthly'),
       min_daily_budget_aud:   num('lgrEdBudget'),
       guarantee_quotes:       num('lgrEdGQuotes'),
-      guarantee_pipeline_aud: num('lgrEdGPipe'),
       typical_min:            num('lgrEdMin'),
       typical_max:            num('lgrEdMax'),
     };
@@ -3138,11 +3139,10 @@ h1{font-size:18px;font-weight:500}
       toast('Typical minimum cannot exceed the maximum', true);
       return;
     }
-    // Both guarantee numbers or neither. One on its own cannot be settled:
-    // settle_guarantee_cycle needs a quotes target AND a pipeline target, and an
-    // engine carrying half a promise opens no cycle at all.
-    if (!!patch.guarantee_quotes !== !!patch.guarantee_pipeline_aud) {
-      toast('Set both guarantee numbers, or neither', true);
+    // A zero is not "no guarantee", it is a guarantee of nothing that settles as
+    // met every time. Blank is how you say an engine carries no guarantee.
+    if (patch.guarantee_quotes !== null && patch.guarantee_quotes < 1) {
+      toast('Guaranteed quoted jobs must be 1 or more, or blank for no guarantee', true);
       return;
     }
     // Freeing an asset must also clear the tenant, or the fleet still reads as taken.
@@ -3346,8 +3346,7 @@ h1{font-size:18px;font-weight:500}
         '<div style="font-weight:600;padding-bottom:8px">' + lgrTierLabel(t) + '</div>' +
         '<label class="bank-lbl">Our fee /mo<input id="lgrBulk_' + t + '_monthly" class="bank-in" style="' + inp + '" type="number" min="0" step="50" value="' + (sample.monthly_price_aud || '') + '"></label>' +
         '<label class="bank-lbl">Their $/day to Meta<input id="lgrBulk_' + t + '_budget" class="bank-in" style="' + inp + '" type="number" min="0" step="5" value="' + (sample.min_daily_budget_aud || '') + '"></label>' +
-        '<label class="bank-lbl">Guarantee quotes<input id="lgrBulk_' + t + '_gquotes" class="bank-in" style="' + inp + '" type="number" min="0" step="1" value="' + (sample.guarantee_quotes || '') + '"></label>' +
-        '<label class="bank-lbl">Guarantee pipeline<input id="lgrBulk_' + t + '_gpipe" class="bank-in" style="' + inp + '" type="number" min="0" step="1000" value="' + (sample.guarantee_pipeline_aud || '') + '"></label>' +
+        '<label class="bank-lbl">Guaranteed quoted jobs<input id="lgrBulk_' + t + '_gquotes" class="bank-in" style="' + inp + '" type="number" min="0" step="1" value="' + (sample.guarantee_quotes || '') + '"></label>' +
         '<label class="bank-lbl">Typical min<input id="lgrBulk_' + t + '_min" class="bank-in" style="' + inp + '" type="number" min="1" step="1" value="' + (sample.typical_min || '') + '"></label>' +
         '<label class="bank-lbl">Typical max<input id="lgrBulk_' + t + '_max" class="bank-in" style="' + inp + '" type="number" min="1" step="1" value="' + (sample.typical_max || '') + '"></label>' +
         '<button class="btn2 btn-sm" type="button" data-lgr-bulk="' + t + '" style="margin-bottom:2px">Apply</button>' +
@@ -3377,11 +3376,10 @@ h1{font-size:18px;font-weight:500}
     var m   = Number(document.getElementById('lgrBulk_' + tier + '_monthly').value || 0);
     var b   = Number(document.getElementById('lgrBulk_' + tier + '_budget').value || 0);
     var gq  = Number(document.getElementById('lgrBulk_' + tier + '_gquotes').value || 0);
-    var gp  = Number(document.getElementById('lgrBulk_' + tier + '_gpipe').value || 0);
     note.textContent = m
       ? 'Client pays us ' + lgrMoney(m) + ' + GST a month' +
         (b ? ', and Meta ' + lgrMoney(b) + ' a day on their own card (about ' + lgrMoney(b * 30) + ' a cycle)' : '') +
-        (gq && gp ? '. Guaranteed ' + gq + ' quotes and ' + lgrMoney(gp) + ' quoted, or that fee is refunded in full.' : '.')
+        (gq ? '. Guaranteed ' + gq + ' quoted jobs, or that fee is refunded in full on a claim.' : '.')
       : '';
   }
 
@@ -3394,7 +3392,6 @@ h1{font-size:18px;font-weight:500}
       monthly_price_aud:      num('monthly'),
       min_daily_budget_aud:   num('budget'),
       guarantee_quotes:       num('gquotes'),
-      guarantee_pipeline_aud: num('gpipe'),
       typical_min:            num('min'),
       typical_max:            num('max'),
     };
@@ -3402,8 +3399,8 @@ h1{font-size:18px;font-weight:500}
       toast('Our monthly fee is required', true);
       return;
     }
-    if (!!patch.guarantee_quotes !== !!patch.guarantee_pipeline_aud) {
-      toast('Set both guarantee numbers, or neither', true);
+    if (patch.guarantee_quotes !== null && patch.guarantee_quotes < 1) {
+      toast('Guaranteed quoted jobs must be 1 or more, or blank for no guarantee', true);
       return;
     }
     if (patch.typical_min && patch.typical_max && patch.typical_min > patch.typical_max) {

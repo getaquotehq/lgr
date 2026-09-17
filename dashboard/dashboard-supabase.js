@@ -1358,9 +1358,9 @@ async function loadActiveOrdersDash() {
   if (!panel || !body || !currentCompanyId) return;
 
   // This used to count LEADS against a floor snapshotted on the rental. The
-  // floor is gone: the guarantee is now quotes and quoted pipeline, settled per
-  // cycle in guarantee_cycles, and a lead count rendered beside it would read as
-  // a second promise.
+  // floor is gone: the guarantee is now QUOTED JOBS (leads quoted or confirmed),
+  // settled per cycle in guarantee_cycles, and a lead count rendered beside it
+  // would read as a second promise.
   //
   // The numbers come from guarantee_progress rather than being recomputed here.
   // The client and Mission Control have to be looking at the same figure - if
@@ -1416,40 +1416,61 @@ async function loadActiveOrdersDash() {
       </div>`;
     }
 
-    const qOk = c.quotes_delivered >= c.quotes_required;
-    const pOk = Number(c.pipeline_delivered_aud) >= Number(c.pipeline_required_aud);
-    const met = qOk && pOk;
-    const settled = c.status === "met" || c.status === "shortfall";
+    // One number settles it: quoted jobs, which is distinct leads either quoted
+    // or confirmed. The pipeline value is shown as context because clients like
+    // knowing it, and nothing is measured against it.
+    const jobs = c.quoted_jobs_delivered ?? 0;
+    const met = jobs >= c.quotes_required;
 
     let sub;
     if (c.status === "shortfall") {
-      sub = "we missed it, so this cycle's fee is refunded in full";
+      sub = c.claim_submitted_at
+        ? "claim received, we will come back to you within 14 days"
+        : "we fell short. Claim your refund within 7 days.";
     } else if (c.status === "met") {
       sub = "guarantee met";
     } else if (met) {
       sub = "guarantee met, and it keeps running";
     } else if (c.days_remaining != null) {
-      sub = c.days_remaining + " day" + (c.days_remaining === 1 ? "" : "s") + " left in this cycle";
+      sub = c.days_remaining + " day" + (c.days_remaining === 1 ? "" : "s") + " left in this period";
     } else {
-      sub = "cycle in progress";
+      sub = "period in progress";
     }
+
+    const claimBtn = (c.status === "shortfall" && !c.claim_submitted_at)
+      ? `<button class="btn btn-sm" style="margin-top:6px" onclick="claimGuarantee('${c.id}')">Claim your refund</button>`
+      : "";
 
     return `<div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 0;border-bottom:1px solid var(--border)">
       <div>
         <div style="font-weight:500">${title}</div>
-        <div style="font-size:12px;color:var(--muted)">Cycle ${c.cycle_no} &middot; ${c.leads_delivered} lead${c.leads_delivered === 1 ? "" : "s"} delivered</div>
+        <div style="font-size:12px;color:var(--muted)">Period ${c.cycle_no} &middot; ${c.leads_delivered} lead${c.leads_delivered === 1 ? "" : "s"} delivered</div>
+        <div style="font-size:12px;color:var(--muted)">${c.quotes_delivered || 0} quoted &middot; ${c.confirmations_delivered || 0} confirmed &middot; ${money(c.pipeline_delivered_aud)} quoted value</div>
       </div>
       <div style="text-align:right">
         <div style="font-weight:600">
-          ${c.quotes_delivered} of ${c.quotes_required} quotes<span style="color:${qOk ? "#0f8a4d" : "var(--muted)"}">${qOk ? " \u2713" : ""}</span>
-        </div>
-        <div style="font-weight:600">
-          ${money(c.pipeline_delivered_aud)} of ${money(c.pipeline_required_aud)}<span style="color:${pOk ? "#0f8a4d" : "var(--muted)"}">${pOk ? " \u2713" : ""}</span>
+          ${jobs} of ${c.quotes_required} quoted jobs<span style="color:${met ? "#0f8a4d" : "var(--muted)"}">${met ? " \u2713" : ""}</span>
         </div>
         <div style="font-size:12px;color:${c.status === "shortfall" ? "#0f8a4d" : "var(--muted)"}">${sub}</div>
+        ${claimBtn}
       </div>
     </div>`;
   }).join("");
+}
+
+// Claiming the guarantee. The refund is claimed rather than paid automatically,
+// so the client needs a way to do it that is not an email they forget to send.
+// The 7 day deadline is enforced in the database, not here.
+async function claimGuarantee(cycleId) {
+  if (!confirm("Claim your guarantee refund for this period?\n\nWe will check it against your account record and come back to you within 14 days. Your service fee for the period is refunded in full if the claim is upheld.\n\nYour advertising spend was paid by you directly to Meta and is not refundable by us.")) return;
+  try {
+    const { error } = await sb.rpc("submit_guarantee_claim", { p_cycle_id: cycleId, p_notes: null });
+    if (error) throw error;
+    toast("Claim submitted. We will respond within 14 days.");
+    loadActiveOrdersDash();
+  } catch (err) {
+    toast(err.message || "Could not submit the claim", true);
+  }
 }
 
 async function quickSendQuote(leadId) {
@@ -5661,7 +5682,7 @@ async function loadBuyLeads() {
   try {
     const { data, error } = await sb
       .from('engine_availability')
-      .select('niche_slug,niche_name,niche_status,engines_available,fee_aud,daily_budget_aud,guarantee_quotes,guarantee_pipeline_aud')
+      .select('niche_slug,niche_name,niche_status,engines_available,fee_aud,daily_budget_aud,guarantee_quotes')
       .gt('engines_available', 0);
     if (error) throw error;
     _rentPlans = data || [];
@@ -5722,9 +5743,9 @@ function renderRentGrid() {
         </div>
 
         <div style="font-size:13px;line-height:1.7">
-          ${p.guarantee_quotes && p.guarantee_pipeline_aud
-            ? `<div><strong>${p.guarantee_quotes} quotes and ${rentMoney(p.guarantee_pipeline_aud)} quoted</strong> guaranteed every 30 days</div>
-               <div style="color:var(--muted)">Miss either number and our fee for that cycle is refunded in full.</div>` : ''}
+          ${p.guarantee_quotes
+            ? `<div><strong>${p.guarantee_quotes} quoted jobs</strong> guaranteed every 30 days</div>
+               <div style="color:var(--muted)">Fall short and our fee for that period is refunded in full on a claim.</div>` : ''}
           <div style="color:var(--muted)">Our fee contains no ad spend. You pay Meta directly, at Meta's prices, and we never handle it.</div>
         </div>
 
@@ -5762,7 +5783,7 @@ async function startRental(nicheSlug) {
     `To us: ${rentMoney(plan.fee_aud)} + GST a month, charged now by Stripe.\n` +
     `To Meta: ${rentMoney(plan.daily_budget_aud)} a day, charged to your own card once your ad account access is set up. This is not charged by us.\n\n` +
     (plan.guarantee_quotes
-      ? `Guaranteed: ${plan.guarantee_quotes} quotes and ${rentMoney(plan.guarantee_pipeline_aud)} quoted every 30 days, or our fee for that cycle is refunded in full.`
+      ? `Guaranteed: ${plan.guarantee_quotes} quoted jobs every 30 days, or our fee for that period is refunded in full on a claim.`
       : '')
   )) return;
 

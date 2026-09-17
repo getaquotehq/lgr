@@ -445,9 +445,9 @@
         <span class="pb-note">Charged by Meta to your card, not to us. Around $1,500 over a 30 day cycle, at Meta's prices, with no markup because we never handle it.</span>
       </div>
       <div class="plan-guar" id="planGuar">
-        <span class="pg-k">Guaranteed every 30 days</span>
-        <span class="pg-v">10 quotes and $100,000 quoted</span>
-        <span class="pg-note">Sent through your dashboard against leads your engine delivered. Miss either number and our fee for that cycle is refunded in full.</span>
+        <span class="pg-k">Every lead</span>
+        <span class="pg-v">Named to you, never resold</span>
+        <span class="pg-note">Your business name goes on the consent line before the homeowner submits, so exclusivity is proven at capture rather than promised afterwards.</span>
       </div>
       <ul class="plan-list">
         <li>An engine that is already built, tested and running</li>
@@ -456,11 +456,11 @@
         <li>We write the ads, set the targeting and manage the spend</li>
         <li>Leads named to your business on the consent the homeowner agrees to</li>
         <li>Automatic reply in your name within about 60 seconds</li>
-        <li>Dashboard with quoting, follow-up and live guarantee tracking</li>
+        <li>Dashboard with quoting, follow-up and pipeline tracking</li>
         <li>Month to month. Cancel yourself before the next cycle</li>
       </ul>
       <button class="btn btn-primary btn-glossy plan-cta" id="startEngine" type="button">Check availability &rarr;</button>
-      <p class="plan-fine">Your 30 days start the day the ads go live, not the day you pay.</p>
+      <p class="plan-fine">Your campaigns go live within days, and you see every dollar of the spend.</p>
     </article>
 
     <article class="plan">
@@ -475,14 +475,14 @@
         <span class="pb-note">Same arrangement: your card on the ad account, billed by Meta directly, at whatever budget the scope calls for.</span>
       </div>
       <div class="plan-guar">
-        <span class="pg-k">Guaranteed every 30 days</span>
-        <span class="pg-v">Written into your scope</span>
-        <span class="pg-note">Bigger targets need a bigger budget behind them, so the number is set with you rather than published here. Same remedy: miss it and the fee comes back.</span>
+        <span class="pg-k">Scope</span>
+        <span class="pg-v">Agreed with you in writing</span>
+        <span class="pg-note">Coverage, budget and what we commit to are settled before anything starts, rather than published here.</span>
       </div>
       <ul class="plan-list">
         <li>More than one engine, or more than one trade</li>
         <li>Higher budgets and wider coverage</li>
-        <li>A guarantee written to the volume you actually need</li>
+        <li>Commitments written to the volume you actually need</li>
         <li>Everything in the Engine plan</li>
       </ul>
       <a class="btn btn-ghost plan-cta" href="/contact">Talk to us &rarr;</a>
@@ -497,7 +497,7 @@
       <div class="money-card">
         <span class="mc-k">You pay us</span>
         <span class="mc-v" id="moneyFee">$1,250 + GST / month</span>
-        <p>Our fee for owning and running the engine, writing and testing the ads, managing the spend and carrying the guarantee. It contains no advertising spend at all. Billed by card, monthly in advance, cancel any time.</p>
+        <p>Our fee for owning and running the engine, writing and testing the ads and managing the spend. It contains no advertising spend at all. Billed by card, monthly in advance, cancel any time.</p>
       </div>
       <div class="money-card">
         <span class="mc-k">You pay Meta</span>
@@ -615,7 +615,7 @@ const NC = NICHE_CFG[NICHE] || NICHE_CFG.solar;
 // are the current published ones and exist so the page is readable before the
 // fetch resolves; whatever the database says wins. Never compute the fee, the
 // budget or the guarantee in here from one another.
-let PLAN = { fee: 1250, budget: 50, quotes: 10, pipeline: 100000, windowDays: 30, available: null };
+let PLAN = { fee: 1250, budget: 50, available: null };
 let postcode = '';
 
 document.title = `Lead Gen Rentals - ${NC.label} pricing and availability`;
@@ -628,7 +628,7 @@ const _back = $('#backLink'); if(_back){ _back.textContent = NC.back; _back.href
   const state = q.get('checkout');
   const el = $('#checkoutBanner'); if(!el || !state) return;
   if(state === 'success'){
-    el.innerHTML = `<div class="banner ok"><span>✓</span><span><b>Fee received. Your engine is allocated.</b> Check your email: the next step is the ad account. We give you access, you put your own card on it, then we launch. Your 30 days start when the ads go live.</span></div>`;
+    el.innerHTML = `<div class="banner ok"><span>✓</span><span><b>Fee received. Your engine is allocated.</b> Check your email: the next step is the ad account. We give you access, you put your own card on it, then we launch.</span></div>`;
     if(window.lgrMetaTrackPurchase){
       const value = Number(q.get('value'));
       const currency = q.get('currency') || 'AUD';
@@ -659,7 +659,7 @@ async function pollForDashboardLink(sessionId, bannerEl){
         const cta = document.createElement('div');
         cta.className = 'banner ok';
         cta.style.marginTop = '10px';
-        cta.innerHTML = `<span>→</span><span><b>Your dashboard is ready.</b> <a href="${esc(data.url)}" style="color:inherit;text-decoration:underline;font-weight:600">Go to your dashboard</a> to watch leads land and your guarantee track.</span>`;
+        cta.innerHTML = `<span>→</span><span><b>Your dashboard is ready.</b> <a href="${esc(data.url)}" style="color:inherit;text-decoration:underline;font-weight:600">Go to your dashboard</a> to watch your leads land in real time.</span>`;
         bannerEl.appendChild(cta);
       }
       return;
@@ -704,15 +704,13 @@ async function loadPlan(){
   try{
     const sb = supabase.createClient(cfg.url, cfg.anonKey);
     const { data, error } = await sb.from('engine_availability')
-      .select('niche_slug,niche_status,engines_available,fee_aud,daily_budget_aud,guarantee_quotes,guarantee_pipeline_aud')
+      .select('niche_slug,niche_status,engines_available,fee_aud,daily_budget_aud')
       .eq('niche_slug', NICHE)
       .maybeSingle();
     if(error) throw error;
     if(data){
-      if(typeof data.fee_aud === 'number')                PLAN.fee      = data.fee_aud;
-      if(typeof data.daily_budget_aud === 'number')       PLAN.budget   = data.daily_budget_aud;
-      if(typeof data.guarantee_quotes === 'number')       PLAN.quotes   = data.guarantee_quotes;
-      if(typeof data.guarantee_pipeline_aud === 'number') PLAN.pipeline = data.guarantee_pipeline_aud;
+      if(typeof data.fee_aud === 'number')          PLAN.fee    = data.fee_aud;
+      if(typeof data.daily_budget_aud === 'number') PLAN.budget = data.daily_budget_aud;
       PLAN.available = Number(data.engines_available || 0);
     } else {
       PLAN.available = 0;
@@ -729,8 +727,6 @@ function paintPlan(){
   $('#planBudget').textContent = money(PLAN.budget) + ' / day';
   $('#moneyFee').textContent   = money(PLAN.fee) + ' + GST / month';
   $('#moneyBudget').textContent= money(PLAN.budget) + ' / day';
-  const guar = $('#planGuar').querySelector('.pg-v');
-  if(guar) guar.textContent = `${PLAN.quotes} quotes and ${money(PLAN.pipeline)} quoted`;
   setAvailTag(PLAN.available);
 }
 
@@ -822,8 +818,7 @@ function showRentStep(){
   $('#whatYouPay').innerHTML =
     `<div class="wyp-row"><span>To us, today</span><b>${money(PLAN.fee)} + GST / month</b></div>` +
     `<div class="wyp-row"><span>To Meta, on your own card</span><b>${money(PLAN.budget)} / day</b></div>` +
-    `<div class="wyp-row guar"><span>Guaranteed per ${PLAN.windowDays} days</span><b>${PLAN.quotes} quotes &amp; ${money(PLAN.pipeline)} quoted</b></div>` +
-    `<p class="wyp-note">Only the first line is charged now. Meta bills the second directly once your card is on the ad account. Miss the guarantee and the first line is refunded in full.</p>`;
+    `<p class="wyp-note">Only the first line is charged now. Meta bills the second directly once your card is on the ad account, at Meta's own prices. Anything we have committed to in writing for your plan applies as written.</p>`;
   $('#rentTotal').innerHTML = `Charged today: <b>${money(PLAN.fee)}</b> <small>+GST, then monthly. Cancel any time.</small>`;
   $('#rentErr').classList.remove('on');
   const claim = $('#modalClaim');
@@ -910,7 +905,7 @@ loadPlan();
       </div>
     </div>
     <div class="foot">
-      <p class="fine">© 2026 Lead Gen Rentals. Lead Gen Rentals owns and operates the lead generation engines and the advertising accounts behind them. The monthly fee shown is Lead Gen Rentals' service fee and does not include advertising spend. Advertising is paid by the client directly to Meta Platforms from a payment card the client puts on the ad account, at Meta's own prices; Lead Gen Rentals does not handle, invoice or mark up advertising spend. The Engine plan requires a committed minimum advertising budget of $50 per day. A lead means a form submission containing a name and an Australian mobile number, captured with named consent to be contacted by one identified service business. Every lead delivered to a client is exclusive to it, named to it, delivered to no other business and never resold. An engine is used by one client at a time. Engaging Lead Gen Rentals confers no exclusive right to any area, postcode, suburb or region. Guarantee, Engine plan: if fewer than 10 quotes, or less than $100,000 in total quoted value, are sent through the Lead Gen Rentals dashboard against leads that engine delivered in a 30 day cycle, the service fee for that cycle is refunded in full. The cycle is measured from the day advertising goes live. The guarantee is conditional on the committed advertising budget remaining funded, the ad account not being paused, edited or unlinked by the client, leads being responded to, and quotes being sent through the dashboard. Lead Gen Rentals does not guarantee any cost per lead, cost per quote, that any quote is accepted, or any revenue or other outcome. Billed month to month in advance; cancel any time before your next cycle begins, no lock-in and no exit fee. Full terms at <a href="/terms" style="color:inherit;text-decoration:underline">leadgenrentals.com.au/terms</a>.</p>
+      <p class="fine">© 2026 Lead Gen Rentals. Lead Gen Rentals owns and operates the lead generation engines and the advertising accounts behind them. The monthly fee shown is Lead Gen Rentals' service fee and does not include advertising spend. Advertising is paid by the client directly to Meta Platforms from a payment card the client puts on the ad account, at Meta's own prices; Lead Gen Rentals does not handle, invoice or mark up advertising spend. The Engine plan requires a committed minimum advertising budget of $50 per day. A lead means a form submission containing a name and an Australian mobile number, captured with named consent to be contacted by one identified service business. Every lead delivered to a client is exclusive to it, named to it, delivered to no other business and never resold. An engine is used by one client at a time. Engaging Lead Gen Rentals confers no exclusive right to any area, postcode, suburb or region. 10 Quoted Jobs Guarantee, Engine plan: where fewer than 10 quoted jobs are produced in the 30 day guarantee period, the service fee for that period is refunded in full on a claim made within 7 days of the period ending. The period runs for 30 consecutive days from the day advertising first goes live and is not extended or reset by any suspension of advertising. A quoted job is a delivered lead for which the client has issued a written quotation, or which has returned a confirmation response to the automated follow-up. The guarantee is conditional on the agreed daily advertising budget being funded continuously, the automated follow-up remaining enabled, each lead being contacted and worked by the client, and no change being made to any campaign, creative, budget or targeting without Lead Gen Rentals' prior agreement. Advertising spend is paid by the client directly to Meta and is not refundable by Lead Gen Rentals. Lead Gen Rentals does not guarantee any cost per lead, cost per quote, that any quote is accepted, or any revenue or other outcome. Billed month to month in advance; cancel any time before your next cycle begins, no lock-in and no exit fee. Full terms at <a href="/terms" style="color:inherit;text-decoration:underline">leadgenrentals.com.au/terms</a>.</p>
     </div>
   </div>
 </footer>

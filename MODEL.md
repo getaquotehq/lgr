@@ -109,60 +109,101 @@ reads as the total cost, and it is not.
 
 ## 3. The guarantee
 
-### 3.1 Engine tier: 10 quotes and $100,000 of quoted pipeline, every 30 days
+### 3.1 Ten quoted jobs in thirty days
 
-In each 30-day cycle LGR guarantees the client will send **10 quotes** totalling
-**$100,000 or more** in quoted pipeline, from leads their engine produced.
+In each 30-day cycle LGR guarantees the client will get **10 quoted jobs** from
+leads their engine produced. Fall short and **the fee for that cycle is refunded
+in full**. No pro-rata, no credit note, no make-good month. The money goes back,
+and the client keeps every lead, quote and job the cycle produced.
 
-**Miss either number and the fee for that cycle is refunded in full.** No
-pro-rata, no credit note, no make-good month. The money goes back. The client
-keeps every lead, quote and job the cycle produced.
+It applies to **every cycle**, not just the first. Our exposure is capped at one
+month's fee at a time, and a guarantee that expires after the trial month is a
+trial offer wearing a guarantee's clothes.
 
-It applies to **every cycle**, not just the first. That is deliberate: our
-exposure is capped at one month's fee at a time, and a guarantee that expires
-after the trial month is a trial offer wearing a guarantee's clothes.
+**There is no dollar figure in the guarantee.** A quoted-pipeline number is a
+positioning line for one landing page (§9.1), never a term. Two targets means a
+client who produced twelve quotes worth less than some figure gets settled as a
+shortfall against a promise nobody made them, which is why
+`guarantee_pipeline_aud` is retired rather than merely unused.
 
-### 3.2 Definitions - and they are load-bearing
+### 3.2 What counts as a quoted job
 
-- A **quote** is a priced quote issued to a named homeowner through the LGR
-  dashboard, with a total and a `sent_at` timestamp.
-- **Quoted pipeline** is the sum of those quotes' totals.
-- Only quotes against **leads the engine delivered** count. A client's own
-  referrals and walk-ins are their business and do not discharge our guarantee.
-- The cycle runs **30 days from the day the ads go live**, not from the day the
-  card was charged. Onboarding time is ours to lose, not theirs.
+A **quoted job** is a lead the engine delivered for which the client has issued a
+written quotation, recorded in the dashboard, or evidenced from the client's own
+records where they quote elsewhere.
 
-### 3.3 What the client has to hold up
+**And this is the part that matters:** our control over a lead ends the moment
+that lead replies to the automated follow-up confirming they want a quote or an
+appointment. Whether a written quote then goes out is the client's own sales
+activity, and we neither control it nor should be judged on it. So:
 
-The guarantee is conditional, the conditions are short, and every one of them
-is stated on the page and in the terms rather than buried:
+> A lead that returns a **confirmation response** during the period counts as a
+> quoted job, whether or not the client actually quoted it.
 
-- the agreed minimum budget stays funded on the card for the whole cycle;
-- the ad account is not paused, edited, unlinked or have its card removed;
-- leads get a response - the platform sends the first one automatically, so in
-  practice this means not switching it off;
-- quotes are sent through the dashboard, because that is how they are counted.
+A confirmation response is a reply from a delivered lead to the automated
+follow-up that affirmatively confirms interest in obtaining a quote or attending
+an appointment, recorded in the dashboard. Where 10 or more are recorded in the
+period, the guarantee is met and no refund is payable.
 
-If the client's card declines and Meta stops delivery, the **clock pauses**. It
-does not fail. A cycle interrupted by something the client can fix is resumed,
-not forfeited - we are not looking for a technicality to escape on.
+Counting is over **distinct leads**: a lead that both confirmed and was quoted is
+one quoted job, not two.
 
-### 3.4 What is not guaranteed, on any tier
+### 3.3 The period
+
+**Thirty consecutive days from the day the client's advertising first goes
+live** - not from the day they paid. Onboarding time is ours to lose, not theirs.
+
+**Any suspension of advertising does not extend or reset it.** Pausing is the
+client's responsibility. Continuous funding is a condition (§3.4) rather than
+something that stops the clock, because a clock that pauses whenever delivery
+stops can be held open indefinitely.
+
+### 3.4 The conditions
+
+A refund is conditional on all of the following holding throughout the period.
+They are short, they are all things the client controls, and every one of them
+is stated on the offer page and in the terms rather than buried:
+
+- advertising was funded continuously at or above the daily budget agreed at
+  activation, paid by the client directly to Meta;
+- the automated follow-up stayed enabled and the assigned number stayed
+  connected;
+- each delivered lead was contacted and worked by the client, recorded in the
+  dashboard;
+- no change was made to any campaign, creative, budget or targeting without our
+  prior agreement.
+
+### 3.5 Claims
+
+A refund is **claimed, not automatic**. The client submits a claim in writing
+within **7 days** of the period ending; we assess it against the platform record
+and respond within **14 days**.
+
+That is not a hurdle for its own sake - it is what makes the assessment a dated,
+recorded decision against the evidence rather than an argument in an inbox. A
+cycle that ends short and is never claimed settles as a shortfall with nothing
+owed until a claim arrives. The 7-day deadline is ours to waive, and waiving it
+should be a decision rather than an accident, so only a super admin can record a
+late claim.
+
+### 3.6 What is not guaranteed, on any tier
 
 - any cost per lead, per quote or per job
+- any number of leads
 - that a quote is accepted, or that any revenue results
 - any number above the guarantee
 - anything at all on the Custom tier beyond what its own scope document says
 
-### 3.5 The rule that protects the product
+Advertising spend is paid by the client to Meta and is **not ours to refund**
+under any circumstance, including when we miss.
 
-A shortfall is closed by **spending more and selling better** - never by
-widening the targeting past what the client services, loosening the lead
-validation, or counting something that is not a real priced quote to a real
+### 3.7 The rule that protects the product
+
+A shortfall is closed by **spending more and selling better** - never by widening
+the targeting past what the client services, loosening lead validation, or
+counting something that is not a real confirmation or a real quote to a real
 homeowner. Server-side validation runs before delivery and is not relaxed to
 reach a number. A guarantee met with junk costs more than a refund.
-
----
 
 ## 4. How a client comes on
 
@@ -346,15 +387,48 @@ delivers nothing.
 
 ## 9. Copy rules, in one place
 
+### 9.1 Where the guarantee may appear
+
+**The guarantee is not site-wide copy.** As a marketing claim it appears on
+`offer.html` - a noindexed landing page for paid traffic - and nowhere else.
+Not the homepage, not the trade pages, not the pricing page's copy, and not in
+the footer fine print of any page that does not make the claim.
+
+The one exception is `fleet.html`, where the transaction completes: its legal
+fine print carries the term because the client pays there, and a page that takes
+money for an offer has to state it. That is disclosure, not a headline, and it
+does not license putting the guarantee back into that page's copy.
+
+The reason is that a standing public promise of a refund is read by every
+competitor and every tyre kicker, not only the person who clicked the ad it was
+written for. On the offer page it reaches someone who has already seen the pitch
+and is one click from acting. Everywhere else it is a liability with no
+corresponding lift.
+
+The rest of the site sells the same product without it: exclusive leads, ad
+spend paid straight to Meta, nothing resold. **If the guarantee starts appearing
+on the homepage or the trade pages again, that is a regression.**
+
+It still appears where it must: in the terms, on the Stripe line item, and in
+the client's own dashboard. Those are a contract, a receipt and a logged-in
+tracker - not marketing surfaces.
+
+**The $100,000 figure is not part of the guarantee** (§3.1). It is an
+illustration of what ten quoted jobs is typically worth, and it may appear on
+`offer.html` only. It must never appear in the terms, in the schema, on a Stripe
+line item, or anywhere a reader could take it for a number we are held to.
+
+### 9.2 What may and may not be said
+
 Things that are true and may be said:
 
 - "We own the engine and run the ads. You pay us a fixed fee and pay Meta
   directly for the advertising."
-- "10 quotes and $100,000 in quoted pipeline in 30 days, or your fee is
-  refunded in full."
 - "Your engine is yours alone while you're on it."
 - "Every advertising dollar is charged to your card by Meta. We never touch it."
 - "You see your business name on the consent line before you pay."
+- on `offer.html` only: "10 quoted jobs in 30 days, or your fee is refunded in
+  full."
 
 Things that are false, or true-but-forbidden, and may never be said:
 
@@ -365,6 +439,7 @@ Things that are false, or true-but-forbidden, and may never be said:
 - any guaranteed cost per lead, or any guaranteed outcome beyond §3.1
 - any specific deployed-spend figure of LGR's own
 - "guaranteed leads", "minimum leads", or a lead floor of any kind
+- any guaranteed dollar figure of quoted pipeline, anywhere
 
 ---
 
