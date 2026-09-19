@@ -94,28 +94,40 @@ begin
     return null;
   end if;
 
-  -- asset_leads carries one full_name; leads wants first and last. Split on the
-  -- first space and put the remainder in last_name, which is wrong for some
-  -- names and right for most, and is only ever a display field here.
+  -- asset_leads carries one full_name. `leads.name` takes it verbatim, which is
+  -- what the dashboard shows. first_name/last_name are also filled by splitting
+  -- on the first space - wrong for some names, right for most, and never used
+  -- for anything but display.
   v_first := split_part(btrim(coalesce(v_al.full_name, '')), ' ', 1);
   v_last  := nullif(btrim(substr(btrim(coalesce(v_al.full_name, '')), length(v_first) + 1)), '');
   if v_first = '' then v_first := 'Unknown'; end if;
 
+  -- `name`, `postcode` and `custom_data` are the columns the dashboard actually
+  -- renders (20260401000004 added them and the UI reads l.name, not
+  -- first_name/last_name). Writing only first_name/last_name produced a lead
+  -- that existed, counted toward the guarantee, and displayed as "-" in the
+  -- client's own list. Both shapes are populated: `name` for the UI, the split
+  -- pair for anything that still expects it.
   insert into public.leads (
-      company_id, first_name, last_name, email, phone,
-      source, service_type, status, notes, metadata, created_at)
+      company_id, name, first_name, last_name, email, phone,
+      source, service_type, status, postcode, notes, custom_data, metadata, created_at)
   values (
-      v_company, v_first, v_last, v_al.email, v_al.phone,
+      v_company,
+      nullif(btrim(coalesce(v_al.full_name, '')), ''),
+      v_first, v_last, v_al.email, v_al.phone,
       'lgr_engine',
       (select n.name from assets a join niches n on n.id = a.niche_id where a.id = v_al.asset_id),
       'new',
-      nullif(btrim(concat_ws(E'\n',
-        case when v_al.postcode is not null then 'Postcode: ' || v_al.postcode end)), ''),
+      v_al.postcode,
+      null,
+      -- The engine's niche-specific answers (bill size, timeframe, roof type)
+      -- go where the dashboard's custom-field rendering looks for them, rather
+      -- than being buried in metadata where only a human reading JSON finds them.
+      coalesce(v_al.extra, '{}'::jsonb),
       jsonb_strip_nulls(jsonb_build_object(
         'asset_lead_id', v_al.id,
         'asset_id',      v_al.asset_id,
-        'postcode',      v_al.postcode,
-        'engine_extra',  v_al.extra
+        'postcode',      v_al.postcode
       )),
       v_al.captured_at)
   returning id into v_lead;

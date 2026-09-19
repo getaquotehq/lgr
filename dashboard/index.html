@@ -554,7 +554,7 @@ tbody tr:hover{background:var(--side-hover);transition:background .1s}
       <div class="nav">
         <button id="navBuyLeads" class="nav-item" data-page="buy-leads" type="button">
           <span class="icon" data-icon="spark"></span>
-          <span class="nav-text">Rent Assets</span>
+          <span class="nav-text">Your Engine</span>
         </button>
         <button class="nav-item" data-page="ai-insights" type="button">
           <span class="icon" data-icon="chart"></span>
@@ -615,7 +615,7 @@ tbody tr:hover{background:var(--side-hover);transition:background .1s}
         <section class="panel" id="onboardingChecklist" style="border:1px solid var(--accent,#F59E0B);display:none">
           <div class="panel-h">
             <div>
-              <h2>Get started - 3 steps to your first booked job</h2>
+              <h2>Get started - 3 steps to your first lead</h2>
               <p id="onboardingProgress" style="font-size:13px;color:var(--muted)">0 of 3 complete</p>
             </div>
             <button type="button" onclick="document.getElementById('onboardingChecklist').style.display='none';localStorage.setItem('onboarding_dismissed','1')"
@@ -641,10 +641,10 @@ tbody tr:hover{background:var(--side-hover);transition:background .1s}
               <div id="oc_step3" class="check-row" style="cursor:pointer" onclick="navigateTo('buy-leads')">
                 <span id="oc_step3_icon" style="font-size:18px;flex-shrink:0">○</span>
                 <div>
-                  <strong style="font-size:13px">Fund your first engine</strong>
-                  <span class="muted" style="display:block;font-size:12px">Deploy budget on a live engine and start receiving exclusive named leads</span>
+                  <strong style="font-size:13px">Add your card to the ad account</strong>
+                  <span class="muted" style="display:block;font-size:12px">We grant you access, you add your own card, Meta bills you directly. Nothing runs until this is done</span>
                 </div>
-                <span style="margin-left:auto;font-size:12px;color:var(--accent,#F59E0B)">Start an engine →</span>
+                <span style="margin-left:auto;font-size:12px;color:var(--accent,#F59E0B)">Your engine →</span>
               </div>
             </div>
           </div>
@@ -658,7 +658,7 @@ tbody tr:hover{background:var(--side-hover);transition:background .1s}
               <span class="icon" data-icon="file"></span><span>New Quote</span>
             </button>
             <button class="quick-tile" type="button" onclick="navigateTo('buy-leads')">
-              <span class="icon" data-icon="spark"></span><span>Rent Assets</span>
+              <span class="icon" data-icon="spark"></span><span>Your Engine</span>
             </button>
             <button class="quick-tile" type="button" onclick="navigateTo('bulk-sms')">
               <span class="icon" data-icon="mail"></span><span>Send Campaign</span>
@@ -783,7 +783,7 @@ tbody tr:hover{background:var(--side-hover);transition:background .1s}
               <h3>No leads yet</h3>
               <p>Leads flow in automatically in real-time.</p>
               <div style="display:flex;gap:8px;margin-top:4px">
-                <button class="btn" type="button" onclick="navigateTo('buy-leads')">Start an engine →</button>
+                <button class="btn" type="button" onclick="navigateTo('buy-leads')">Your engine →</button>
               </div>
             </div>
             <div id="leadsPagination" style="display:flex;justify-content:center;gap:10px;margin-top:14px"></div>
@@ -1622,27 +1622,20 @@ tbody tr:hover{background:var(--side-hover);transition:background .1s}
         </div>
       </div>
 
-      <!-- Start an Engine -->
+      <!-- Your Engine -->
+      <!--
+        The self-serve "browse engines and buy one" panel that used to sit here
+        is gone. It described a flow that does not exist: an engine is allocated
+        by us, the ad account is granted by hand, and the client's own card goes
+        on it before anything can run. A logged-in client cannot do any of that
+        from a button, and a panel implying they can just produces a checkout
+        that strands them waiting for a manual step nobody told them about.
+
+        New clients buy on the public pricing page. An existing client who wants
+        a second engine talks to us, because that is genuinely what happens.
+      -->
       <div id="page-buy-leads" class="page hidden">
         <div class="stack">
-          <section class="panel">
-            <div class="panel-h">
-              <div>
-                <h2>Start an Engine</h2>
-                <p>An engine is a lead generation funnel and the Meta campaigns behind it. We own it and run it, and it is used by one business at a time. You pay us a flat monthly fee and you pay Meta directly for your own ad budget, on your own card. Which page and domain an engine runs on is shown under Your Engine once your first fee is paid: we do not publish live funnels to accounts that are not paying for them.</p>
-              </div>
-              <div style="display:flex;gap:6px;flex-wrap:wrap">
-                <select id="rentNicheFilter" class="filter-select"><option value="">All trades</option></select>
-
-              </div>
-            </div>
-            <div class="panel-b">
-              <div id="rentLoading" class="notice">Loading availability…</div>
-              <div id="rentGrid" class="hidden"></div>
-              <div id="rentEmpty" class="notice hidden">Every engine is taken right now. Email contact@leadgenrentals.com.au and we will come to you first when one frees up.</div>
-            </div>
-          </section>
-
           <section class="panel">
             <div class="panel-h">
               <div><h2>Your Engine</h2><p id="rentMineCount">Loading…</p><p style="font-size:12px;color:var(--muted);margin-top:4px">Your engine links through to the live page homeowners land on. The fee column is ours; the Meta column is billed to your own card and never passes through us.</p></div>
@@ -1650,7 +1643,7 @@ tbody tr:hover{background:var(--side-hover);transition:background .1s}
             <div class="panel-b">
               <div id="rentMineLoading" class="notice">Loading…</div>
               <div id="rentMine" class="hidden"></div>
-              <div id="rentMineEmpty" class="notice hidden">You do not have an engine running yet.</div>
+              <div id="rentMineEmpty" class="notice hidden">You do not have an engine running yet. Once your first fee is paid we allocate one, grant you access to its Meta ad account, and launch as soon as your card is on it. Anything to chase up, email <a href="mailto:contact@leadgenrentals.com.au">contact@leadgenrentals.com.au</a>.</div>
             </div>
           </section>
         </div>

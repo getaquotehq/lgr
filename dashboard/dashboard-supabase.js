@@ -992,7 +992,7 @@ const PAGE_META = {
   "team-members":     ["Team",              "Invite and manage your team."],
   "integrations":     ["Integrations",      "API keys, webhooks, and external connections."],
   "reviews":          ["Reviews",           "Manage Google review requests for closed deals."],
-  "buy-leads":        ["Rent Assets",        "Rent an exclusive lead generation asset for your trade and area."],
+  "buy-leads":        ["Your Engine",        "The engine we run for you, what it costs, and where it is up to."],
 };
 
 function isAdmin() {
@@ -1091,12 +1091,15 @@ async function loadDashboard() {
 
 
   try {
-    const [{ data: leads }, { data: quotes }, { data: appointments }, { data: aiCfg }, { count: orderCount }] = await Promise.all([
+    const [{ data: leads }, { data: quotes }, { data: appointments }, { data: aiCfg }, { data: openRentals }] = await Promise.all([
       sb.from("leads").select("id, name, email, pipeline_stage, value, ai_enabled, created_at").eq("company_id", currentCompanyId),
       sb.from("quotes").select("id, lead_id, status, created_at").eq("company_id", currentCompanyId),
       sb.from("appointments").select("id, lead_id, status, start_time, created_at").eq("company_id", currentCompanyId),
       sb.from("sms_agent_config").select("is_active, agent_name").eq("company_id", currentCompanyId).maybeSingle(),
-      sb.from("rentals").select("id", { count: "exact", head: true }).is("ended_at", null),
+      // The "own rentals" RLS policy scopes this to the signed-in company, so no
+      // installer filter is needed here. payment_method_added_at is what the
+      // onboarding checklist's third step asks about.
+      sb.from("rentals").select("id, payment_method_added_at").is("ended_at", null),
     ]);
 
     const all          = leads || [];
@@ -1158,7 +1161,10 @@ async function loadDashboard() {
     renderPipelineSnapshot(all);
 
     loadHotLeads();
-    loadOnboardingChecklist(aiCfg, all.length, orderCount || 0);
+    // Card on the ad account: true only once at least one live engagement has it
+    // stamped. Until then the client is the blocker and the checklist says so.
+    const cardOnAccount = (openRentals || []).some((r) => !!r.payment_method_added_at);
+    loadOnboardingChecklist(aiCfg, all.length, cardOnAccount);
     loadActiveOrdersDash();
 
     // ── Status banner ──────────────────────────────────────────────────────
@@ -1501,13 +1507,17 @@ async function openConversationForLead(leadId) {
 }
 
 // ─── Onboarding Checklist (Change 7) ─────────────────────────────────────────
-function loadOnboardingChecklist(aiCfg, leadCount, orderCount) {
+// Step 3 used to be "has an order", which under the old self-serve model meant
+// "has bought something". It now asks whether the client's own card is on the ad
+// account, because that is the step that actually blocks a launch and the one
+// they have to do themselves. It is read from the rental, not inferred.
+function loadOnboardingChecklist(aiCfg, leadCount, cardOnAccount) {
   if (localStorage.getItem('onboarding_dismissed')) return;
   const el = document.getElementById('onboardingChecklist');
   if (!el) return;
   const step1Done = aiCfg?.is_active === true && !!aiCfg?.agent_name;
   const step2Done = (leadCount || 0) > 0;
-  const step3Done = (orderCount || 0) > 0;
+  const step3Done = cardOnAccount === true;
   const doneCount = [step1Done, step2Done, step3Done].filter(Boolean).length;
   if (doneCount === 3) { el.style.display = 'none'; return; }
   el.style.display = '';
@@ -4995,7 +5005,7 @@ function generatePerformanceInsights(stats, leads, benchmark = null, niche = nul
   // Show a teaser if no benchmark yet
   if (!bm && niche && cards.length > 0) {
     cards.push({
-      title: "Niche Benchmarks Coming Soon",
+      title: "No benchmark data yet",
       body: `Once 10+ ${nicheLabel} businesses on Lead Gen Rentals have enough pipeline data, you'll see how you compare to your peers - callback rates, win rates, deal values, and more. Your data contributes automatically if you've opted in under Account Settings.`,
       type: "info",
       metric: null,
@@ -5633,30 +5643,27 @@ async function skipReviewRequest(requestId) {
 }
 
 // =============================================================================
-// Start an Engine
+// Your Engine
 // =============================================================================
 // An engine is one lead generation funnel plus the Meta campaigns behind it. We
 // own both. It is used by one business at a time, and there are two payments:
 // our fee, billed by us, and the client's ad budget, billed by Meta to the
 // client's own card. Neither is ever shown without the other.
 //
-// Nothing here names the engine. Which page or domain it runs on is withheld
-// until the first fee is paid, and the base table is not readable by an account
-// holding no live engagement. Once the engagement exists, "Your Engine" further
-// down reads the full asset row and links the live page. Signing up for a
-// dashboard account is free, so everything above that line has to assume its
-// reader is a competitor.
+// THERE IS NO SELF-SERVE PURCHASE HERE ANY MORE. The browse-and-buy grid that
+// used to live in this file read engine_availability, asked for a postcode in a
+// prompt() and opened a Stripe checkout. It described a flow that does not
+// exist: we allocate the engine, we grant the ad account by hand, and the
+// client's own card has to go on it before anything can run. A button cannot do
+// any of that, and one that pretends to just leaves a paying client waiting on
+// a manual step nobody mentioned.
+//
+// New clients buy on the public pricing page. An existing client wanting a
+// second engine talks to us. What is left below is the panel showing the engine
+// they have: what it costs, where the handover is up to, and the live page once
+// they are paid up.
 
-// The plan, read from the per-trade catalogue. There is no market grid of
-// individual engines any more, for the same two reasons the public page lost
-// one: exclusivity is per engine and never per area, so a grid of engines by
-// area is a territory map we do not sell; and a free dashboard signup would
-// otherwise hand a competitor the shape of our inventory. Availability is a
-// count per trade, and turning a postcode into an actual engine happens
-// server-side at checkout.
-
-let _rentPlans = [];
-let _rentMine  = [];
+let _rentMine = [];
 
 function rentMoney(n) {
   return (n == null || n === '') ? '-' : '$' + Number(n).toLocaleString('en-AU');
@@ -5666,9 +5673,9 @@ function rentTierLabel(t) {
   return t ? t.charAt(0).toUpperCase() + t.slice(1) : '-';
 }
 
-// The live engine URL. Only ever called from "Your Engine", for an engagement
-// this account actually holds - never from the plan cards, which have no
-// brand_domain to give them in the first place.
+// The live engine URL. Only ever called for an engagement this account actually
+// holds - engine identity is withheld until the first fee is paid, and the base
+// table is not readable by an account with no live engagement.
 function rentEngineUrl(a) {
   const d = String(a.brand_domain || '').replace(/^https?:\/\//, '').replace(/\/.*$/, '');
   if (!d) return null;
@@ -5676,146 +5683,9 @@ function rentEngineUrl(a) {
   return 'https://' + d + (slug ? '/' + slug + '/' : '/');
 }
 
+// The page is just "your engine" now, so loading it is loading that.
 async function loadBuyLeads() {
-  const loading = document.getElementById('rentLoading');
-
-  try {
-    const { data, error } = await sb
-      .from('engine_availability')
-      .select('niche_slug,niche_name,niche_status,engines_available,fee_aud,daily_budget_aud,guarantee_quotes')
-      .gt('engines_available', 0);
-    if (error) throw error;
-    _rentPlans = data || [];
-  } catch (err) {
-    loading.textContent = 'Could not load availability: ' + err.message;
-    return;
-  }
-
-  const nicheSel = document.getElementById('rentNicheFilter');
-  if (nicheSel) {
-    const keep = nicheSel.value;
-    nicheSel.innerHTML = '<option value="">All trades</option>' +
-      _rentPlans.map((p) => `<option value="${escapeHtml(p.niche_slug)}">${escapeHtml(p.niche_name)}</option>`).join('');
-    nicheSel.value = keep;
-  }
-
-  renderRentGrid();
   loadMyRentals();
-}
-
-function renderRentGrid() {
-  const loading = document.getElementById('rentLoading');
-  const grid    = document.getElementById('rentGrid');
-  const empty   = document.getElementById('rentEmpty');
-
-  const nicheSel = document.getElementById('rentNicheFilter');
-  const niche = nicheSel ? nicheSel.value : '';
-  const rows = _rentPlans.filter((p) => !niche || p.niche_slug === niche);
-
-  loading.classList.add('hidden');
-  if (!rows.length) {
-    grid.classList.add('hidden');
-    empty.classList.remove('hidden');
-    return;
-  }
-  empty.classList.add('hidden');
-  grid.classList.remove('hidden');
-
-  grid.innerHTML =
-    '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:14px">' +
-    rows.map((p) => `
-      <div style="border:1px solid var(--border);border-radius:12px;padding:16px;background:var(--surface,transparent);display:flex;flex-direction:column;gap:12px">
-        <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px">
-          <div>
-            <div style="font-weight:600">${escapeHtml(p.niche_name || 'Trade')}</div>
-            <div style="font-size:12px;color:var(--muted)">One business per engine</div>
-          </div>
-          <span style="font-size:11px;font-weight:600;padding:3px 9px;border-radius:999px;background:rgba(16,185,129,.14);color:#0f8a4d">Available</span>
-        </div>
-
-        <div>
-          <div style="display:flex;align-items:baseline;gap:6px">
-            <span style="font-size:26px;font-weight:700">${rentMoney(p.fee_aud)}</span>
-            <span style="font-size:12px;color:var(--muted)">per month + GST, to us</span>
-          </div>
-          <div style="font-size:13px;margin-top:2px"><strong>plus ${rentMoney(p.daily_budget_aud)} a day</strong>
-            <span style="color:var(--muted)">charged to your own card by Meta</span></div>
-        </div>
-
-        <div style="font-size:13px;line-height:1.7">
-          ${p.guarantee_quotes
-            ? `<div><strong>${p.guarantee_quotes} quoted jobs</strong> guaranteed every 30 days</div>
-               <div style="color:var(--muted)">Fall short and our fee for that period is refunded in full on a claim.</div>` : ''}
-          <div style="color:var(--muted)">Our fee contains no ad spend. You pay Meta directly, at Meta's prices, and we never handle it.</div>
-        </div>
-
-        <div style="font-size:11px;color:var(--muted);display:flex;align-items:center;gap:5px">
-          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" aria-hidden="true"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>
-          <span>The live page and its address are shown here once your first fee is paid.</span>
-        </div>
-
-        <button class="btn-primary" type="button" data-rent="${escapeHtml(p.niche_slug)}" style="margin-top:auto">Start this engine</button>
-      </div>`).join('') + '</div>';
-
-  grid.querySelectorAll('[data-rent]').forEach((b) =>
-    b.addEventListener('click', () => startRental(b.getAttribute('data-rent')))
-  );
-}
-
-// Checkout is the same edge function the public pricing page uses, so an
-// engagement started here and one started from the website produce identical
-// records. The postcode is asked for here rather than assumed, because it is
-// what the server resolves to an engine.
-async function startRental(nicheSlug) {
-  const plan = _rentPlans.find((p) => p.niche_slug === nicheSlug);
-  if (!plan) return;
-
-  const postcode = (prompt(
-    `What postcode do you want ${plan.niche_name} work in?\n\n` +
-    `This is not a territory you are buying, and it gives you no exclusive rights to an area. ` +
-    `We use it to put you on an engine that covers you and to target your campaigns.`
-  ) || '').trim();
-  if (!postcode) return;
-  if (!/^\d{4}$/.test(postcode)) { toast('Enter a 4 digit Australian postcode.', true); return; }
-
-  if (!confirm(
-    `Start a ${plan.niche_name} engine?\n\n` +
-    `To us: ${rentMoney(plan.fee_aud)} + GST a month, charged now by Stripe.\n` +
-    `To Meta: ${rentMoney(plan.daily_budget_aud)} a day, charged to your own card once your ad account access is set up. This is not charged by us.\n\n` +
-    (plan.guarantee_quotes
-      ? `Guaranteed: ${plan.guarantee_quotes} quoted jobs every 30 days, or our fee for that period is refunded in full on a claim.`
-      : '')
-  )) return;
-
-  const btn = document.querySelector(`[data-rent="${nicheSlug}"]`);
-  if (btn) { btn.disabled = true; btn.textContent = 'Opening checkout…'; }
-
-  try {
-    const { data: company } = await sb
-      .from('companies')
-      .select('name, email, phone')
-      .eq('id', currentCompanyId)
-      .maybeSingle();
-
-    const res = await fetch(`${SUPABASE_URL}/functions/v1/create-rental-checkout`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_ANON_KEY },
-      body: JSON.stringify({
-        niche_slug: nicheSlug,
-        postcode,
-        business_name: company?.name || '',
-        contact_name: '',
-        email: company?.email || '',
-        phone: company?.phone || '',
-      }),
-    });
-    const out = await res.json();
-    if (!res.ok || !out.url) throw new Error(out.error || 'Checkout could not be created');
-    window.location.href = out.url;
-  } catch (err) {
-    toast(err.message, true);
-    if (btn) { btn.disabled = false; btn.textContent = 'Start this engine'; }
-  }
 }
 
 // What the client sees of the ad account handover. Step two is theirs, and
@@ -5917,11 +5787,7 @@ async function loadMyRentals() {
     }).join('') + '</tbody></table></div>';
 }
 
-['rentNicheFilter'].forEach((id) => {
-  document.addEventListener('DOMContentLoaded', () => {
-    document.getElementById(id)?.addEventListener('change', renderRentGrid);
-  });
-});
+
 
 // =============================================================================
 // Admin (super admin only)

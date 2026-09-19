@@ -742,7 +742,7 @@ td.mono{font-family:var(--mono);font-size:12px}
     </div>
     <div class="frow"><label class="flabel">Short description</label><textarea class="fta" id="mn-desc" placeholder="~12-word blurb for the homepage picker"></textarea></div>
     <div class="fgrid2">
-      <div class="frow"><label class="flabel">Status</label><select class="fs" id="mn-status"><option value="live">Live</option><option value="coming_soon">Coming soon</option><option value="paused">Paused</option></select></div>
+      <div class="frow"><label class="flabel">Status</label><select class="fs" id="mn-status"><option value="live">Live</option><option value="paused">Paused</option></select></div>
       <div class="frow"><label class="flabel">Sort order</label><input class="fi" id="mn-sort" type="number" value="0"></div>
     </div>
     <div class="macts"><button class="btn" onclick="closeModal('m-niche')">Cancel</button><button class="btn btn-p" id="mn-save" onclick="saveNiche()">Save niche</button></div>
@@ -2372,7 +2372,7 @@ async function loadNiches(){
   if(nRes.error){ $('niches-tbody').innerHTML=`<tr><td colspan="7" class="empty" style="color:var(--red)">${esc(nRes.error.message)}</td></tr>`; return; }
   _niches=nRes.data||[];
   const cnt={}; (aRes.data||[]).forEach(a=>cnt[a.niche_id]=(cnt[a.niche_id]||0)+1);
-  const statusBadge=s=> s==='live'?'bg-grn':s==='coming_soon'?'bg-amb':'bg-gray';
+  const statusBadge=s=> s==='live'?'bg-grn':'bg-gray';
   $('niches-tbody').innerHTML = _niches.length ? _niches.map(n=>`<tr>
       <td><strong>${esc(n.name)}</strong></td>
       <td class="mono dim">${esc(n.slug)}</td>

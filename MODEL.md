@@ -379,9 +379,16 @@ on, and the client never sees it anyway (§7).
 
 Battery, HVAC, roofing and renovations have niches and price lists but **no
 funnel site**, and `submit-lead` routes on `brand_domain`, so there are no
-engines to sell and their pages stay coming-soon. Do not seed a niche whose
-funnel does not exist - a listing with no page behind it takes money and
-delivers nothing.
+engines to sell for them yet. Their pages are live and sell the offer; what they
+report is that nothing is free for that trade right now, computed from real
+inventory rather than from a "coming soon" badge (retired in `20260919000000` -
+a label nobody updates was a worse answer than the fact).
+
+Nobody can pay for a trade we cannot serve, and that does not depend on the
+copy: `allocate_engine()` returns null and checkout is refused server-side. Do
+not seed a niche whose funnel does not exist - a listing with a real engine
+behind it that cannot deliver takes money and delivers nothing, which is a
+different and much worse failure than showing no availability.
 
 ---
 

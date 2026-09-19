@@ -606,7 +606,7 @@ h1{font-size:18px;font-weight:500}
       </div>
       <div class="panel-b">
         <p style="font-size:12px;color:var(--muted);margin-bottom:12px">
-          A niche set to <strong>coming soon</strong> keeps its trade page live but shows the ribbon and hides its assets from the fleet selector. Set it to <strong>live</strong> when the funnels are ready to rent.
+          A niche set to <strong>paused</strong> is hidden from the site entirely. There is no "coming soon" state: whether a trade can be served is answered from live inventory, so a trade with no engines simply shows none available rather than a badge somebody has to remember to change.
         </p>
         <div id="lgrNicheEditor" class="hidden" style="margin-bottom:14px;padding:14px;background:var(--surface);border:1px solid var(--border);border-radius:10px">
           <input type="hidden" id="lgrNicheId">
@@ -616,7 +616,6 @@ h1{font-size:18px;font-weight:500}
             <label class="bank-lbl">Status
               <select id="lgrNicheStatus" class="bank-in">
                 <option value="live">Live</option>
-                <option value="coming_soon">Coming soon</option>
                 <option value="retired">Retired</option>
               </select>
             </label>

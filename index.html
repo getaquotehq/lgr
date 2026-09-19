@@ -147,14 +147,12 @@
     color:var(--ink);text-decoration:none;
     transition:transform .16s,box-shadow .16s,border-color .16s}
   a.trade.live:hover{transform:translateY(-2px);box-shadow:var(--sh-lg);border-color:var(--blue-line)}
-  .trade.soon{opacity:.75}
   .trade-top{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:11px}
   .trade h3{font-size:1.14rem;font-weight:600;letter-spacing:-.02em;color:var(--ink)}
   .trade p{font-size:.9rem;color:var(--muted);line-height:1.5;flex:1;margin-bottom:18px}
   .trade .btn{width:100%}
   .pill{font-size:.72rem;font-weight:550;padding:4px 11px;border-radius:99px;letter-spacing:0}
   .pill.open{color:var(--green);background:var(--green-tint)}
-  .pill.soon{color:var(--muted);background:var(--surface-2)}
   /* loading / error states for live data */
   .sk-bar{background:var(--line-2);border-radius:6px;height:12px;display:block;
     animation:skpulse 1.2s ease-in-out infinite}
@@ -631,16 +629,16 @@
     const PAGE = { solar: '/solar-leads', battery: '/solar-battery-leads' };
     const href = slug => PAGE[slug] || '/' + slug + '-leads';
     const label = n => n.slug === 'solar' ? 'solar' : n.name.toLowerCase();
+    // Every trade links through to its page. There is no "coming soon" card any
+    // more: a greyed-out tile with a dead button is a dead end that tells a
+    // visitor nothing and gives them nowhere to go. Whether an engine is free
+    // for a trade is a live question answered on the trade page and the pricing
+    // page, from real availability, rather than a label we forget to update.
     const cardLive = n =>
       '<a href="'+href(n.slug)+'" class="trade live">'
-      + '<div class="trade-top"><h3>'+esc(n.name)+'</h3><span class="pill open">Live</span></div>'
+      + '<div class="trade-top"><h3>'+esc(n.name)+'</h3></div>'
       + '<p>'+esc(n.short_desc||'')+'</p>'
       + '<span class="btn btn-primary btn-glossy">View '+esc(label(n))+' leads →</span></a>';
-    const cardSoon = n =>
-      '<div class="trade soon">'
-      + '<div class="trade-top"><h3>'+esc(n.name)+'</h3><span class="pill soon">Coming soon</span></div>'
-      + '<p>'+esc(n.short_desc||'')+'</p>'
-      + '<span class="btn btn-ghost" aria-disabled="true">Coming soon</span></div>';
     async function loadTrades(){
       if(!cfg.url || !cfg.anonKey || cfg.anonKey.indexOf('__') === 0){
         grid.innerHTML = '<div class="data-error">Trade data temporarily unavailable.</div>';
@@ -650,12 +648,12 @@
         const sb = supabase.createClient(cfg.url, cfg.anonKey);
         const { data, error } = await sb.from('niches')
           .select('slug,name,short_desc,status,sort_order')
-          .in('status', ['live','coming_soon'])
+          .neq('status', 'paused')
           .order('sort_order', { ascending:true })
           .order('name', { ascending:true });
         if(error) throw error;
         grid.innerHTML = (data && data.length)
-          ? data.map(n => n.status === 'live' ? cardLive(n) : cardSoon(n)).join('')
+          ? data.map(cardLive).join('')
           : '<div class="data-error">No trades available yet.</div>';
       }catch(e){
         console.error('niches load failed', e);
