@@ -431,6 +431,63 @@ comment on view public.guarantee_progress is
 revoke all on public.guarantee_progress from public, anon;
 grant select on public.guarantee_progress to authenticated;
 
+-- ─── 6b. The public views stop carrying the retired column ─────────────────
+-- assets_public and engine_availability were built in 20260916000000 with
+-- guarantee_pipeline_aud in their projections. It is always null now, so nothing
+-- breaks - but a nullable column called "guarantee pipeline" sitting in the
+-- catalogue anon reads is an invitation to put a dollar figure back on a page.
+-- Both are rebuilt without it. The projections are otherwise unchanged.
+drop view if exists public.assets_public;
+create view public.assets_public as
+  select a.id,
+         a.tier,
+         a.monthly_price_aud,
+         a.min_daily_budget_aud,
+         a.guarantee_quotes,
+         a.guarantee_window_days,
+         a.status,
+         a.sold_out,
+         a.created_at,
+         a.niche_id,
+         n.slug as niche_slug,
+         n.name as niche_name
+    from public.assets a
+    join public.niches n on n.id = a.niche_id
+   where a.deleted_at is null;
+
+comment on view public.assets_public is
+  'Public engine catalogue: trade, tier, fee, committed daily budget, the guaranteed '
+  'number of quoted jobs, and availability. Never brand_name or brand_domain (engine '
+  'identity is revealed after payment), never region (exclusivity is per engine), and '
+  'never a dollar guarantee figure. MODEL.md sections 1.1, 7 and 9.1.';
+
+revoke all on public.assets_public from anon, authenticated;
+grant select on public.assets_public to anon, authenticated;
+
+drop view if exists public.engine_availability;
+create view public.engine_availability as
+  select n.slug              as niche_slug,
+         n.name              as niche_name,
+         n.status            as niche_status,
+         count(a.id) filter (
+           where a.status = 'available' and not a.sold_out and a.deleted_at is null
+         )                   as engines_available,
+         min(a.monthly_price_aud)    filter (where a.deleted_at is null) as fee_aud,
+         min(a.min_daily_budget_aud) filter (where a.deleted_at is null) as daily_budget_aud,
+         min(a.guarantee_quotes)     filter (where a.deleted_at is null) as guarantee_quotes
+    from public.niches n
+    left join public.assets a
+           on a.niche_id = n.id and a.tier = 'engine'
+   group by n.slug, n.name, n.status, n.sort_order
+   order by n.sort_order, n.name;
+
+comment on view public.engine_availability is
+  'Per-trade availability for the public pages. A count, never a list - a region-by-region '
+  'breakdown is the territory map by another route. MODEL.md section 1.1.';
+
+revoke all on public.engine_availability from anon, authenticated;
+grant select on public.engine_availability to anon, authenticated;
+
 -- ─── 7. Backfill ────────────────────────────────────────────────────────────
 -- Any cycle already opened was measuring the wrong thing. Recompute the lot.
 do $$

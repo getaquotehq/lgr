@@ -15,6 +15,12 @@
 -- See MODEL.md. That document is the source of truth; this migration is it
 -- expressed in tables.
 --
+-- SUPERSEDED IN PART BY 20260917000000. The guarantee described below as "10
+-- quotes AND $100,000 of quoted pipeline" is not the promise and never shipped:
+-- it is ten QUOTED JOBS, with no dollar figure anywhere in the schema or the
+-- terms. That migration retires guarantee_pipeline_aud and rewrites the column
+-- comments this file sets. Read them together; where they disagree, 917 wins.
+--
 -- WHY THE FLOOR COLUMNS ARE DROPPED RATHER THAN LEFT ALONE
 --
 -- floor_leads has already been dropped once (20260828120000) and restored once
@@ -233,6 +239,17 @@ revoke all on function public.set_area_pricing(uuid, text, integer, numeric, int
   from public, anon;
 grant execute on function public.set_area_pricing(uuid, text, integer, numeric, integer, integer, uuid)
   to authenticated, service_role;
+
+-- assets_public still carries floor_leads at this point: the version created by
+-- 20260831170000 selects it, and section 5 below does not rebuild it until after
+-- this. Postgres refuses to drop a column a view depends on, so the view is
+-- dropped here and recreated in section 5 without the column.
+--
+-- Dropped explicitly rather than with DROP ... CASCADE. Cascade would also take
+-- out anything else that happens to depend on the column without saying what, and
+-- on a view that anon reads that is exactly the kind of silent collateral damage
+-- worth a few extra lines to avoid.
+drop view if exists public.assets_public;
 
 alter table public.assets           drop column if exists floor_leads;
 alter table public.rentals          drop column if exists floor_leads;
