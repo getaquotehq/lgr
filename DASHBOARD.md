@@ -41,8 +41,9 @@ Edge functions and migrations live with the rest of the project in
    tables - the one clash, `leads`, was resolved by renaming LGR's to
    `asset_leads`. (Already applied to the live project.)
 
-2. **Deploy the edge functions** in `../supabase/functions/`. Stripe has one
-   handler, `stripe-webhook`, for the engine checkout.
+2. **Deploy the edge functions** in `../supabase/functions/`. Stripe has two
+   handlers: `stripe-webhook` for the engine checkout and
+   `dashboard-stripe-webhook` for SMS credit purchases.
 
 3. **Set the function secrets** on the LGR Supabase project:
    `RESEND_API_KEY`, `RESEND_FROM_EMAIL`, `TWILIO_ACCOUNT_SID`,
@@ -66,8 +67,12 @@ Edge functions and migrations live with the rest of the project in
   done in SQL.
 - **Retired in October 2026**, as leftovers of the self-serve platform the
   dashboard was ported from: the public REST API and its Cloudflare worker,
-  API keys, outbound webhooks, Google review requests, the VA console, SMS
-  credit top-ups, and the unused password-reset / phone-check / callback
-  intake functions. `va-api` became `admin-api` (admin only) since
-  `admin.html` still needs its billing, DFY and email-template actions. The
-  tables behind the retired features are still in the database, unused.
+  API keys, outbound webhooks, Google review requests, the VA console, and
+  the unused phone-check / callback intake functions. `va-api` became
+  `admin-api` (admin only) since `admin.html` still needs its billing, DFY and
+  email-template actions. Their tables were dropped in `20261009000100`.
+- Still deployed but not called from any page: `complete-password-reset`,
+  `send-password-rest`, `create-sms-credits-checkout` and
+  `dashboard-stripe-webhook`. Password resets use Supabase's built-in
+  `resetPasswordForEmail`; the SMS credit Buy buttons were taken out of the
+  dashboard.
