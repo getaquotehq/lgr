@@ -1819,18 +1819,6 @@ function renderCustomDataSummary(data) {
   }).join("");
 }
 
-function resetLeadForm() {
-  document.getElementById("leadForm")?.reset();
-  const leadId = document.getElementById("leadId");
-  const leadModalTitle = document.getElementById("leadModalTitle");
-  if (leadId) leadId.value = "";
-  if (leadModalTitle) leadModalTitle.textContent = "New Lead";
-
-  // Re-enable any fields that a previously-viewed locked lead disabled
-  setFieldsLocked(LOCKED_LEADMODAL_FIELDS, false);
-  renderCustomFieldInputs();
-}
-
 async function openEditLead(id) {
   const l = allLeads.find((x) => x.id === id);
   if (!l) return;
