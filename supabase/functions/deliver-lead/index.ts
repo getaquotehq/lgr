@@ -12,6 +12,9 @@
 // quote guarantee. See sync_asset_lead_to_company (20260916000200).
 //
 // Request:  POST { "lead_id": "<uuid>" }   (installer_id optional override)
+// Callers:  submit-lead (service role key) and Mission Control (a super admin's
+//           JWT). Anyone else is refused - a re-delivery emails and texts the
+//           installer, so it must not be triggerable from outside.
 // Secrets:  SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY (auto-injected),
 //           RESEND_API_KEY, RESEND_FROM_EMAIL,
 //           TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, TWILIO_FROM_NUMBER
@@ -29,6 +32,27 @@ function jsonResponse(body: unknown, status = 200) {
     status,
     headers: { ...corsHeaders, "Content-Type": "application/json" },
   });
+}
+
+function safeEqual(a: string, b: string): boolean {
+  const x = new TextEncoder().encode(a);
+  const y = new TextEncoder().encode(b);
+  let ok = x.length === y.length && x.length > 0;
+  for (let i = 0; i < Math.max(x.length, y.length); i++) {
+    if ((x[i] ?? 0) !== (y[i] ?? 0)) ok = false;
+  }
+  return ok;
+}
+
+async function isAllowedCaller(req: Request): Promise<boolean> {
+  const token = (req.headers.get("Authorization") || "").replace(/^Bearer\s+/i, "");
+  if (!token) return false;
+  if (safeEqual(token, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "")) return true;
+  const asCaller = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_ANON_KEY")!, {
+    global: { headers: { Authorization: `Bearer ${token}` } },
+  });
+  const { data } = await asCaller.rpc("is_super_admin");
+  return data === true;
 }
 
 function formatAEST(date: Date): string {
@@ -163,6 +187,7 @@ async function deliverWebhook(lead: Record<string, unknown>, url: string): Promi
 
 Deno.serve(async (req: Request) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
+  if (!(await isAllowedCaller(req))) return jsonResponse({ error: "Unauthorized" }, 401);
   try {
     const { lead_id, installer_id } = await req.json();
     if (!lead_id) return jsonResponse({ error: "lead_id required" }, 400);

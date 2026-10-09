@@ -23,7 +23,21 @@ async function getSharedTwilioNumber(): Promise<string | null> {
   return data?.shared_twilio_number || Deno.env.get('SHARED_TWILIO_NUMBER') || null
 }
 
+// Server-to-server only (stripe-webhook, create-user-silent send the service
+// role key). Constant-time compare, same as resend-email.
+function isServiceRole(req: Request): boolean {
+  const token = (req.headers.get('Authorization') || '').replace(/^Bearer\s+/i, '')
+  const x = new TextEncoder().encode(token)
+  const y = new TextEncoder().encode(Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '')
+  let ok = x.length === y.length && x.length > 0
+  for (let i = 0; i < Math.max(x.length, y.length); i++) {
+    if ((x[i] ?? 0) !== (y[i] ?? 0)) ok = false
+  }
+  return ok
+}
+
 serve(async (req) => {
+  if (!isServiceRole(req)) return new Response('Unauthorized', { status: 401 })
   const { company_id } = await req.json()
   if (!company_id) return new Response('Missing company_id', { status: 400 })
 
