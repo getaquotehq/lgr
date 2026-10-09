@@ -71,8 +71,10 @@ Edge functions and migrations live with the rest of the project in
   the unused phone-check / callback intake functions. `va-api` became
   `admin-api` (admin only) since `admin.html` still needs its billing, DFY and
   email-template actions. Their tables were dropped in `20261009000100`.
-- Still deployed but not called from any page: `complete-password-reset`,
-  `send-password-rest`, `create-sms-credits-checkout` and
-  `dashboard-stripe-webhook`. Password resets use Supabase's built-in
-  `resetPasswordForEmail`; the SMS credit Buy buttons were taken out of the
-  dashboard.
+- **Password resets** go through `send-password-rest`: a branded Resend email
+  whose recovery link lands on `SITE_URL/` (default
+  `https://leadgenrentals.com.au/dashboard`), where `PASSWORD_RECOVERY` opens
+  the reset modal. That URL must be in Supabase Auth's redirect allow list.
+  `complete-password-reset` is the unused half of an older custom-token design.
+- Still deployed but not called from any page: `create-sms-credits-checkout`
+  and `dashboard-stripe-webhook` (the SMS credit Buy buttons were taken out).

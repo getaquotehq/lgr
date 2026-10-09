@@ -436,13 +436,13 @@ document.addEventListener("DOMContentLoaded", async () => {
     };
 
     try {
-      const { error } = await sb.auth.resetPasswordForEmail(email, {
-        redirectTo: window.location.origin + "/index.html",
-      });
-
-      if (error) {
-        console.error("Password reset error:", error);
-        toast(error.message || "Failed to send reset link. Please try again.", true);
+      // Branded email via Resend (send-password-rest). Its link lands back on
+      // the dashboard, where PASSWORD_RECOVERY opens the reset modal.
+      const res = await edgeFetch("send-password-rest", { email }, SUPABASE_ANON_KEY);
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        console.error("Password reset error:", data);
+        toast(data.error || "Failed to send reset link. Please try again.", true);
         return;
       }
 

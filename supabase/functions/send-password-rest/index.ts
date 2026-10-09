@@ -2,7 +2,7 @@
 // Lead Gen Rentals - Send Password Reset via Resend
 // =============================================================================
 // Same pattern as invite-rep:
-//   1. admin.generateLink({ type: "recovery", redirectTo: index.html })
+//   1. admin.generateLink({ type: "recovery", redirectTo: SITE_URL/ })
 //      → returns action_link (Supabase handles the token exchange server-side)
 //   2. Send action_link in a branded email via Resend
 //   3. User clicks → Supabase redirects to index.html → onAuthStateChange
@@ -89,7 +89,7 @@ Deno.serve(async (req) => {
       );
     }
 
-    const siteUrl = (Deno.env.get("SITE_URL") ?? "").replace(/\/$/, "");
+    const siteUrl = (Deno.env.get("SITE_URL") || "https://leadgenrentals.com.au/dashboard").replace(/\/$/, "");
 
     const adminClient = createClient(
       Deno.env.get("SUPABASE_URL")!,
