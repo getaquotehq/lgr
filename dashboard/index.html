@@ -504,10 +504,6 @@ tbody tr:hover{background:var(--side-hover);transition:background .1s}
     </div>
 
     <div class="nav">
-      <a id="navVaPanel" class="nav-item" href="va.html" style="display:none;text-decoration:none">
-        <span class="icon" data-icon="users"></span>
-        <span class="nav-text">VA Panel</span>
-      </a>
       <button class="nav-item" data-page="dashboard" type="button">
         <span class="icon" data-icon="dashboard"></span>
         <span class="nav-text">Status</span>
@@ -573,14 +569,6 @@ tbody tr:hover{background:var(--side-hover);transition:background .1s}
         <button class="nav-item" data-page="team-members" type="button">
           <span class="icon" data-icon="team"></span>
           <span class="nav-text">Team</span>
-        </button>
-        <button class="nav-item" data-page="reviews" type="button">
-          <span class="icon" data-icon="star"></span>
-          <span class="nav-text">Reviews</span>
-        </button>
-        <button class="nav-item" data-page="integrations" type="button">
-          <span class="icon" data-icon="external-link"></span>
-          <span class="nav-text">Integrations</span>
         </button>
         <button class="nav-item" data-page="general-settings" type="button">
           <span class="icon" data-icon="settings"></span>
@@ -1053,7 +1041,7 @@ tbody tr:hover{background:var(--side-hover);transition:background .1s}
                         <input id="aiAutoSendWelcome" type="checkbox">
                         <span class="toggle-label">Auto-send welcome message to new leads</span>
                       </label>
-                      <span class="field-hint">When enabled, this message is automatically sent via SMS as soon as a new lead with a phone number is created (via dashboard, API, or integrations).</span>
+                      <span class="field-hint">When enabled, this message is automatically sent via SMS as soon as a new lead with a phone number is created (delivered by your engine or added in the dashboard).</span>
                     </div>
                     <div class="field settings-full">
                       <label for="aiWelcomeMessage">Welcome Message</label>
@@ -1165,34 +1153,10 @@ tbody tr:hover{background:var(--side-hover);transition:background .1s}
             <div class="panel-h">
               <div>
                 <h2>SMS Credits</h2>
-                <p>500 free credits included every 30 days. Each SMS (inbound or outbound) uses 1 credit. Purchased credits never expire.</p>
+                <p>500 credits included every 30 days. Each SMS (inbound or outbound) uses 1 credit. Running low? Email <a href="mailto:contact@leadgenrentals.com.au">contact@leadgenrentals.com.au</a>.</p>
                 <p id="smsCreditsResetLabel" style="font-size:12px;color:var(--muted);margin-top:4px"></p>
               </div>
               <div id="smsCreditsBalance" style="font-size:22px;font-weight:700;color:var(--text)">-</div>
-            </div>
-            <div class="panel-b">
-              <p style="font-size:12px;color:var(--muted);margin-bottom:16px">Top up your credits below for extra capacity. GST is added at checkout.</p>
-              <div style="display:flex;gap:10px;flex-wrap:wrap">
-                <div style="flex:1;min-width:140px;border:1px solid var(--border);border-radius:10px;padding:16px;text-align:center">
-                  <div style="font-size:18px;font-weight:700;margin-bottom:2px">100</div>
-                  <div style="font-size:11px;color:var(--muted);margin-bottom:12px">credits</div>
-                  <div style="font-size:13px;font-weight:600;margin-bottom:10px">$10 AUD</div>
-                  <button class="btn2" style="width:100%;font-size:12px;padding:8px" onclick="buySmsCredits('100')">Buy</button>
-                </div>
-                <div style="flex:1;min-width:140px;border:2px solid var(--accent,#F59E0B);border-radius:10px;padding:16px;text-align:center;position:relative">
-                  <div style="position:absolute;top:-10px;left:50%;transform:translateX(-50%);background:var(--accent,#F59E0B);color:#fff;font-size:10px;font-weight:700;padding:2px 10px;border-radius:10px">POPULAR</div>
-                  <div style="font-size:18px;font-weight:700;margin-bottom:2px">500</div>
-                  <div style="font-size:11px;color:var(--muted);margin-bottom:12px">credits</div>
-                  <div style="font-size:13px;font-weight:600;margin-bottom:10px">$45 AUD</div>
-                  <button class="btn2" style="width:100%;font-size:12px;padding:8px" onclick="buySmsCredits('500')">Buy</button>
-                </div>
-                <div style="flex:1;min-width:140px;border:1px solid var(--border);border-radius:10px;padding:16px;text-align:center">
-                  <div style="font-size:18px;font-weight:700;margin-bottom:2px">1,000</div>
-                  <div style="font-size:11px;color:var(--muted);margin-bottom:12px">credits</div>
-                  <div style="font-size:13px;font-weight:600;margin-bottom:10px">$80 AUD</div>
-                  <button class="btn2" style="width:100%;font-size:12px;padding:8px" onclick="buySmsCredits('1000')">Buy</button>
-                </div>
-              </div>
             </div>
           </section>
 
@@ -1256,30 +1220,6 @@ tbody tr:hover{background:var(--side-hover);transition:background .1s}
               </label>
             </div>
             <div class="actions" style="margin-top:14px"><button id="saveAiSharingBtn" class="btn2" type="button">Save Preference</button></div>
-          </div>
-        </section>
-        <!-- Lead Delivery -->
-        <section class="panel" style="margin-top:24px">
-          <div class="panel-h"><div><h2>Lead Delivery</h2><p>Choose how new leads are delivered to you. Leave a field blank to disable that channel.</p></div></div>
-          <div class="panel-b">
-            <form id="leadDeliveryForm" class="stack">
-              <div class="form2">
-                <div class="field">
-                  <label for="deliveryEmail">Notification Email</label>
-                  <input id="deliveryEmail" type="email" placeholder="e.g. leads@yourcompany.com.au">
-                </div>
-                <div class="field">
-                  <label for="deliverySms">Notification SMS Number</label>
-                  <input id="deliverySms" type="tel" placeholder="e.g. +61400000000">
-                </div>
-              </div>
-              <div class="field">
-                <label for="deliveryWebhook">Webhook URL</label>
-                <input id="deliveryWebhook" type="url" placeholder="https://your-system.com/webhook/leads">
-                <p style="font-size:11px;color:var(--muted);margin-top:4px">We'll POST lead data as JSON to this URL when a new lead is assigned to your account.</p>
-              </div>
-              <div class="actions"><button class="btn2" type="submit">Save Delivery Settings</button></div>
-            </form>
           </div>
         </section>
         <!-- Quote Defaults -->
@@ -1396,226 +1336,6 @@ tbody tr:hover{background:var(--side-hover);transition:background .1s}
               <div id="aiIndustryInsights">
                 <div class="notice">Loading…</div>
               </div>
-            </div>
-          </section>
-
-        </div>
-      </div>
-
-      <!-- ── Integrations Page ──────────────────────────────────────────────── -->
-      <div id="page-integrations" class="page hidden">
-        <div class="stack">
-
-          <!-- API Keys Section -->
-          <section class="panel">
-            <div class="panel-h">
-              <div><h2>API Keys</h2><p>Create and manage API tokens for programmatic access to your data. Tokens are shown only once - copy them immediately.</p></div>
-              <div class="actions"><button id="createApiKeyBtn" class="btn2" type="button"><span class="icon" data-icon="plus"></span> Create API Key</button></div>
-            </div>
-            <div class="panel-b">
-              <div id="apiKeysTable" class="table-lite"><div class="notice">Loading…</div></div>
-            </div>
-          </section>
-
-          <!-- New API Key Form (hidden by default) -->
-          <section id="apiKeyFormPanel" class="panel" style="display:none">
-            <div class="panel-h"><div><h2>New API Key</h2><p>Name your key and select the permissions it should have.</p></div></div>
-            <div class="panel-b">
-              <form id="apiKeyForm" class="stack">
-                <div class="form2">
-                  <div class="field"><label for="apiKeyName">Key Name</label><input id="apiKeyName" type="text" placeholder="e.g., Zapier Integration" required></div>
-                  <div class="field"><label for="apiKeyExpiry">Expires</label><select id="apiKeyExpiry"><option value="">Never</option><option value="30">30 days</option><option value="90">90 days</option><option value="365">1 year</option></select></div>
-                </div>
-                <div class="toggle-group">
-                  <label class="toggle-item"><input id="scopeLeadsRead" type="checkbox" checked><span class="toggle-label">Read Leads</span></label>
-                  <label class="toggle-item"><input id="scopeLeadsWrite" type="checkbox" checked><span class="toggle-label">Write Leads</span></label>
-                  <label class="toggle-item"><input id="scopeQuotesRead" type="checkbox" checked><span class="toggle-label">Read Quotes</span></label>
-                  <label class="toggle-item"><input id="scopeAppointmentsRead" type="checkbox" checked><span class="toggle-label">Read Appointments</span></label>
-                  <label class="toggle-item"><input id="scopePipelineRead" type="checkbox" checked><span class="toggle-label">Read Pipeline</span></label>
-                  <label class="toggle-item"><input id="scopeSmsSend" type="checkbox"><span class="toggle-label">Send SMS</span></label>
-                </div>
-                <div class="actions"><button class="btn2" type="submit">Generate Key</button><button class="btn" type="button" id="cancelApiKeyBtn">Cancel</button></div>
-              </form>
-            </div>
-          </section>
-
-          <!-- API Key Created (show once) -->
-          <section id="apiKeyCreatedPanel" class="panel" style="display:none">
-            <div class="panel-h"><div><h2>API Key Created</h2><p>Copy this key now - it will not be shown again.</p></div></div>
-            <div class="panel-b">
-              <div style="background:var(--surface-2);border:1px solid var(--border);border-radius:8px;padding:16px;font-family:monospace;font-size:14px;word-break:break-all;position:relative">
-                <code id="apiKeyRawValue"></code>
-                <button id="copyApiKeyBtn" class="btn" type="button" style="position:absolute;top:8px;right:8px;font-size:11px;padding:4px 10px">Copy</button>
-              </div>
-              <div class="actions" style="margin-top:12px"><button id="apiKeyCreatedDoneBtn" class="btn2" type="button">Done</button></div>
-            </div>
-          </section>
-
-          <!-- Webhooks Section -->
-          <section class="panel">
-            <div class="panel-h">
-              <div><h2>Webhooks</h2><p>Receive real-time notifications when events happen in your account. Payloads are signed with HMAC-SHA256.</p></div>
-              <div class="actions"><button id="createWebhookBtn" class="btn2" type="button"><span class="icon" data-icon="plus"></span> Add Webhook</button></div>
-            </div>
-            <div class="panel-b">
-              <div id="webhooksTable" class="table-lite"><div class="notice">Loading…</div></div>
-            </div>
-          </section>
-
-          <!-- New Webhook Form (hidden by default) -->
-          <section id="webhookFormPanel" class="panel" style="display:none">
-            <div class="panel-h"><div><h2>New Webhook</h2><p>Enter the URL and select which events should trigger a POST request.</p></div></div>
-            <div class="panel-b">
-              <form id="webhookForm" class="stack">
-                <input id="webhookEditId" type="hidden">
-                <div class="form2">
-                  <div class="field full"><label for="webhookUrl">Endpoint URL</label><input id="webhookUrl" type="url" placeholder="https://example.com/webhook" required></div>
-                </div>
-                <div class="toggle-group">
-                  <label class="toggle-item"><input class="wh-event" type="checkbox" value="lead.created" checked><span class="toggle-label">Lead Created</span></label>
-                  <label class="toggle-item"><input class="wh-event" type="checkbox" value="lead.updated"><span class="toggle-label">Lead Updated</span></label>
-                  <label class="toggle-item"><input class="wh-event" type="checkbox" value="quote.accepted" checked><span class="toggle-label">Quote Accepted</span></label>
-                  <label class="toggle-item"><input class="wh-event" type="checkbox" value="quote.declined"><span class="toggle-label">Quote Declined</span></label>
-                  <label class="toggle-item"><input class="wh-event" type="checkbox" value="appointment.booked" checked><span class="toggle-label">Appointment Booked</span></label>
-                  <label class="toggle-item"><input class="wh-event" type="checkbox" value="call.completed"><span class="toggle-label">Call Completed</span></label>
-                  <label class="toggle-item"><input class="wh-event" type="checkbox" value="sale.completed"><span class="toggle-label">Sale Completed</span></label>
-                </div>
-                <div class="actions"><button class="btn2" type="submit">Save Webhook</button><button class="btn" type="button" id="cancelWebhookBtn">Cancel</button></div>
-              </form>
-            </div>
-          </section>
-
-          <!-- Webhook Secret Created (show once) -->
-          <section id="webhookSecretPanel" class="panel" style="display:none">
-            <div class="panel-h"><div><h2>Webhook Signing Secret</h2><p>Copy this secret now - it will not be shown again. Use it to verify webhook signatures.</p></div></div>
-            <div class="panel-b">
-              <div style="background:var(--surface-2);border:1px solid var(--border);border-radius:8px;padding:16px;font-family:monospace;font-size:14px;word-break:break-all;position:relative">
-                <code id="webhookSecretValue"></code>
-                <button id="copyWebhookSecretBtn" class="btn" type="button" style="position:absolute;top:8px;right:8px;font-size:11px;padding:4px 10px">Copy</button>
-              </div>
-              <div class="actions" style="margin-top:12px"><button id="webhookSecretDoneBtn" class="btn2" type="button">Done</button></div>
-            </div>
-          </section>
-
-          <!-- Webhook Deliveries Log -->
-          <section class="panel">
-            <div class="panel-h"><div><h2>Recent Deliveries</h2><p>Last 50 webhook delivery attempts across all endpoints.</p></div></div>
-            <div class="panel-b">
-              <div id="webhookDeliveriesTable" class="table-lite"><div class="notice">Loading…</div></div>
-            </div>
-          </section>
-
-          <!-- API Documentation -->
-          <section class="panel">
-            <div class="panel-h"><div><h2>API Documentation</h2><p>Use these endpoints with your API key to integrate with external tools.</p></div></div>
-            <div class="panel-b">
-              <div style="font-size:13px;color:var(--text-2);margin-bottom:12px;line-height:1.6">
-                Base URL: <code>https://leadgenrentals.com.au/api/v1</code>
-              </div>
-              <div class="stack" style="gap:12px">
-                <div class="section-card">
-                  <div class="section-card-title"><span class="icon" data-icon="users"></span> Leads</div>
-                  <div style="font-family:monospace;font-size:12px;line-height:2;color:var(--text-2)">
-                    <div><b style="color:var(--green)">GET</b> /v1/leads<span class="muted"> - List leads (paginated, filterable by stage/ai_status/search)</span></div>
-                    <div><b style="color:var(--blue)">POST</b> /v1/leads<span class="muted"> - Create a lead (name, phone, email, etc.)</span></div>
-                    <div><b style="color:var(--green)">GET</b> /v1/leads/:id<span class="muted"> - Get a single lead</span></div>
-                    <div><b style="color:var(--yellow)">PATCH</b> /v1/leads/:id<span class="muted"> - Update a lead</span></div>
-                  </div>
-                </div>
-                <div class="section-card">
-                  <div class="section-card-title"><span class="icon" data-icon="file"></span> Quotes</div>
-                  <div style="font-family:monospace;font-size:12px;line-height:2;color:var(--text-2)">
-                    <div><b style="color:var(--green)">GET</b> /v1/quotes<span class="muted"> - List quotes (filterable by status)</span></div>
-                    <div><b style="color:var(--green)">GET</b> /v1/quotes/:id<span class="muted"> - Get a single quote with line items</span></div>
-                  </div>
-                </div>
-                <div class="section-card">
-                  <div class="section-card-title"><span class="icon" data-icon="message"></span> SMS</div>
-                  <div style="font-family:monospace;font-size:12px;line-height:2;color:var(--text-2)">
-                    <div><b style="color:var(--blue)">POST</b> /v1/sms<span class="muted"> - Send SMS to a lead (lead_id, message)</span></div>
-                  </div>
-                </div>
-                <div class="section-card">
-                  <div class="section-card-title"><span class="icon" data-icon="calendar"></span> Appointments</div>
-                  <div style="font-family:monospace;font-size:12px;line-height:2;color:var(--text-2)">
-                    <div><b style="color:var(--green)">GET</b> /v1/appointments<span class="muted"> - List appointments (filterable by type)</span></div>
-                    <div><b style="color:var(--green)">GET</b> /v1/pipeline<span class="muted"> - Pipeline stage counts</span></div>
-                  </div>
-                </div>
-                <div class="section-card">
-                  <div class="section-card-title"><span class="icon" data-icon="settings"></span> Authentication</div>
-                  <div style="font-size:13px;color:var(--text-2);line-height:1.6">
-                    All requests require an <code>Authorization: Bearer &lt;api_key&gt;</code> header.<br>
-                    Pagination: <code>?page=1&amp;per_page=25</code> (max 100 per page).<br>
-                    Responses: <code>{ "data": [...], "meta": { "page", "per_page", "total" } }</code>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </section>
-
-        </div>
-      </div>
-
-      <!-- ── Reviews Page ───────────────────────────────────────────────────── -->
-      <div id="page-reviews" class="page hidden">
-        <div class="stack">
-
-          <!-- Review Settings -->
-          <section class="panel">
-            <div class="panel-h">
-              <div><h2>Review Settings</h2><p>Configure automated Google review requests sent to customers after a deal is won.</p></div>
-            </div>
-            <div class="panel-b">
-              <form id="reviewSettingsForm" class="stack">
-                <div class="settings-grid">
-                  <div class="field settings-full">
-                    <label class="toggle-item">
-                      <input id="reviewEnabled" type="checkbox">
-                      <span class="toggle-label">Enable Review Requests</span>
-                    </label>
-                    <span class="field-hint">When enabled, review request SMS messages will be scheduled when a lead moves to Closed Won.</span>
-                  </div>
-                  <div class="field settings-full">
-                    <label for="googleReviewLink">Google Review Link</label>
-                    <input id="googleReviewLink" type="url" placeholder="https://g.page/r/YOUR_PLACE_ID/review">
-                    <span class="field-hint">Paste your Google review URL here. Find it in Google Business Profile → Ask for reviews.</span>
-                  </div>
-                  <div class="field">
-                    <label for="reviewDelayDays">Days After Close</label>
-                    <input id="reviewDelayDays" type="number" min="0" max="30" value="7">
-                    <span class="field-hint">Wait this many days after closing a deal before sending the review request.</span>
-                  </div>
-                  <div class="field">
-                    <label class="toggle-item">
-                      <input id="reviewAutoSend" type="checkbox">
-                      <span class="toggle-label">Auto-send</span>
-                    </label>
-                    <span class="field-hint">Send review requests automatically. When off, requests are created as pending for manual approval.</span>
-                  </div>
-                  <div class="field settings-full">
-                    <label for="reviewMessage">Review Request Message</label>
-                    <textarea id="reviewMessage" rows="3" placeholder="Hi {{first_name}}, thank you for choosing us! We'd love your feedback - please leave us a Google review: {{review_link}}"></textarea>
-                    <span class="field-hint">Use {{first_name}} for the customer's name and {{review_link}} for your Google review URL.</span>
-                  </div>
-                </div>
-                <div class="actions"><button class="btn2" type="submit">Save Review Settings</button></div>
-              </form>
-            </div>
-          </section>
-
-          <!-- Pending Review Requests -->
-          <section class="panel">
-            <div class="panel-h">
-              <div><h2>Review Requests</h2><p>Manage pending and sent review requests.</p></div>
-            </div>
-            <div class="panel-b">
-              <div class="mini-grid" style="margin-bottom:16px">
-                <article class="mini-card"><h3>Pending</h3><b id="reviewPendingCount">0</b></article>
-                <article class="mini-card"><h3>Sent</h3><b id="reviewSentCount">0</b></article>
-                <article class="mini-card"><h3>Skipped</h3><b id="reviewSkippedCount">0</b></article>
-              </div>
-              <div id="reviewRequestsTable" class="table-lite"><div class="notice">Loading…</div></div>
             </div>
           </section>
 

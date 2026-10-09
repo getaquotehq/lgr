@@ -361,7 +361,7 @@ Deno.serve(async (req: Request) => {
     }
 
     // ── real-time delivery for fresh leads ───────────────────────────────────
-    // Kept alive past the response with waitUntil (same as intake-lead): without
+    // Kept alive past the response with waitUntil: without
     // it the edge isolate can be torn down the moment we return and take the
     // in-flight delivery with it, leaving a lead that reads 'delivered' with
     // nothing ever sent. Falls back to awaiting inline on runtimes that don't

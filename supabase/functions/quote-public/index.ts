@@ -18,47 +18,6 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type",
 };
 
-// ── Outbound webhook helper ───────────────────────────────────────────────────
-// Fire-and-forget: looks up active webhook_endpoints for the company,
-// filters by event, signs the payload with HMAC-SHA256, delivers, and logs.
-async function fireWebhooks(
-  db: ReturnType<typeof createClient>,
-  companyId: string,
-  event: string,
-  payload: unknown,
-) {
-  try {
-    const { data: endpoints } = await db
-      .from("webhook_endpoints")
-      .select("id, url, secret, events")
-      .eq("company_id", companyId)
-      .eq("active", true);
-    if (!endpoints || endpoints.length === 0) return;
-    for (const ep of endpoints) {
-      const events = Array.isArray(ep.events) ? ep.events : [];
-      if (!events.includes(event)) continue;
-      const body = JSON.stringify({ event, timestamp: new Date().toISOString(), data: payload });
-      // Sign only when a secret is configured; a secret-less endpoint still
-      // receives the event, just without the X-Webhook-Signature header.
-      let signature: string | null = null;
-      if (ep.secret) {
-        const encoder = new TextEncoder();
-        const key = await crypto.subtle.importKey("raw", encoder.encode(ep.secret), { name: "HMAC", hash: "SHA-256" }, false, ["sign"]);
-        const sig = await crypto.subtle.sign("HMAC", key, encoder.encode(body));
-        signature = Array.from(new Uint8Array(sig)).map((b) => b.toString(16).padStart(2, "0")).join("");
-      }
-      (async () => {
-        let success = false, responseStatus = 0, responseBody = "";
-        try {
-          const res = await fetch(ep.url, { method: "POST", headers: { "Content-Type": "application/json", "X-Webhook-Event": event, ...(signature ? { "X-Webhook-Signature": signature } : {}) }, body });
-          responseStatus = res.status; responseBody = (await res.text()).slice(0, 1000); success = res.ok;
-        } catch (err) { responseBody = `${(err as Error).name}: ${(err as Error).message}`; }
-        await db.from("webhook_deliveries").insert({ webhook_id: ep.id, company_id: companyId, event, payload: JSON.parse(body), response_status: responseStatus, response_body: responseBody, success });
-      })();
-    }
-  } catch (err) { console.error("fireWebhooks error:", err); }
-}
-
 
 
 Deno.serve(async (req) => {
@@ -241,7 +200,6 @@ Deno.serve(async (req) => {
           .from("leads")
           .update({ pipeline_stage: "closed_won" })
           .eq("id", quote.lead_id);
-        fireWebhooks(db, quote.company_id, "quote.accepted", { quote_id: quote.id, quote_number: quote.quote_number, lead_id: quote.lead_id });
       }
 
       // If declined, advance to closed_lost
@@ -250,7 +208,6 @@ Deno.serve(async (req) => {
           .from("leads")
           .update({ pipeline_stage: "closed_lost" })
           .eq("id", quote.lead_id);
-        fireWebhooks(db, quote.company_id, "quote.declined", { quote_id: quote.id, quote_number: quote.quote_number, lead_id: quote.lead_id });
       }
 
       return new Response(JSON.stringify({ success: true, status: update.status }), {

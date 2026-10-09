@@ -452,42 +452,6 @@ h1{font-size:18px;font-weight:500}
       </div>
     </div>
 
-    <!-- Virtual Assistants panel -->
-    <div class="card" style="margin-bottom:20px">
-      <div class="panel-h">
-        <div>
-          <h2>Virtual Assistants</h2>
-          <p id="vaCountLabel">Loading…</p>
-        </div>
-      </div>
-      <div class="panel-b">
-        <div class="form-row" style="margin-bottom:16px">
-          <label class="form-label" for="vaUserPicker">Make a user a VA</label>
-          <div style="display:flex;gap:8px;flex-wrap:wrap">
-            <select class="form-input" id="vaUserPicker" style="max-width:360px"><option value="">Loading users…</option></select>
-            <button class="btn2 btn-sm" id="vaMakeBtn" type="button">Make VA</button>
-          </div>
-          <p style="font-size:12px;color:var(--muted);margin:6px 0 0">A VA only sees the client companies you assign below - never anyone else's, and they can't edit client accounts.</p>
-        </div>
-        <div id="vaLoadingState" class="notice">Loading VAs…</div>
-        <div id="vaList" class="hidden"></div>
-      </div>
-    </div>
-
-    <!-- VA Availability panel -->
-    <div class="card" style="margin-bottom:20px">
-      <div class="panel-h">
-        <div>
-          <h2>VA Availability</h2>
-          <p>When each VA is available to take calls (times in AEST).</p>
-        </div>
-      </div>
-      <div class="panel-b">
-        <div id="vaAvailLoading" class="notice">Loading availability…</div>
-        <div id="vaAvailList" class="hidden"></div>
-      </div>
-    </div>
-
 <!-- ══ Lead Gen Rentals ══════════════════════════════════════════════════ -->
     <div class="form-section" style="margin:28px 0 14px;font-size:13px;letter-spacing:.04em;text-transform:uppercase;color:var(--muted)">Lead Gen Rentals</div>
 
@@ -1237,54 +1201,6 @@ h1{font-size:18px;font-weight:500}
       '</div>';
     }
 
-    // API Keys
-    if (c) {
-      html += '<div class="ud-section">API Keys</div>';
-      html += '<div id="adminApiKeysWrap" data-company-id="' + escapeHtml(c.id) + '">' +
-        '<div class="notice" style="font-size:12px" id="adminApiKeysLoading">Loading API keys…</div>' +
-        '<div id="adminApiKeysList" style="display:none"></div>' +
-        '<div style="margin-top:10px">' +
-          '<button class="btn2 btn-sm" id="adminCreateApiKeyBtn" type="button" style="display:none">+ New API Key</button>' +
-        '</div>' +
-        '<div id="adminApiKeyForm" class="hidden" style="margin-top:10px;padding:12px;border:1px solid var(--border);border-radius:10px;background:var(--surface-2)">' +
-          '<div class="form-row" style="margin-bottom:8px">' +
-            '<label class="form-label">Key Name</label>' +
-            '<input class="form-input" id="adminApiKeyName" type="text" placeholder="e.g. Zapier Integration" maxlength="100">' +
-          '</div>' +
-          '<div class="form-row" style="margin-bottom:8px">' +
-            '<label class="form-label">Expires</label>' +
-            '<select class="form-input" id="adminApiKeyExpiry" style="height:34px">' +
-              '<option value="">Never</option>' +
-              '<option value="30">30 days</option>' +
-              '<option value="90">90 days</option>' +
-              '<option value="365">365 days</option>' +
-            '</select>' +
-          '</div>' +
-          '<div class="form-row" style="margin-bottom:8px">' +
-            '<label class="form-label">Scopes</label>' +
-            '<div style="display:flex;flex-wrap:wrap;gap:8px;font-size:12px">' +
-              '<label style="display:flex;align-items:center;gap:4px"><input type="checkbox" class="admin-api-scope" value="leads:read" checked> leads:read</label>' +
-              '<label style="display:flex;align-items:center;gap:4px"><input type="checkbox" class="admin-api-scope" value="leads:write"> leads:write</label>' +
-              '<label style="display:flex;align-items:center;gap:4px"><input type="checkbox" class="admin-api-scope" value="quotes:read" checked> quotes:read</label>' +
-              '<label style="display:flex;align-items:center;gap:4px"><input type="checkbox" class="admin-api-scope" value="appointments:read" checked> appointments:read</label>' +
-              '<label style="display:flex;align-items:center;gap:4px"><input type="checkbox" class="admin-api-scope" value="pipeline:read" checked> pipeline:read</label>' +
-              '<label style="display:flex;align-items:center;gap:4px"><input type="checkbox" class="admin-api-scope" value="sms:send"> sms:send</label>' +
-            '</div>' +
-          '</div>' +
-          '<div style="display:flex;gap:8px">' +
-            '<button class="btn2 btn-sm" id="adminApiKeySubmitBtn" type="button">Create Key</button>' +
-            '<button class="btn btn-sm" id="adminApiKeyCancelBtn" type="button">Cancel</button>' +
-          '</div>' +
-        '</div>' +
-        '<div id="adminApiKeyCreatedPanel" class="hidden" style="margin-top:10px;padding:12px;border:1px solid rgba(22,163,74,.3);border-radius:10px;background:rgba(22,163,74,.06)">' +
-          '<div style="font-size:12px;font-weight:600;margin-bottom:6px;color:#15803d">API Key Created - Copy it now!</div>' +
-          '<div style="font-family:monospace;font-size:12px;word-break:break-all;background:var(--surface);padding:8px 10px;border-radius:6px;border:1px solid var(--border);user-select:all;cursor:text" id="adminApiKeyRawValue"></div>' +
-          '<div style="font-size:11px;color:var(--muted);margin-top:6px">This key will not be shown again. Make sure to copy it.</div>' +
-          '<button class="btn btn-sm" id="adminApiKeyDoneBtn" type="button" style="margin-top:8px">Done</button>' +
-        '</div>' +
-      '</div>';
-    }
-
     return html;
   }
 
@@ -1305,7 +1221,6 @@ h1{font-size:18px;font-weight:500}
       document.getElementById('editUserDetailsBody').innerHTML = renderUserDetailsBody(d);
       if (d.company && d.company.id) {
         initAdminSmsPrompt(d.company.id);
-        initAdminApiKeys(d.company.id);
       }
     }).catch(function() {});
   }
@@ -1346,132 +1261,6 @@ h1{font-size:18px;font-weight:500}
           .then(function() { toast('SMS prompt saved.'); })
           .catch(function(err) { toast('Failed: ' + err.message, true); })
           .finally(function() { saveBtn.disabled = false; saveBtn.textContent = 'Save Prompt'; });
-      };
-    }
-  }
-
-  // ── Admin API Keys ──────────────────────────────────────────────────────────
-  function initAdminApiKeys(companyId) {
-    var loading = document.getElementById('adminApiKeysLoading');
-    var listEl = document.getElementById('adminApiKeysList');
-    var createBtn = document.getElementById('adminCreateApiKeyBtn');
-    if (!loading || !listEl) return;
-
-    function loadKeys() {
-      callEdge({ action: 'get_company_api_keys', company_id: companyId }).then(function(res) {
-        loading.style.display = 'none';
-        listEl.style.display = '';
-        createBtn.style.display = '';
-        var keys = res.keys || [];
-        if (!keys.length) {
-          listEl.innerHTML = '<div class="notice" style="font-size:12px">No API keys yet.</div>';
-          return;
-        }
-        var html = '';
-        keys.forEach(function(k) {
-          var revoked = !!k.revoked_at;
-          var expired = k.expires_at && new Date(k.expires_at) < new Date();
-          var status = revoked ? 'Revoked' : expired ? 'Expired' : 'Active';
-          var statusColor = revoked || expired ? 'var(--muted)' : '#15803d';
-          var lastUsed = k.last_used_at ? new Date(k.last_used_at).toLocaleDateString() : 'Never';
-          html += '<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 10px;border-bottom:1px solid var(--border);font-size:12px' + (revoked ? ';opacity:.5' : '') + '">' +
-            '<div style="flex:1">' +
-              '<strong>' + escapeHtml(k.name) + '</strong>' +
-              ' <span style="font-family:monospace;font-size:11px;color:var(--muted)">' + escapeHtml(k.token_prefix) + '…</span>' +
-            '</div>' +
-            '<div style="display:flex;gap:10px;align-items:center;font-size:11px;color:var(--muted)">' +
-              '<span style="color:' + statusColor + '">' + status + '</span>' +
-              '<span>Last used: ' + lastUsed + '</span>' +
-              (!revoked ? '<button class="btn btn-sm admin-revoke-key-btn" data-key-id="' + k.id + '" data-key-name="' + escapeHtml(k.name) + '" type="button" style="font-size:10px;padding:2px 8px">Revoke</button>' : '') +
-            '</div>' +
-          '</div>';
-        });
-        listEl.innerHTML = html;
-        listEl.querySelectorAll('.admin-revoke-key-btn').forEach(function(btn) {
-          btn.addEventListener('click', function() {
-            var keyId = this.getAttribute('data-key-id');
-            var keyName = this.getAttribute('data-key-name');
-            if (!confirm('Revoke API key "' + keyName + '"? Integrations using it will stop working.')) return;
-            callEdge({ action: 'revoke_company_api_key', key_id: keyId })
-              .then(function() { toast('API key revoked.'); loadKeys(); })
-              .catch(function(err) { toast('Failed: ' + err.message, true); });
-          });
-        });
-      }).catch(function(err) {
-        loading.textContent = 'Failed to load: ' + err.message;
-      });
-    }
-
-    loadKeys();
-
-    if (createBtn) {
-      createBtn.onclick = function() {
-        document.getElementById('adminApiKeyForm').classList.remove('hidden');
-        document.getElementById('adminApiKeyCreatedPanel').classList.add('hidden');
-        createBtn.style.display = 'none';
-      };
-    }
-
-    var cancelBtn = document.getElementById('adminApiKeyCancelBtn');
-    if (cancelBtn) {
-      cancelBtn.onclick = function() {
-        document.getElementById('adminApiKeyForm').classList.add('hidden');
-        createBtn.style.display = '';
-      };
-    }
-
-    var doneBtn = document.getElementById('adminApiKeyDoneBtn');
-    if (doneBtn) {
-      doneBtn.onclick = function() {
-        document.getElementById('adminApiKeyCreatedPanel').classList.add('hidden');
-        createBtn.style.display = '';
-      };
-    }
-
-    var submitBtn = document.getElementById('adminApiKeySubmitBtn');
-    if (submitBtn) {
-      submitBtn.onclick = async function() {
-        var name = document.getElementById('adminApiKeyName').value.trim();
-        if (!name) { toast('Key name is required', true); return; }
-        var scopes = [];
-        document.querySelectorAll('.admin-api-scope:checked').forEach(function(el) { scopes.push(el.value); });
-        if (!scopes.length) { toast('Select at least one scope', true); return; }
-        var expiryDays = document.getElementById('adminApiKeyExpiry').value;
-        var expiresAt = null;
-        if (expiryDays) {
-          var d = new Date();
-          d.setDate(d.getDate() + parseInt(expiryDays));
-          expiresAt = d.toISOString();
-        }
-        var rawBytes = new Uint8Array(48);
-        crypto.getRandomValues(rawBytes);
-        var rawToken = 'qlhq_' + Array.from(rawBytes, function(b) { return b.toString(16).padStart(2, '0'); }).join('');
-        var tokenPrefix = rawToken.slice(0, 12);
-        var encoder = new TextEncoder();
-        var hashBuffer = await crypto.subtle.digest('SHA-256', encoder.encode(rawToken));
-        var tokenHash = Array.from(new Uint8Array(hashBuffer), function(b) { return b.toString(16).padStart(2, '0'); }).join('');
-
-        submitBtn.disabled = true; submitBtn.textContent = 'Creating…';
-        callEdge({
-          action: 'create_company_api_key',
-          company_id: companyId,
-          name: name,
-          scopes: scopes,
-          expires_at: expiresAt,
-          token_hash: tokenHash,
-          token_prefix: tokenPrefix
-        }).then(function() {
-          document.getElementById('adminApiKeyForm').classList.add('hidden');
-          document.getElementById('adminApiKeyCreatedPanel').classList.remove('hidden');
-          document.getElementById('adminApiKeyRawValue').textContent = rawToken;
-          document.getElementById('adminApiKeyName').value = '';
-          toast('API key created! Copy it now.');
-          loadKeys();
-        }).catch(function(err) {
-          toast('Failed: ' + err.message, true);
-        }).finally(function() {
-          submitBtn.disabled = false; submitBtn.textContent = 'Create Key';
-        });
       };
     }
   }
@@ -1777,12 +1566,6 @@ h1{font-size:18px;font-weight:500}
 
 
 
-    // 13. Load Virtual Assistants panel
-    await loadVaPanel();
-
-    // 14. Load VA Availability panel
-    await loadVaAvailability();
-
     // 15. Lead Gen Rentals panels
     await loadLgrNiches();
     await loadLgrFleet();
@@ -1792,13 +1575,13 @@ h1{font-size:18px;font-weight:500}
 
   } // end boot()
 
-  // ── Virtual Assistants ────────────────────────────────────────────────────
-  // All VA operations go through the dedicated `va-api` edge function (service
-  // role, is_admin-gated). No existing data or RLS is touched.
-  async function callVaEdge(body) {
+  // ── admin-api ─────────────────────────────────────────────────────────────
+  // Billing, DFY profiles and email templates go through the `admin-api` edge
+  // function (service role, is_admin-gated).
+  async function callAdminApi(body) {
     var token = await getAccessToken();
     if (!token) throw new Error('Not authenticated');
-    var res = await fetch(SUPABASE_URL + '/functions/v1/va-api', {
+    var res = await fetch(SUPABASE_URL + '/functions/v1/admin-api', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token, 'apikey': SUPABASE_ANON_KEY },
       body: JSON.stringify(body),
@@ -1808,162 +1591,6 @@ h1{font-size:18px;font-weight:500}
     if (!res.ok) throw new Error(data.error || ('HTTP ' + res.status));
     return data;
   }
-
-  var _vaCompanies = [];   // all companies, for the assignment pickers
-
-  async function loadVaPanel() {
-    var loadingEl = document.getElementById('vaLoadingState');
-    var listEl    = document.getElementById('vaList');
-    if (!loadingEl || !listEl) return;
-    try {
-      var usersRes = await callVaEdge({ action: 'list_users' });
-      var compRes  = await callVaEdge({ action: 'list_companies' });
-      var vasRes   = await callVaEdge({ action: 'list_vas' });
-      _vaCompanies = compRes.companies || [];
-
-      // Populate the "make a user a VA" picker with non-VA users.
-      var picker = document.getElementById('vaUserPicker');
-      var nonVa = (usersRes.users || []).filter(function (u) { return !u.is_va; });
-      picker.innerHTML = '<option value="">Select a user…</option>' + nonVa.map(function (u) {
-        return '<option value="' + escapeHtml(u.id) + '">' + escapeHtml((u.full_name || '(no name)') + ' - ' + (u.email || '')) + '</option>';
-      }).join('');
-
-      renderVaList(vasRes.vas || []);
-      var label = document.getElementById('vaCountLabel');
-      if (label) label.textContent = (vasRes.vas || []).length + ' VA' + ((vasRes.vas || []).length === 1 ? '' : 's');
-      loadingEl.classList.add('hidden');
-      listEl.classList.remove('hidden');
-    } catch (err) {
-      loadingEl.textContent = 'Failed to load VAs: ' + err.message;
-    }
-  }
-
-  // ── VA Availability (read-only weekly grid per VA) ──────────────────────────
-  var _avDays  = [['mon','M'],['tue','T'],['wed','W'],['thu','T'],['fri','F'],['sat','S'],['sun','S']];
-  var _avHours = [8,9,10,11,12,13,14,15,16,17,18,19];
-  function _avHourLabel(h) { var ap = h < 12 ? 'a' : 'p'; var hh = h % 12 === 0 ? 12 : h % 12; return hh + ap; }
-  function avMiniGrid(slots) {
-    var set = {};
-    (slots || []).forEach(function (s) { set[s] = true; });
-    var h = '<table class="avail-mini"><thead><tr><th class="ah"></th>' +
-      _avDays.map(function (d) { return '<th>' + d[1] + '</th>'; }).join('') + '</tr></thead><tbody>';
-    _avHours.forEach(function (hr) {
-      h += '<tr><td class="ah">' + _avHourLabel(hr) + '</td>' +
-        _avDays.map(function (d) { var id = d[0] + '-' + hr; return '<td class="cell' + (set[id] ? ' on' : '') + '"></td>'; }).join('') +
-        '</tr>';
-    });
-    return h + '</tbody></table>';
-  }
-
-  async function loadVaAvailability() {
-    var loadingEl = document.getElementById('vaAvailLoading');
-    var listEl    = document.getElementById('vaAvailList');
-    if (!loadingEl || !listEl) return;
-    try {
-      var res = await callVaEdge({ action: 'list_availability' });
-      var vas = res.availability || [];
-      if (!vas.length) {
-        listEl.innerHTML = '<div class="notice">No VAs yet.</div>';
-      } else {
-        listEl.innerHTML = vas.map(function (v) {
-          var slots = Array.isArray(v.slots) ? v.slots : [];
-          var none = slots.length === 0;
-          return '<div style="background:var(--surface-2);border:1px solid var(--border);border-radius:13px;padding:14px 16px;margin-bottom:10px">' +
-            '<div style="font-size:13px;margin-bottom:' + (none ? '0' : '10px') + '"><strong>' + escapeHtml(v.full_name || '(no name)') + '</strong>&nbsp; <span style="color:var(--muted)">' + escapeHtml(v.email || '') + '</span></div>' +
-            (none ? '<div style="color:var(--muted);font-size:12px">No availability set.</div>' : '<div style="overflow-x:auto">' + avMiniGrid(slots) + '</div>') +
-          '</div>';
-        }).join('');
-      }
-      loadingEl.classList.add('hidden');
-      listEl.classList.remove('hidden');
-    } catch (err) {
-      loadingEl.textContent = 'Failed to load availability: ' + err.message;
-    }
-  }
-
-  function renderVaList(vas) {
-    var listEl = document.getElementById('vaList');
-    if (!vas.length) { listEl.innerHTML = '<div class="notice">No VAs yet. Pick a user above and click "Make VA".</div>'; return; }
-    var compOptions = '<option value="">Assign a client…</option>' + _vaCompanies.map(function (c) {
-      return '<option value="' + escapeHtml(c.id) + '">' + escapeHtml(c.name || '(no name)') + ' (' + escapeHtml(c.plan || '') + ')</option>';
-    }).join('');
-    listEl.innerHTML = vas.map(function (v) {
-      return '<div data-va="' + escapeHtml(v.id) + '" style="background:var(--surface-2);border:1px solid var(--border);border-radius:13px;padding:14px 16px;margin-bottom:10px">' +
-        '<div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:14px">' +
-          '<div style="font-size:13px"><strong>' + escapeHtml(v.full_name || '(no name)') + '</strong>&nbsp; <span style="color:var(--muted)">' + escapeHtml(v.email || '') + '</span></div>' +
-          '<button class="btn btn-danger btn-sm va-remove-btn" type="button">Remove VA</button>' +
-        '</div>' +
-        '<div class="form-label" style="margin-bottom:8px">Assigned clients</div>' +
-        '<div class="va-assigns" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px">Loading…</div>' +
-        '<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">' +
-          '<select class="form-input va-assign-picker" style="flex:1;min-width:220px;max-width:360px">' + compOptions + '</select>' +
-          '<button class="btn2 btn-sm va-assign-btn" type="button">Assign</button>' +
-        '</div>' +
-      '</div>';
-    }).join('');
-
-    listEl.querySelectorAll('[data-va]').forEach(function (row) {
-      var vaId = row.getAttribute('data-va');
-      loadVaAssignments(vaId, row.querySelector('.va-assigns'));
-      row.querySelector('.va-remove-btn').addEventListener('click', function () { removeVa(vaId, row); });
-      row.querySelector('.va-assign-btn').addEventListener('click', function () {
-        var sel = row.querySelector('.va-assign-picker');
-        if (sel.value) assignClient(vaId, sel.value, row);
-      });
-    });
-  }
-
-  async function loadVaAssignments(vaId, container) {
-    try {
-      var res = await callVaEdge({ action: 'list_assignments', va_user_id: vaId });
-      var comps = res.companies || [];
-      if (!comps.length) { container.innerHTML = '<span style="color:var(--muted);font-size:12px">No clients assigned yet.</span>'; return; }
-      container.innerHTML = comps.map(function (c) {
-        return '<span data-company="' + escapeHtml(c.id) + '" style="display:inline-flex;align-items:center;gap:7px;padding:4px 6px 4px 11px;border:1px solid var(--border);border-radius:999px;background:var(--surface);font-size:11.5px">' +
-          escapeHtml(c.name || '(no name)') +
-          '<span class="va-unassign" title="Unassign" style="cursor:pointer;display:inline-flex;align-items:center;justify-content:center;width:16px;height:16px;border-radius:999px;color:var(--muted);font-weight:700;line-height:1">×</span></span>';
-      }).join('');
-      container.querySelectorAll('[data-company]').forEach(function (chip) {
-        chip.querySelector('.va-unassign').addEventListener('click', function () {
-          unassignClient(vaId, chip.getAttribute('data-company'), container);
-        });
-      });
-    } catch (err) {
-      container.innerHTML = '<span style="color:var(--muted)">Could not load: ' + escapeHtml(err.message) + '</span>';
-    }
-  }
-
-  async function assignClient(vaId, companyId, row) {
-    try { await callVaEdge({ action: 'assign', va_user_id: vaId, company_id: companyId });
-      await loadVaAssignments(vaId, row.querySelector('.va-assigns'));
-      row.querySelector('.va-assign-picker').value = '';
-      toast('Client assigned');
-    } catch (err) { toast('Assign failed: ' + err.message, true); }
-  }
-
-  async function unassignClient(vaId, companyId, container) {
-    try { await callVaEdge({ action: 'unassign', va_user_id: vaId, company_id: companyId });
-      await loadVaAssignments(vaId, container);
-      toast('Client unassigned');
-    } catch (err) { toast('Unassign failed: ' + err.message, true); }
-  }
-
-  async function removeVa(vaId, row) {
-    if (!confirm('Remove VA status from this user? Their client assignments will be cleared.')) return;
-    try { await callVaEdge({ action: 'set_va', user_id: vaId, is_va: false });
-      toast('VA removed'); await loadVaPanel();
-    } catch (err) { toast('Failed: ' + err.message, true); }
-  }
-
-  document.addEventListener('click', function (e) {
-    if (e.target && e.target.id === 'vaMakeBtn') {
-      var sel = document.getElementById('vaUserPicker');
-      if (!sel.value) { toast('Pick a user first', true); return; }
-      callVaEdge({ action: 'set_va', user_id: sel.value, is_va: true })
-        .then(function () { toast('VA created'); return loadVaPanel(); })
-        .catch(function (err) { toast('Failed: ' + err.message, true); });
-    }
-  });
 
   // ── Companies ─────────────────────────────────────────────────────────────
   var allCompaniesPanel = [];
@@ -2105,7 +1732,7 @@ h1{font-size:18px;font-weight:500}
 
   // ── Invoicing & Billing ─────────────────────────────────────────────────────
   // All billing state lives on companies + the invoices / business_settings
-  // tables and is reached through the va-api edge function (admin-gated).
+  // tables and is reached through the admin-api edge function (admin-gated).
   var _billingClients = [];
 
   function fmtDateShort(d) {
@@ -2122,7 +1749,7 @@ h1{font-size:18px;font-weight:500}
     var loadingEl = document.getElementById('billingLoadingState');
     if (!loadingEl) return;
     try {
-      var res = await callVaEdge({ action: 'billing_list' });
+      var res = await callAdminApi({ action: 'billing_list' });
       _billingClients = res.clients || [];
       var label = document.getElementById('billingCountLabel');
       if (label) label.textContent = _billingClients.length + ' compan' + (_billingClients.length === 1 ? 'y' : 'ies');
@@ -2236,14 +1863,14 @@ h1{font-size:18px;font-weight:500}
     return wrap;
   }
 
-  // ── DFY profile + preview links (per client, /admin side; mirrors /va) ──────
+  // ── DFY profile + preview links (per client) ──────
   async function loadDfyEditor(host, c) {
     host.innerHTML = '<div style="color:var(--muted);font-size:12px;padding:8px 0">Loading…</div>';
     try {
-      var res = await callVaEdge({ action: 'get_dfy', company_id: c.id });
+      var res = await callAdminApi({ action: 'get_dfy', company_id: c.id });
       c._dfy = res.profile || {};
       renderDfyEditor(host, c);
-      var pl = await callVaEdge({ action: 'list_preview_links', company_id: c.id });
+      var pl = await callAdminApi({ action: 'list_preview_links', company_id: c.id });
       c._links = pl.links || [];
       renderPreviewLinks(host.querySelector('[data-prev]'), c);
     } catch (err) {
@@ -2258,8 +1885,8 @@ h1{font-size:18px;font-weight:500}
         '<label class="bill-fld" style="margin-bottom:8px">Service area' +
           '<textarea class="dfy-ta" data-dfy-f="service_area" rows="2" placeholder="Suburbs / postcodes / radius they want leads from">' + escapeHtml(p.service_area || '') + '</textarea>' +
         '</label>' +
-        '<label class="bill-fld" style="margin-bottom:8px">Onboarding details <span style="font-weight:400">(notes for the VA about this client)</span>' +
-          '<textarea class="dfy-ta" data-dfy-f="onboarding" rows="4" placeholder="Anything the VA should know about this client…">' + escapeHtml(p.onboarding || '') + '</textarea>' +
+        '<label class="bill-fld" style="margin-bottom:8px">Onboarding details <span style="font-weight:400">(internal notes about this client)</span>' +
+          '<textarea class="dfy-ta" data-dfy-f="onboarding" rows="4" placeholder="Anything we should know about this client…">' + escapeHtml(p.onboarding || '') + '</textarea>' +
         '</label>' +
         '<label class="bill-fld" style="margin-bottom:8px">Campaign preferences' +
           '<textarea class="dfy-ta" data-dfy-f="campaign_prefs" rows="3" placeholder="Budget, platforms, target audience, ad angle, do&#39;s and don&#39;ts…">' + escapeHtml(p.campaign_prefs || '') + '</textarea>' +
@@ -2304,7 +1931,7 @@ h1{font-size:18px;font-weight:500}
       if (st) st.textContent = 'Uploading ' + f.name + '… (' + (done + 1) + '/' + imgs.length + ')';
       try {
         var data = await fileToBase64(f);
-        var res = await callVaEdge({ action: 'add_preview_image', company_id: c.id, data: data, filename: f.name, content_type: f.type });
+        var res = await callAdminApi({ action: 'add_preview_image', company_id: c.id, data: data, filename: f.name, content_type: f.type });
         c._links = [res.link].concat(c._links || []);
         renderPreviewLinks(host.querySelector('[data-prev]'), c);
         done++;
@@ -2329,7 +1956,7 @@ h1{font-size:18px;font-weight:500}
     btn.disabled = true;
     var status = host.querySelector('[data-dfy-status]');
     try {
-      await callVaEdge({ action: 'save_dfy', company_id: c.id, profile: profile });
+      await callAdminApi({ action: 'save_dfy', company_id: c.id, profile: profile });
       c._dfy = profile;
       if (status) status.textContent = 'Saved ✓';
     } catch (err) {
@@ -2363,7 +1990,7 @@ h1{font-size:18px;font-weight:500}
     if (!url) { toast('Enter a URL.', true); return; }
     btn.disabled = true;
     try {
-      var res = await callVaEdge({ action: 'add_preview_link', company_id: c.id, kind: kind, url: url, label: labelEl.value.trim() });
+      var res = await callAdminApi({ action: 'add_preview_link', company_id: c.id, kind: kind, url: url, label: labelEl.value.trim() });
       c._links = [res.link].concat(c._links || []);
       urlEl.value = ''; labelEl.value = '';
       renderPreviewLinks(host.querySelector('[data-prev]'), c);
@@ -2375,7 +2002,7 @@ h1{font-size:18px;font-weight:500}
   async function deletePreviewLink(host, c, id, btn) {
     btn.disabled = true;
     try {
-      await callVaEdge({ action: 'delete_preview_link', id: id });
+      await callAdminApi({ action: 'delete_preview_link', id: id });
       c._links = (c._links || []).filter(function (x) { return x.id !== id; });
       renderPreviewLinks(host, c);
     } catch (err) {
@@ -2421,7 +2048,7 @@ h1{font-size:18px;font-weight:500}
     el.disabled = true;
     try {
       var fields = {}; fields[field] = val;
-      await callVaEdge({ action: 'billing_update_company', company_id: c.id, fields: fields });
+      await callAdminApi({ action: 'billing_update_company', company_id: c.id, fields: fields });
       c[field] = val;
       if (field === 'va_intro_done') c.va_intro_done_at = val ? new Date().toISOString() : null;
       toast('Saved.');
@@ -2436,7 +2063,7 @@ h1{font-size:18px;font-weight:500}
   async function markInvoice(c, id, status, btn) {
     btn.disabled = true;
     try {
-      var res = await callVaEdge({ action: 'update_invoice', id: id, patch: { status: status } });
+      var res = await callAdminApi({ action: 'update_invoice', id: id, patch: { status: status } });
       var inv = (c.invoices || []).find(function (x) { return x.id === id; });
       if (inv && res.invoice) inv.status = res.invoice.status;
       renderBillingInvoices(btn.closest('[data-invs]'), c);
@@ -2450,7 +2077,7 @@ h1{font-size:18px;font-weight:500}
   async function deleteInvoiceRow(c, id, btn) {
     btn.disabled = true;
     try {
-      await callVaEdge({ action: 'delete_invoice', id: id });
+      await callAdminApi({ action: 'delete_invoice', id: id });
       c.invoices = (c.invoices || []).filter(function (x) { return x.id !== id; });
       renderBillingInvoices(btn.closest('[data-invs]'), c);
       toast('Invoice deleted.');
@@ -2473,7 +2100,7 @@ h1{font-size:18px;font-weight:500}
     ed.classList.toggle('hidden');
     if (ed.classList.contains('hidden') || _bankLoaded) return;
     try {
-      var res = await callVaEdge({ action: 'get_bank_details' });
+      var res = await callAdminApi({ action: 'get_bank_details' });
       var s = res.settings || {};
       Object.keys(BANK_FIELDS).forEach(function (k) {
         var input = document.getElementById(BANK_FIELDS[k]);
@@ -2494,7 +2121,7 @@ h1{font-size:18px;font-weight:500}
       if (input) settings[k] = input.value.trim();
     });
     try {
-      await callVaEdge({ action: 'set_bank_details', settings: settings });
+      await callAdminApi({ action: 'set_bank_details', settings: settings });
       toast('Bank details saved.');
     } catch (err) {
       toast('Save failed: ' + err.message, true);
@@ -2520,7 +2147,7 @@ h1{font-size:18px;font-weight:500}
     var loadingEl = document.getElementById('tplLoadingState');
     if (!loadingEl) return;
     try {
-      var res = await callVaEdge({ action: 'list_email_templates' });
+      var res = await callAdminApi({ action: 'list_email_templates' });
       _templates = res.templates || [];
       var label = document.getElementById('tplCountLabel');
       if (label) label.textContent = _templates.length + ' template' + (_templates.length === 1 ? '' : 's');
@@ -2586,7 +2213,7 @@ h1{font-size:18px;font-weight:500}
     if (!tpl.name) { toast('Template name is required.', true); return; }
     btn.disabled = true; btn.textContent = 'Saving…';
     try {
-      var res = await callVaEdge({ action: 'save_email_template', template: tpl });
+      var res = await callAdminApi({ action: 'save_email_template', template: tpl });
       var saved = res.template;
       var idx = _templates.findIndex(function (x) { return x.id === saved.id; });
       if (idx >= 0) _templates[idx] = saved; else _templates.push(saved);
@@ -2604,7 +2231,7 @@ h1{font-size:18px;font-weight:500}
 
   async function deleteTemplate(t) {
     try {
-      await callVaEdge({ action: 'delete_email_template', id: t.id });
+      await callAdminApi({ action: 'delete_email_template', id: t.id });
       _templates = _templates.filter(function (x) { return x.id !== t.id; });
       document.getElementById('tplCountLabel').textContent = _templates.length + ' template' + (_templates.length === 1 ? '' : 's');
       renderTemplates();

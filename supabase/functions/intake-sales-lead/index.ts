@@ -3,10 +3,8 @@
 // installers wanting to rent LGR assets) and drops them into the Sales
 // Pipeline panel in mc/app.html.
 //
-// Distinct from intake-lead: that one is the tenant-facing CRM intake (fires
-// welcome SMS / AI agent for a paying company's own end-customer leads).
-// This one always lands under LGR's own internal company and never touches
-// SMS/AI, it's just a raw inbound sales lead for a human to work.
+// Always lands under LGR's own internal company and never touches SMS/AI, it's
+// just a raw inbound sales lead for a human to work.
 //
 // Request:  POST, header "x-api-secret: <SALES_LEAD_INTAKE_SECRET>"
 //           body { name | first_name/last_name, email?, phone?, company?,

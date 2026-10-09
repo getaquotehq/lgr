@@ -25,12 +25,9 @@ No runtime dependency on any other system.
 | `index.html` | login / signup |
 | `index.html` + `dashboard-supabase.js` | the main client app |
 | `admin.html` | internal admin panel |
-| `va.html` | VA console |
 | `quote-public.html` | public quote view |
-| `api-docs.html` | API documentation |
 | `privacy.html`, `terms.html` | legal |
 | `lib/supabase.js` | shared Supabase client |
-| `workers/api-proxy/` | Cloudflare Worker fronting the public API |
 
 Edge functions and migrations live with the rest of the project in
 `../supabase/` - they were merged in, not kept separate.
@@ -44,18 +41,12 @@ Edge functions and migrations live with the rest of the project in
    tables - the one clash, `leads`, was resolved by renaming LGR's to
    `asset_leads`. (Already applied to the live project.)
 
-2. **Deploy the edge functions** in `../supabase/functions/`. The platform's
-   Stripe handler is **`dashboard-stripe-webhook`**, kept distinct from
-   `stripe-webhook` so it doesn't overwrite the asset rental checkout.
+2. **Deploy the edge functions** in `../supabase/functions/`. Stripe has one
+   handler, `stripe-webhook`, for the engine checkout.
 
 3. **Set the function secrets** on the LGR Supabase project:
    `RESEND_API_KEY`, `RESEND_FROM_EMAIL`, `TWILIO_ACCOUNT_SID`,
-   `TWILIO_AUTH_TOKEN`, `VERIPHONE_API_KEY`, and Stripe keys for the
-   `dashboard-stripe-webhook` endpoint.
-
-4. **Deploy the Worker** (optional) - `workers/api-proxy` needs its own
-   Cloudflare deployment and its `wrangler.toml` route updating if you want the
-   public API proxy.
+   `TWILIO_AUTH_TOKEN`, `VERIPHONE_API_KEY` (used inline by `submit-lead`).
 
 ## Notes
 
@@ -73,3 +64,10 @@ Edge functions and migrations live with the rest of the project in
 - The dispute/scrub round trip from the old `sync-to-hq` / `sync-from-mc` pair
   is still unported. Since both sides share one database, most of it could be
   done in SQL.
+- **Retired in October 2026**, as leftovers of the self-serve platform the
+  dashboard was ported from: the public REST API and its Cloudflare worker,
+  API keys, outbound webhooks, Google review requests, the VA console, SMS
+  credit top-ups, and the unused password-reset / phone-check / callback
+  intake functions. `va-api` became `admin-api` (admin only) since
+  `admin.html` still needs its billing, DFY and email-template actions. The
+  tables behind the retired features are still in the database, unused.
