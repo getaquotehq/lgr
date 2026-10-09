@@ -4,7 +4,8 @@
 // Wire this endpoint (Stripe Dashboard -> Event destinations) to
 //   https://<project>.supabase.co/functions/v1/stripe-webhook
 // subscribed to:
-//   - checkout.session.completed        -> activate the rental
+//   - checkout.session.completed        -> activate the rental, or add
+//                                          purchased SMS credits
 //   - customer.subscription.deleted     -> release the asset (cancel / lapse)
 // The signing secret goes in STRIPE_WEBHOOK_SECRET.
 //
@@ -13,6 +14,10 @@
 // rented, opens a rentals history row), email the renter a confirmation, and
 // email contact@leadgenrentals.com.au a "new rental paid" notice. All emails
 // are best-effort and never block the (already active) rental.
+//
+// metadata.type === 'sms_credits' (from create-sms-credits-checkout) adds the
+// credits via add_sms_credits() and emails contact@ a notice. This is the only
+// Stripe endpoint, so credit purchases have to be handled here.
 //
 // Secrets: STRIPE_API_KEY, STRIPE_WEBHOOK_SECRET (required),
 //          RESEND_API_KEY, RESEND_FROM_EMAIL (for emails),
@@ -69,6 +74,8 @@ serve(async (req) => {
       const m = session.metadata || {}
       if (m.type === 'asset_rental') {
         await activateRental(session, m)
+      } else if (m.type === 'sms_credits') {
+        await addSmsCredits(session, m)
       }
     } else if (event.type === 'customer.subscription.deleted') {
       const sub = event.data.object as Stripe.Subscription
@@ -435,4 +442,44 @@ async function notifyRentalPaid(m: Record<string, string>, renterEmail: string, 
     }),
   })
   if (!res.ok) console.error('resend (rental-paid) error:', res.status, (await res.text()).slice(0, 300))
+}
+
+// ── SMS credits top-up (existing dashboard company) ─────────────────────────
+async function addSmsCredits(session: Stripe.Checkout.Session, m: Record<string, string>) {
+  try {
+    const credits = parseInt(m.credits)
+    if (!credits || credits <= 0) throw new Error('Invalid credits value')
+
+    const { error } = await supabase.rpc('add_sms_credits', { p_company_id: m.company_id, p_amount: credits })
+    if (error) throw error
+
+    const { data: company } = await supabase
+      .from('companies').select('name, email').eq('id', m.company_id).maybeSingle()
+
+    await sendInternalEmail(
+      `SMS credits top-up - ${company?.name}`,
+      `<p>${company?.name} purchased ${credits} SMS credits.</p><p><strong>Email:</strong> ${company?.email}</p>`
+    )
+  } catch (err) {
+    console.error('addSmsCredits error:', err)
+    await sendInternalEmail(
+      `SMS credits top-up FAILED - company ${m.company_id}`,
+      `<p>Error: ${String(err)}</p><p>Credits: ${m.credits}</p><p>Stripe Session: ${session.id}</p>`
+    )
+  }
+}
+
+async function sendInternalEmail(subject: string, body: string) {
+  const apiKey = Deno.env.get('RESEND_API_KEY')
+  if (!apiKey) return
+  await fetch('https://api.resend.com/emails', {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      from: 'Lead Gen Rentals System <system@leadgenrentals.com.au>',
+      to:   'contact@leadgenrentals.com.au',
+      subject,
+      html: `<div style="font-family:system-ui,sans-serif;font-size:14px;color:#333;line-height:1.7">${body}</div>`,
+    }),
+  }).catch(err => console.error('sendInternalEmail error:', err))
 }
