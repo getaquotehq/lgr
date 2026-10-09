@@ -41,9 +41,8 @@ Edge functions and migrations live with the rest of the project in
    tables - the one clash, `leads`, was resolved by renaming LGR's to
    `asset_leads`. (Already applied to the live project.)
 
-2. **Deploy the edge functions** in `../supabase/functions/`. Stripe has two
-   handlers: `stripe-webhook` for the engine checkout and
-   `dashboard-stripe-webhook` for SMS credit purchases.
+2. **Deploy the edge functions** in `../supabase/functions/`. Stripe has one
+   endpoint, `stripe-webhook`, for engine checkouts and SMS credit purchases.
 
 3. **Set the function secrets** on the LGR Supabase project:
    `RESEND_API_KEY`, `RESEND_FROM_EMAIL`, `TWILIO_ACCOUNT_SID`,
@@ -75,7 +74,6 @@ Edge functions and migrations live with the rest of the project in
   whose recovery link lands on `SITE_URL/` (default
   `https://leadgenrentals.com.au/dashboard`), where `PASSWORD_RECOVERY` opens
   the reset modal. That URL must be in Supabase Auth's redirect allow list.
-  `complete-password-reset` is the unused half of an older custom-token design.
 - **SMS credit top-ups**: the Buy buttons on the AI Agent page call
   `create-sms-credits-checkout`; Stripe's `checkout.session.completed` then
-  hits `dashboard-stripe-webhook`, which adds the credits.
+  hits `stripe-webhook` (the only Stripe endpoint), which adds the credits.
