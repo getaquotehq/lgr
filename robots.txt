@@ -8,10 +8,7 @@ Disallow: /mc/
 Disallow: /dashboard/
 
 # Internal reference documents. GitHub Pages serves every file in the repo, so
-# these are reachable by URL whether or not they are linked. MODEL.md in
-# particular is the internal description of the commercial model and is not
-# written for a prospect to read.
-Disallow: /MODEL.md
+# these are reachable by URL whether or not they are linked.
 Disallow: /DASHBOARD.md
 Disallow: /README.md
 
