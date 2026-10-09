@@ -76,5 +76,6 @@ Edge functions and migrations live with the rest of the project in
   `https://leadgenrentals.com.au/dashboard`), where `PASSWORD_RECOVERY` opens
   the reset modal. That URL must be in Supabase Auth's redirect allow list.
   `complete-password-reset` is the unused half of an older custom-token design.
-- Still deployed but not called from any page: `create-sms-credits-checkout`
-  and `dashboard-stripe-webhook` (the SMS credit Buy buttons were taken out).
+- **SMS credit top-ups**: the Buy buttons on the AI Agent page call
+  `create-sms-credits-checkout`; Stripe's `checkout.session.completed` then
+  hits `dashboard-stripe-webhook`, which adds the credits.

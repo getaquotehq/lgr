@@ -3272,11 +3272,43 @@ async function loadAiSettings() {
 
     _updateSmsCreditsUi(b);
 
+    // Show success toast if returning from credits purchase
+    if (new URLSearchParams(location.search).get("sms_credits_success")) {
+      toast("SMS credits added to your account.");
+      if (window.lgrMetaTrackPurchase) {
+        const searchParams = new URLSearchParams(location.search);
+        const value = Number(searchParams.get("value"));
+        const currency = searchParams.get("currency") || "AUD";
+        window.lgrMetaTrackPurchase(Number.isFinite(value) ? { value, currency } : { currency });
+      }
+      history.replaceState({}, "", location.pathname);
+    }
+
   } catch (err) {
     console.error("Load AI settings error:", err);
     toast("Failed to load AI settings.", true);
   }
 }
+
+async function buySmsCredits(pack) {
+  const btn = event?.target;
+  if (btn) { btn.disabled = true; btn.textContent = "Redirecting…"; }
+  try {
+    const { data: { session } } = await sb.auth.getSession();
+    const res = await fetch(`${SUPABASE_URL}/functions/v1/create-sms-credits-checkout`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "Authorization": `Bearer ${session.access_token}`, "apikey": SUPABASE_ANON_KEY },
+      body: JSON.stringify({ pack }),
+    });
+    const data = await res.json();
+    if (!res.ok || !data.url) throw new Error(data.error || "No checkout URL");
+    window.location.href = data.url;
+  } catch (err) {
+    toast(err.message || "Failed to start checkout.", true);
+    if (btn) { btn.disabled = false; btn.textContent = "Buy"; }
+  }
+}
+window.buySmsCredits = buySmsCredits;
 
 // Helper functions for form population
 function setInputValue(id, value) {
