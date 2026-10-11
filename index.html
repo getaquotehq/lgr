@@ -342,9 +342,6 @@
         <div class="nav-dd-menu" role="menu">
           <a href="/solar-leads" role="menuitem">Solar</a>
           <a href="/solar-battery-leads" role="menuitem">Battery</a>
-          <a href="/hvac-leads" role="menuitem">HVAC</a>
-          <a href="/roofing-leads" role="menuitem">Roofing</a>
-          <a href="/renovations-leads" role="menuitem">Renovations</a>
         </div>
       </div>
       <a href="/dashboard/" class="nav-l">Dashboard</a>
@@ -359,9 +356,6 @@
   <span class="mm-label">Industries</span>
   <a href="/solar-leads">Solar</a>
   <a href="/solar-battery-leads">Battery</a>
-  <a href="/hvac-leads">HVAC</a>
-  <a href="/roofing-leads">Roofing</a>
-  <a href="/renovations-leads">Renovations</a>
   <a href="/dashboard/">Dashboard</a>
   <a href="/about">About</a>
   <a href="/contact">Contact</a>
@@ -381,8 +375,6 @@
     <div class="trades" id="trades" aria-busy="true">
       <div class="trade trade-sk" aria-hidden="true"><div class="trade-top"><span class="sk-bar" style="width:45%;height:16px"></span><span class="sk-bar" style="width:52px"></span></div><span class="sk-bar" style="width:90%;margin:6px 0"></span><span class="sk-bar" style="width:70%;margin-bottom:22px"></span><span class="sk-bar" style="width:100%;height:38px;border-radius:7px"></span></div>
       <div class="trade trade-sk" aria-hidden="true"><div class="trade-top"><span class="sk-bar" style="width:40%;height:16px"></span><span class="sk-bar" style="width:52px"></span></div><span class="sk-bar" style="width:90%;margin:6px 0"></span><span class="sk-bar" style="width:70%;margin-bottom:22px"></span><span class="sk-bar" style="width:100%;height:38px;border-radius:7px"></span></div>
-      <div class="trade trade-sk" aria-hidden="true"><div class="trade-top"><span class="sk-bar" style="width:50%;height:16px"></span><span class="sk-bar" style="width:52px"></span></div><span class="sk-bar" style="width:90%;margin:6px 0"></span><span class="sk-bar" style="width:70%;margin-bottom:22px"></span><span class="sk-bar" style="width:100%;height:38px;border-radius:7px"></span></div>
-      <div class="trade trade-sk" aria-hidden="true"><div class="trade-top"><span class="sk-bar" style="width:42%;height:16px"></span><span class="sk-bar" style="width:52px"></span></div><span class="sk-bar" style="width:90%;margin:6px 0"></span><span class="sk-bar" style="width:70%;margin-bottom:22px"></span><span class="sk-bar" style="width:100%;height:38px;border-radius:7px"></span></div>
     </div>
     </div>
   </div>
@@ -557,9 +549,6 @@
         <a href="/">Home</a>
         <a href="/solar-leads">Solar</a>
         <a href="/solar-battery-leads">Battery</a>
-        <a href="/hvac-leads">HVAC</a>
-        <a href="/roofing-leads">Roofing</a>
-        <a href="/renovations-leads">Renovations</a>
         <a href="/about">About</a>
         <a href="/contact">Contact</a>
         <a href="/terms">Terms</a>
@@ -624,10 +613,10 @@
     const grid = document.getElementById('trades');
     const cfg = window.LGR_SUPABASE || {};
     const esc = s => (s==null?'':String(s)).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-    // Page filenames do not all follow /<slug>-leads, so map the exceptions
-    // explicitly. A wrong guess here is a 404 on the main call to action.
+    // The trades LGR sells, and their pages. A wrong page here is a 404 on the
+    // main call to action.
     const PAGE = { solar: '/solar-leads', battery: '/solar-battery-leads' };
-    const href = slug => PAGE[slug] || '/' + slug + '-leads';
+    const href = slug => PAGE[slug];
     const label = n => n.slug === 'solar' ? 'solar' : n.name.toLowerCase();
     // Every trade links through to its page. There is no "coming soon" card any
     // more: a greyed-out tile with a dead button is a dead end that tells a
@@ -652,8 +641,11 @@
           .order('sort_order', { ascending:true })
           .order('name', { ascending:true });
         if(error) throw error;
-        grid.innerHTML = (data && data.length)
-          ? data.map(cardLive).join('')
+        // LGR sells solar and solar battery only; anything else in the table
+        // has no page to link to.
+        const live = (data || []).filter(n => PAGE[n.slug]);
+        grid.innerHTML = live.length
+          ? live.map(cardLive).join('')
           : '<div class="data-error">No trades available yet.</div>';
       }catch(e){
         console.error('niches load failed', e);
