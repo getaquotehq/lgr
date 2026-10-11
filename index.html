@@ -355,11 +355,12 @@
   .ad-txt{padding:0 14px 12px;font-size:.84rem;color:var(--ink-2);line-height:1.5}
   .ad-img{display:block;width:100%;height:auto;aspect-ratio:4/5;object-fit:cover;background:var(--surface-2);border-block:1px solid var(--line)}
   .ad-art{position:relative;container-type:inline-size}
-  .ad-ovl{position:absolute;inset:0 0 auto;display:flex;flex-direction:column;align-items:center;text-align:center;gap:3cqw;padding:9cqw 8cqw 0}
-  .ad-h{font-family:var(--sans);font-weight:800;font-size:9cqw;line-height:1.05;letter-spacing:-.02em;color:#fff;text-shadow:0 1px 12px rgba(10,40,90,.25)}
-  .ad-sub{font-family:var(--sans);font-weight:500;font-size:4.3cqw;line-height:1.35;color:rgba(255,255,255,.95);max-width:30ch;text-shadow:0 1px 8px rgba(10,40,90,.25)}
-  .ad-btn{display:inline-flex;align-items:center;gap:1.6cqw;margin-top:1.5cqw;font-family:var(--sans);font-weight:700;font-size:4cqw;color:#0B2545;background:#fff;border-radius:999px;padding:2.6cqw 5.5cqw;box-shadow:0 6px 18px rgba(10,40,90,.22)}
-  .ad-btn svg{width:3.4cqw;height:3.4cqw}
+  .ad-art::before{content:"";position:absolute;inset:1px 0 auto;height:45%;background:linear-gradient(180deg,rgba(8,30,70,.32),rgba(8,30,70,0));pointer-events:none}
+  .ad-ovl{position:absolute;inset:0 0 auto;display:flex;flex-direction:column;align-items:flex-start;padding:7cqw 7cqw 0}
+  .ad-h{font-family:var(--sans);font-weight:700;font-size:7.2cqw;line-height:1.1;letter-spacing:-.025em;color:#fff}
+  .ad-sub{margin-top:2cqw;font-family:var(--sans);font-weight:400;font-size:3.7cqw;line-height:1.4;color:rgba(255,255,255,.92);max-width:31ch}
+  .ad-btn{display:inline-flex;align-items:center;gap:1.4cqw;margin-top:4.5cqw;font-family:var(--sans);font-weight:600;font-size:3.5cqw;letter-spacing:-.005em;color:#1a1204;background:#FBB43C;border-radius:2cqw;padding:2.4cqw 4cqw}
+  .ad-btn svg{width:3.2cqw;height:3.2cqw}
   .ad-foot{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 14px;background:var(--surface)}
   .ad-foot small{display:block;font-size:.66rem;color:var(--muted);text-transform:uppercase;letter-spacing:.05em}
   .ad-foot b{font-size:.86rem;color:var(--ink);font-weight:600}
@@ -554,7 +555,7 @@
                 <img class="ad-img" src="lgr-solar-ad.webp" width="800" height="1000" loading="lazy" decoding="async" alt="Single-storey brick home with solar panels on the roof under a clear blue sky">
                 <div class="ad-ovl">
                   <div class="ad-h">Sydney Homeowners</div>
-                  <div class="ad-sub">Click Get Quote to book your Obligation-Free Solar Assessment</div>
+                  <div class="ad-sub">Click Get Quote to book your <span style="white-space:nowrap">Obligation&#8209;Free</span> Solar Assessment</div>
                   <span class="ad-btn">Get Quote <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>
                 </div>
               </div>
