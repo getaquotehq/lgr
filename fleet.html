@@ -432,7 +432,7 @@
         <span class="plan-name">Engine</span>
         <span class="plan-tag" id="availTag">Checking availability</span>
       </div>
-      <div class="plan-price"><span class="pp-num" id="planSetup">$1,250</span><small>+GST up front, to us, for setup and your first 30 days. Then <span id="planFee">$690</span> +GST a month.</small></div>
+      <div class="plan-price"><span class="pp-num" id="planFee">$690</span><small>+GST a month, to us. No setup fee. Your first payment covers your first 30 days.</small></div>
       <div class="plan-budget">
         <span class="pb-k">Plus your own ad budget</span>
         <span class="pb-v" id="planBudget">$50 / day</span>
@@ -490,8 +490,8 @@
     <div class="money-grid">
       <div class="money-card">
         <span class="mc-k">You pay us</span>
-        <span class="mc-v" id="moneySetup">$1,250 + GST to start</span>
-        <p>Our fee for owning and running the engine, writing and testing the ads and managing the spend. That covers setup and your first 30 days, then it is <span id="moneyFee">$690</span> + GST a month. It contains no advertising spend at all. Billed by card, monthly in advance, cancel any time.</p>
+        <span class="mc-v" id="moneyFeeHead">$690 + GST a month</span>
+        <p>Our fee for owning and running the engine, writing and testing the ads and managing the spend. There is no setup fee: your first payment covers your first 30 days, then it is <span id="moneyFee">$690</span> + GST a month. It contains no advertising spend at all. Billed by card, monthly in advance, cancel any time.</p>
       </div>
       <div class="money-card">
         <span class="mc-k">You pay Meta</span>
@@ -606,7 +606,7 @@ const NC = NICHE_CFG[NICHE] || NICHE_CFG.solar;
 // are the current published ones and exist so the page is readable before the
 // fetch resolves; whatever the database says wins. Never compute the fee, the
 // budget or the guarantee in here from one another.
-let PLAN = { fee: 690, setup: 1250, budget: 50, available: null };
+let PLAN = { fee: 690, budget: 50, available: null };
 let postcode = '';
 
 document.title = `Lead Gen Rentals - ${NC.label} pricing and availability`;
@@ -701,7 +701,6 @@ async function loadPlan(){
     if(error) throw error;
     if(data){
       if(typeof data.fee_aud === 'number')          PLAN.fee    = data.fee_aud;
-      if(typeof data.setup_fee_aud === 'number')    PLAN.setup  = data.setup_fee_aud;
       if(typeof data.daily_budget_aud === 'number') PLAN.budget = data.daily_budget_aud;
       PLAN.available = Number(data.engines_available || 0);
     } else {
@@ -718,8 +717,7 @@ function paintPlan(){
   $('#planFee').textContent    = money(PLAN.fee);
   $('#planBudget').textContent = money(PLAN.budget) + ' / day';
   $('#moneyFee').textContent   = money(PLAN.fee);
-  $('#planSetup').textContent  = money(PLAN.setup);
-  $('#moneySetup').textContent = money(PLAN.setup) + ' + GST to start';
+  $('#moneyFeeHead').textContent = money(PLAN.fee) + ' + GST a month';
   $('#moneyBudget').textContent= money(PLAN.budget) + ' / day';
   setAvailTag(PLAN.available);
 }
@@ -810,11 +808,11 @@ function showRentStep(){
   // Both numbers, every time. A fee shown on its own reads as the total cost of
   // advertising with us, and it is not.
   $('#whatYouPay').innerHTML =
-    `<div class="wyp-row"><span>To us, today</span><b>${money(PLAN.setup)} + GST, setup and first 30 days</b></div>` +
+    `<div class="wyp-row"><span>To us, today</span><b>${money(PLAN.fee)} + GST, your first 30 days</b></div>` +
     `<div class="wyp-row"><span>To us, then</span><b>${money(PLAN.fee)} + GST / month</b></div>` +
     `<div class="wyp-row"><span>To Meta, on your own card</span><b>${money(PLAN.budget)} / day</b></div>` +
     `<p class="wyp-note">Only the first line is charged now; we bill the monthly fee from day 31. Meta bills the Meta line directly once your card is on the ad account, at Meta's own prices. Anything we have committed to in writing for your plan applies as written.</p>`;
-  $('#rentTotal').innerHTML = `Charged today: <b>${money(PLAN.setup)}</b> <small>+GST (setup + first 30 days), then ${money(PLAN.fee)} +GST monthly. Cancel any time.</small>`;
+  $('#rentTotal').innerHTML = `Charged today: <b>${money(PLAN.fee)}</b> <small>+GST (your first 30 days, no setup fee), then ${money(PLAN.fee)} +GST monthly. Cancel any time.</small>`;
   $('#rentErr').classList.remove('on');
   const claim = $('#modalClaim');
   claim.disabled = false; claim.textContent = 'Continue to secure checkout →';
@@ -825,7 +823,7 @@ function showRentStep(){
 
 function openModal(){
   $('#modalShot').innerHTML = shot(true);
-  $('#modalMeta').textContent = `${NC.label} · Engine plan · ${money(PLAN.setup)} +GST for setup + first 30 days, then ${money(PLAN.fee)} +GST / month plus ${money(PLAN.budget)}/day to Meta`;
+  $('#modalMeta').textContent = `${NC.label} · Engine plan · ${money(PLAN.fee)} +GST / month, no setup fee, plus ${money(PLAN.budget)}/day to Meta`;
   $('#modalTitle').textContent = `Your ${NC.label.toLowerCase()} engine`;
   showPreviewStep();
   $('#modal').classList.add('on');

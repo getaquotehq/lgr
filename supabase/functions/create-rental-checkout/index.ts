@@ -76,7 +76,7 @@ const money = (n: number) => '$' + Number(n).toLocaleString('en-AU')
 async function notifyCheckoutStarted(d: {
   business_name: string; contact_name: string; email: string; phone: string
   brand_name: string; niche: string; postcode: string; tier: string
-  fee: number; setup_fee: number; daily_budget: number; guarantee: string
+  fee: number; daily_budget: number; guarantee: string
   session_id: string; service_type: string
 }) {
   const apiKey = Deno.env.get('RESEND_API_KEY')
@@ -101,7 +101,6 @@ async function notifyCheckoutStarted(d: {
       ${row('Trade', esc(d.niche) + ' (' + esc(d.tier) + ')')}
       ${row('Service postcode', esc(d.postcode) || '-')}
       ${row('Our fee', money(d.fee) + ' + GST / 30 days')}
-      ${d.setup_fee ? row('Setup fee', money(d.setup_fee) + ' + GST, one-off, includes first 30 days') : ''}
       ${row('Their Meta budget', money(d.daily_budget) + '/day, paid direct to Meta on their own card')}
       ${row('Guarantee', esc(d.guarantee))}
       ${row('Stripe session', `<code>${esc(d.session_id)}</code>`)}
@@ -175,7 +174,7 @@ serve(async (req) => {
     // ── read the deal server-side (never trust the client with an amount) ────
     const { data: asset, error: assetErr } = await supabase
       .from('assets')
-      .select('id, tier, brand_name, monthly_price_aud, setup_fee_aud, min_daily_budget_aud, ' +
+      .select('id, tier, brand_name, monthly_price_aud, min_daily_budget_aud, ' +
               'guarantee_quotes, guarantee_window_days, ' +
               'status, sold_out, deleted_at, niches(name)')
       .eq('id', assetId)
@@ -191,8 +190,6 @@ serve(async (req) => {
     }
 
     const fee = asset.monthly_price_aud
-    // One-off, charged with the first month only (see line_items below).
-    const setupFee = Number(asset.setup_fee_aud || 1250)
     const dailyBudget = Number(asset.min_daily_budget_aud ?? 0)
     const windowDays = Number(asset.guarantee_window_days ?? 30)
     const gQuotes = asset.guarantee_quotes
@@ -209,13 +206,13 @@ serve(async (req) => {
       ? `${gQuotes} quoted jobs per ${windowDays} days, or this fee is refunded in full.`
       : 'Guarantee per the scope agreed in writing.'
 
-    const productName = `${tierName} lead engine - ${nicheName} (LGR setup + first 30 days)`
+    const productName = `${tierName} lead engine - ${nicheName} (LGR first 30 days)`
     // Every clause here is a MODEL.md rule: fee excludes media (2.1), the client
     // pays Meta on their own card (2.2), the budget is named beside the fee
     // (2.4), the guarantee and its remedy (3.1), exclusivity is per engine and
     // never territorial (1.1).
     const productDesc =
-      `One-off payment covering setup and your first 30 days, then ${money(fee)} + GST a month, billed separately. ` +
+      `Payment for your first 30 days, with no setup fee, then ${money(fee)} + GST a month, billed separately. ` +
       `It does NOT include advertising spend. ` +
       `You pay Meta directly from your own card on the ad account we give you access to, ` +
       `with a committed minimum of ${money(dailyBudget)}/day (about ${money(dailyBudget * windowDays)} per ${windowDays} days). ` +
@@ -228,8 +225,8 @@ serve(async (req) => {
     const existing = await stripe.customers.list({ email: String(email).trim(), limit: 1 })
     if (existing.data.length) customerId = existing.data[0].id
 
-    // One-off payment only: the setup fee covers setup and the first 30 days.
-    // The monthly fee after that is billed separately, outside this checkout.
+    // One payment for the first 30 days at the monthly fee; there is no setup
+    // fee. The monthly fee after that is billed separately, outside this checkout.
     const session = await stripe.checkout.sessions.create({
       mode: 'payment',
       payment_method_types: ['card'],
@@ -238,7 +235,7 @@ serve(async (req) => {
       line_items: [{
         price_data: {
           currency: 'aud',
-          unit_amount: setupFee * 100,
+          unit_amount: fee * 100,
           // Prices are advertised "+GST", so tax-exclusive: Stripe Tax adds 10%
           // on top rather than carving it out.
           tax_behavior: 'exclusive',
@@ -258,14 +255,13 @@ serve(async (req) => {
         // Named `fee_aud`, not `price`, so nobody downstream mistakes it for a
         // total that includes media.
         fee_aud: String(fee),
-        setup_fee_aud: String(setupFee),
         min_daily_budget_aud: String(dailyBudget),
         guarantee_quotes: String(gQuotes ?? ''),
         service_type: serviceType,
       },
       // session_id lets the landing page poll get-magic-link for a one-click way
       // into the dashboard once the webhook has provisioned the account.
-      success_url: `${SITE}/fleet.html?checkout=success&session_id={CHECKOUT_SESSION_ID}&value=${encodeURIComponent(String(setupFee))}&currency=AUD`,
+      success_url: `${SITE}/fleet.html?checkout=success&session_id={CHECKOUT_SESSION_ID}&value=${encodeURIComponent(String(fee))}&currency=AUD`,
       cancel_url: `${SITE}/fleet.html?checkout=cancelled`,
     })
 
@@ -277,7 +273,6 @@ serve(async (req) => {
       email: String(email).trim(),
       phone: String(phone || '').slice(0, 40) || null,
       monthly_price_aud: fee,
-      setup_fee_aud: setupFee || null,
       min_daily_budget_aud: dailyBudget || null,
       guarantee_quotes: gQuotes ?? null,
       service_type: serviceType,
@@ -296,7 +291,6 @@ serve(async (req) => {
       postcode,
       tier: tierName,
       fee,
-      setup_fee: setupFee,
       daily_budget: dailyBudget,
       guarantee: guaranteeLine,
       session_id: session.id,
