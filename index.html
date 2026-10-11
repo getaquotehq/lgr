@@ -355,12 +355,13 @@
   .ad-txt{padding:0 14px 12px;font-size:.84rem;color:var(--ink-2);line-height:1.5}
   .ad-img{display:block;width:100%;height:auto;aspect-ratio:4/5;object-fit:cover;background:var(--surface-2);border-block:1px solid var(--line)}
   .ad-art{position:relative;container-type:inline-size}
-  .ad-ovl{position:absolute;top:4.5cqw;left:4.5cqw;display:flex;flex-direction:column;align-items:flex-start;text-align:left;padding:4cqw 4.8cqw 4.4cqw;border-radius:3.2cqw;background:linear-gradient(160deg,rgba(9,22,46,.55),rgba(9,22,46,.32));-webkit-backdrop-filter:blur(10px) saturate(140%);backdrop-filter:blur(10px) saturate(140%);border:1px solid rgba(255,255,255,.18);box-shadow:0 8px 24px rgba(6,18,40,.18)}
-  .ad-h{font-family:'Instrument Serif',Georgia,serif;font-weight:400;font-size:8.6cqw;line-height:1;white-space:nowrap;letter-spacing:-.01em;color:#fff}
+  .ad-art::before{content:"";position:absolute;inset:1px 0 auto;height:62%;background:linear-gradient(180deg,rgba(5,16,36,.82) 0%,rgba(5,16,36,.55) 38%,rgba(5,16,36,0) 100%);pointer-events:none}
+  .ad-ovl{position:absolute;inset:0 0 auto;display:flex;flex-direction:column;align-items:flex-start;text-align:left;padding:6cqw 7cqw 0}
+  .ad-h{font-family:'Instrument Serif',Georgia,serif;font-weight:400;font-size:11.5cqw;line-height:.9;letter-spacing:-.015em;color:#fff}
   .ad-h em{font-style:italic;color:#FFB547}
-  .ad-sub{margin-top:2cqw;font-family:var(--sans);font-weight:450;font-size:3.2cqw;line-height:1.45;color:rgba(255,255,255,.86);max-width:28ch}
-  .ad-btn{display:inline-flex;align-items:center;gap:1.6cqw;margin-top:3.2cqw;font-family:var(--sans);font-weight:600;font-size:3.1cqw;color:#2a1600;background:linear-gradient(180deg,#FFC25C,#F59E0B);border-radius:999px;padding:2.1cqw 4cqw 2.1cqw 4.4cqw;box-shadow:0 1px 0 rgba(255,255,255,.45) inset}
-  .ad-btn svg{width:3cqw;height:3cqw}
+  .ad-sub{margin-top:2.6cqw;font-family:var(--sans);font-weight:500;font-size:3.6cqw;line-height:1.4;color:rgba(255,255,255,.92);max-width:28ch}
+  .ad-btn{display:inline-flex;align-items:center;gap:2cqw;margin:3.8cqw 0 0 1.6cqw;font-family:var(--sans);font-weight:700;font-size:3.8cqw;letter-spacing:-.005em;color:#1f1000;background:#FBB43C;border-radius:1.6cqw;padding:2.6cqw 4.6cqw;box-shadow:-1.6cqw 1.6cqw 0 #C2410C}
+  .ad-btn svg{width:3.6cqw;height:3.6cqw}
   .ad-foot{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 14px;background:var(--surface)}
   .ad-foot small{display:block;font-size:.66rem;color:var(--muted);text-transform:uppercase;letter-spacing:.05em}
   .ad-foot b{font-size:.86rem;color:var(--ink);font-weight:600}
@@ -554,7 +555,7 @@
               <div class="ad-art">
                 <img class="ad-img" src="lgr-solar-ad.webp" width="800" height="1000" loading="lazy" decoding="async" alt="Single-storey brick home with solar panels on the roof under a clear blue sky">
                 <div class="ad-ovl">
-                  <div class="ad-h">Sydney <em>Homeowners</em></div>
+                  <div class="ad-h">Sydney<br><em>Homeowners</em></div>
                   <div class="ad-sub">Click Get Quote to book your <span style="white-space:nowrap">Obligation&#8209;Free</span> Solar Assessment</div>
                   <span class="ad-btn">Get Quote <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>
                 </div>
