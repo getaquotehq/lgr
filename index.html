@@ -354,6 +354,12 @@
   .ad-sp{font-size:.72rem;color:var(--muted)}
   .ad-txt{padding:0 14px 12px;font-size:.84rem;color:var(--ink-2);line-height:1.5}
   .ad-img{display:block;width:100%;height:auto;aspect-ratio:4/5;object-fit:cover;background:var(--surface-2);border-block:1px solid var(--line)}
+  .ad-art{position:relative;container-type:inline-size}
+  .ad-ovl{position:absolute;inset:0 0 auto;display:flex;flex-direction:column;align-items:center;text-align:center;gap:3cqw;padding:9cqw 8cqw 0}
+  .ad-h{font-family:var(--sans);font-weight:800;font-size:9cqw;line-height:1.05;letter-spacing:-.02em;color:#fff;text-shadow:0 1px 12px rgba(10,40,90,.25)}
+  .ad-sub{font-family:var(--sans);font-weight:500;font-size:4.3cqw;line-height:1.35;color:rgba(255,255,255,.95);max-width:30ch;text-shadow:0 1px 8px rgba(10,40,90,.25)}
+  .ad-btn{display:inline-flex;align-items:center;gap:1.6cqw;margin-top:1.5cqw;font-family:var(--sans);font-weight:700;font-size:4cqw;color:#0B2545;background:#fff;border-radius:999px;padding:2.6cqw 5.5cqw;box-shadow:0 6px 18px rgba(10,40,90,.22)}
+  .ad-btn svg{width:3.4cqw;height:3.4cqw}
   .ad-foot{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 14px;background:var(--surface)}
   .ad-foot small{display:block;font-size:.66rem;color:var(--muted);text-transform:uppercase;letter-spacing:.05em}
   .ad-foot b{font-size:.86rem;color:var(--ink);font-weight:600}
@@ -544,7 +550,14 @@
                 <div><div class="ad-name">Western Sydney Solar Quotes</div><div class="ad-sp">Sponsored &middot; <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor" style="vertical-align:-1px"><circle cx="12" cy="12" r="10" opacity=".35"/><path d="M12 2a10 10 0 0 1 0 20" opacity=".6"/></svg></div></div>
               </div>
               <div class="ad-txt">Thinking about solar? Get a quote from a local, accredited installer who services your suburb. Two minutes, no obligation.</div>
-              <img class="ad-img" src="lgr-solar-ad.webp" width="800" height="1000" loading="lazy" decoding="async" alt="Single-storey brick home with solar panels on the roof under a clear blue sky">
+              <div class="ad-art">
+                <img class="ad-img" src="lgr-solar-ad.webp" width="800" height="1000" loading="lazy" decoding="async" alt="Single-storey brick home with solar panels on the roof under a clear blue sky">
+                <div class="ad-ovl">
+                  <div class="ad-h">Gold Coast Homeowners</div>
+                  <div class="ad-sub">Click Get Quote to book your Obligation-Free Solar Assessment</div>
+                  <span class="ad-btn">Get Quote <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>
+                </div>
+              </div>
               <div class="ad-foot">
                 <div><small>Local install quotes</small><b>Get a solar quote near you</b></div>
                 <span class="ad-cta">Get quote</span>
@@ -641,7 +654,6 @@
                 <div class="db-r"><span>Mobile</span><b class="ok">0412 *** *** &middot; verified</b></div>
                 <div class="db-r"><span>Quarterly bill</span><b>$600&ndash;$900</b></div>
                 <div class="db-r"><span>Consent named</span><b><span class="slot">Your Business</span></b></div>
-                <div class="db-r"><span>Other businesses sent this lead</span><b>None</b></div>
                 <div class="db-r"><span>SMS</span><b>Call tomorrow after 4pm</b></div>
               </div>
               <div class="db-src"><b>Came from</b>&ldquo;Get a solar quote near you&rdquo; &middot; Western Sydney &middot; your ad account</div>
