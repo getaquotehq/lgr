@@ -18,21 +18,21 @@
 <noscript><img height="1" width="1" style="display:none" src="https://www.facebook.com/tr?id=1264556364606702&ev=PageView&noscript=1" /></noscript>
 <meta name="color-scheme" content="light dark">
 <title>Buy Renovation Leads Australia | Exclusive Builder Leads</title>
-<meta name="description" content="Renovation leads in Australia. We own and run the lead engine and the Meta campaigns behind it. Flat $1,250 a month to us, your ad budget paid direct to Meta at Meta's prices. Every lead named to your business and never resold.">
+<meta name="description" content="Renovation leads in Australia. We own and run the lead engine and the Meta campaigns behind it. Setup from $1,250 + GST, then from $690 + GST a month to us, your ad budget paid direct to Meta at Meta's prices. Every lead named to your business and never resold.">
 <link rel="canonical" href="https://leadgenrentals.com.au/renovations-leads">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="Lead Gen Rentals">
 <meta property="og:locale" content="en_AU">
 <meta property="og:url" content="https://leadgenrentals.com.au/renovations-leads">
 <meta property="og:title" content="Buy Renovation Leads Australia | Exclusive Builder Leads">
-<meta property="og:description" content="Renovation leads in Australia. We own and run the lead engine and the Meta campaigns behind it. Flat $1,250 a month to us, your ad budget paid direct to Meta at Meta's prices. Every lead named to your business and never resold.">
+<meta property="og:description" content="Renovation leads in Australia. We own and run the lead engine and the Meta campaigns behind it. Setup from $1,250 + GST, then from $690 + GST a month to us, your ad budget paid direct to Meta at Meta's prices. Every lead named to your business and never resold.">
 <meta property="og:image" content="https://leadgenrentals.com.au/lgr-og-image.png">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
 <meta property="og:image:alt" content="Lead Gen Rentals - Australia's exclusive lead rental engine">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="Buy Renovation Leads Australia | Exclusive Builder Leads">
-<meta name="twitter:description" content="Renovation leads in Australia. We own and run the lead engine and the Meta campaigns behind it. Flat $1,250 a month to us, your ad budget paid direct to Meta at Meta's prices. Every lead named to your business and never resold.">
+<meta name="twitter:description" content="Renovation leads in Australia. We own and run the lead engine and the Meta campaigns behind it. Setup from $1,250 + GST, then from $690 + GST a month to us, your ad budget paid direct to Meta at Meta's prices. Every lead named to your business and never resold.">
 <meta name="twitter:image" content="https://leadgenrentals.com.au/lgr-og-image.png">
 <link rel="icon" href="favicon.ico">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -580,7 +580,7 @@
         <div class="step">
           <div class="step-n">02</div>
           <h4>Pay our fee, get the ad account</h4>
-          <p>$1,250 + GST a month, month to month. We then give you access to the Meta ad account that runs your engine, where you can see every campaign, every dollar and every result as it happens.</p>
+          <p>A one-off setup fee from $1,250 + GST, then from $690 + GST a month, month to month. We then give you access to the Meta ad account that runs your engine, where you can see every campaign, every dollar and every result as it happens.</p>
         </div>
         <div class="step">
           <div class="step-n">03</div>
@@ -662,15 +662,15 @@
       </div>
       <div class="price-hero">
         <span class="ph-label">What you pay, in full</span>
-        <div class="ph-num" style="font-size:clamp(1.5rem,4.2vw,2.4rem);line-height:1.2">$1,250 to us. $50 a day to Meta.</div>
-        <span class="ph-sub">Two payments, two places, and only one of them comes to us. Our fee covers the engine and us running the campaigns. Your advertising is charged to your own card by Meta.</span>
+        <div class="ph-num" style="font-size:clamp(1.5rem,4.2vw,2.4rem);line-height:1.2">From $690 a month to us. $50 a day to Meta.</div>
+        <span class="ph-sub">Two payments, two places, and only one of them comes to us. Our fee is a one-off setup from $1,250 + GST, then from $690 + GST a month, and covers the engine and us running the campaigns. Your advertising is charged to your own card by Meta.</span>
       </div>
       <div class="tiers tiers-2">
 
         <div class="tier feature">
           <span class="tier-badge">Most take this</span>
           <div class="tier-class"><span class="tier-code">T1</span><span class="tier-name">Engine</span></div>
-          <div class="tier-price">$1,250<small>per month &middot; +GST &middot; paid to us</small></div>
+          <div class="tier-price">from $690<small>per month &middot; +GST &middot; paid to us &middot; plus a one-off setup fee from $1,250 + GST</small></div>
           <div class="tier-budget"><b>Plus $50 a day to Meta</b><span>Charged to your own card by Meta, at Meta's prices. About $1,500 over a 30 day cycle. We never handle it and never mark it up.</span></div>
           <div class="tier-range"><b>One business per engine</b><span>while you are on it, every lead it produces is yours and nobody else is calling them</span></div>
           <ul>
@@ -867,7 +867,7 @@
   // Current published figures. Whatever the database says wins; these exist so
   // the widget reads correctly before the fetch resolves, and are never used to
   // derive one another.
-  let PLAN = { fee:1250, budget:50, available:null };
+  let PLAN = { fee:690, setup:1250, budget:50, available:null };
   const hasConfig = cfg.url && cfg.anonKey && cfg.anonKey.indexOf('__') !== 0;
   if(hasConfig) sb = supabase.createClient(cfg.url, cfg.anonKey);
 
@@ -896,7 +896,7 @@
       </div>
       <div class="res">
         <span class="res-k">You pay us</span>
-        <span class="res-v">${esc(money(PLAN.fee))}<small>+GST per month &middot; cancel any time</small></span>
+        <span class="res-v">${esc(money(PLAN.fee))}<small>+GST per month, plus ${esc(money(PLAN.setup))} +GST one-off setup &middot; cancel any time</small></span>
         <span class="res-r"><a href="${href}" class="btn btn-primary btn-sm">${ctaLabel}</a></span>
       </div>
       <div class="res">
@@ -916,12 +916,13 @@
     out.innerHTML = loadingRow();
     try{
       const { data, error } = await sb.from('engine_availability')
-        .select('niche_slug,engines_available,fee_aud,daily_budget_aud')
+        .select('*')
         .eq('niche_slug', NICHE)
         .maybeSingle();
       if(error) throw error;
       if(data){
         if(typeof data.fee_aud === 'number')          PLAN.fee    = data.fee_aud;
+        if(typeof data.setup_fee_aud === 'number')    PLAN.setup  = data.setup_fee_aud;
         if(typeof data.daily_budget_aud === 'number') PLAN.budget = data.daily_budget_aud;
         PLAN.available = Number(data.engines_available || 0);
       } else {

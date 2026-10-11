@@ -13,7 +13,7 @@
 // Checkout Session, this Stripe account, or LGR's bank.
 //
 // That makes the line-item description load-bearing rather than decorative: a
-// Stripe receipt saying "$1,250 - lead engine" and nothing else is a receipt a
+// Stripe receipt saying "$690 - lead engine" and nothing else is a receipt a
 // client will reasonably read as the total cost of advertising with us. The
 // committed daily budget is therefore named in the product description, in the
 // metadata, and on the confirmation - everywhere the fee is named. MODEL.md
@@ -76,7 +76,7 @@ const money = (n: number) => '$' + Number(n).toLocaleString('en-AU')
 async function notifyCheckoutStarted(d: {
   business_name: string; contact_name: string; email: string; phone: string
   brand_name: string; niche: string; postcode: string; tier: string
-  fee: number; daily_budget: number; guarantee: string
+  fee: number; setup_fee: number; daily_budget: number; guarantee: string
   session_id: string; service_type: string
 }) {
   const apiKey = Deno.env.get('RESEND_API_KEY')
@@ -101,6 +101,7 @@ async function notifyCheckoutStarted(d: {
       ${row('Trade', esc(d.niche) + ' (' + esc(d.tier) + ')')}
       ${row('Service postcode', esc(d.postcode) || '-')}
       ${row('Our fee', money(d.fee) + ' + GST / 30 days')}
+      ${d.setup_fee ? row('Setup fee', money(d.setup_fee) + ' + GST, one-off') : ''}
       ${row('Their Meta budget', money(d.daily_budget) + '/day, paid direct to Meta on their own card')}
       ${row('Guarantee', esc(d.guarantee))}
       ${row('Stripe session', `<code>${esc(d.session_id)}</code>`)}
@@ -171,7 +172,7 @@ serve(async (req) => {
     // ── read the deal server-side (never trust the client with an amount) ────
     const { data: asset, error: assetErr } = await supabase
       .from('assets')
-      .select('id, tier, brand_name, monthly_price_aud, min_daily_budget_aud, ' +
+      .select('id, tier, brand_name, monthly_price_aud, setup_fee_aud, min_daily_budget_aud, ' +
               'guarantee_quotes, guarantee_window_days, ' +
               'status, sold_out, deleted_at, niches(name)')
       .eq('id', assetId)
@@ -187,6 +188,8 @@ serve(async (req) => {
     }
 
     const fee = asset.monthly_price_aud
+    // One-off, charged with the first month only (see line_items below).
+    const setupFee = Number(asset.setup_fee_aud ?? 0)
     const dailyBudget = Number(asset.min_daily_budget_aud ?? 0)
     const windowDays = Number(asset.guarantee_window_days ?? 30)
     const gQuotes = asset.guarantee_quotes
@@ -237,7 +240,22 @@ serve(async (req) => {
           product_data: { name: productName, description: productDesc },
         },
         quantity: 1,
-      }],
+      },
+      // A non-recurring price in a subscription-mode session is billed once,
+      // on the first invoice, alongside the first month.
+      ...(setupFee > 0 ? [{
+        price_data: {
+          currency: 'aud',
+          unit_amount: setupFee * 100,
+          tax_behavior: 'exclusive' as const,
+          product_data: {
+            name: `${tierName} lead engine - ${nicheName} (LGR one-off setup fee)`,
+            description: `One-off setup fee, charged once with your first month. ` +
+                         `It does NOT include advertising spend.`,
+          },
+        },
+        quantity: 1,
+      }] : [])],
       metadata: {
         type: 'asset_rental',
         asset_id: String(assetId),
@@ -250,6 +268,7 @@ serve(async (req) => {
         // Named `fee_aud`, not `price`, so nobody downstream mistakes it for a
         // total that includes media.
         fee_aud: String(fee),
+        setup_fee_aud: String(setupFee),
         min_daily_budget_aud: String(dailyBudget),
         guarantee_quotes: String(gQuotes ?? ''),
         service_type: serviceType,
@@ -259,7 +278,7 @@ serve(async (req) => {
       },
       // session_id lets the landing page poll get-magic-link for a one-click way
       // into the dashboard once the webhook has provisioned the account.
-      success_url: `${SITE}/fleet.html?checkout=success&session_id={CHECKOUT_SESSION_ID}&value=${encodeURIComponent(String(fee))}&currency=AUD`,
+      success_url: `${SITE}/fleet.html?checkout=success&session_id={CHECKOUT_SESSION_ID}&value=${encodeURIComponent(String(fee + setupFee))}&currency=AUD`,
       cancel_url: `${SITE}/fleet.html?checkout=cancelled`,
     })
 
@@ -271,6 +290,7 @@ serve(async (req) => {
       email: String(email).trim(),
       phone: String(phone || '').slice(0, 40) || null,
       monthly_price_aud: fee,
+      setup_fee_aud: setupFee || null,
       min_daily_budget_aud: dailyBudget || null,
       guarantee_quotes: gQuotes ?? null,
       service_type: serviceType,
@@ -289,6 +309,7 @@ serve(async (req) => {
       postcode,
       tier: tierName,
       fee,
+      setup_fee: setupFee,
       daily_budget: dailyBudget,
       guarantee: guaranteeLine,
       session_id: session.id,
