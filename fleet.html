@@ -558,9 +558,9 @@
         <p style="margin-bottom:16px;font-size:.84rem;color:var(--muted)">Month to month, cancel any time before your next cycle. After you pay we give you access to the ad account, you add your own card to it, and we launch. <a href="/rental-terms" style="color:var(--blue);font-weight:600">Service terms &rarr;</a></p>
         <div class="rf-grid">
           <div class="rf-f"><label for="rf-business">Business name<span class="req">*</span></label><input id="rf-business" type="text" placeholder="e.g. Bright Spark Electrical" autocomplete="organization"><p class="rf-consent" id="rfConsent"><span class="rf-consent-k">This is what your leads agree to</span><span class="rf-consent-v">I agree to be contacted about my <span id="rfConsentNoun">project</span> by <b id="rfConsentName">your business name</b>.</span></p></div>
-          <div class="rf-f"><label for="rf-contact">Your name</label><input id="rf-contact" type="text" placeholder="Full name" autocomplete="name"></div>
+          <div class="rf-f"><label for="rf-contact">Your name<span class="req">*</span></label><input id="rf-contact" type="text" placeholder="Full name" autocomplete="name"></div>
           <div class="rf-f"><label for="rf-email">Email<span class="req">*</span></label><input id="rf-email" type="email" placeholder="you@business.com.au" autocomplete="email"></div>
-          <div class="rf-f"><label for="rf-phone">Phone</label><input id="rf-phone" type="tel" placeholder="04xx xxx xxx" autocomplete="tel"></div>
+          <div class="rf-f"><label for="rf-phone">Phone<span class="req">*</span></label><input id="rf-phone" type="tel" placeholder="04xx xxx xxx" autocomplete="tel"></div>
         </div>
         <p class="rf-total" id="rentTotal"></p>
         <p class="rf-err" id="rentErr"></p>
@@ -856,11 +856,13 @@ async function startCheckout(){
   const phone    = $('#rf-phone').value.trim();
   const err = $('#rentErr');
   const flash = (el,msg) => { el.classList.add('err'); err.textContent = msg; err.classList.add('on'); el.focus(); };
-  ['rf-business','rf-email'].forEach(id => $('#'+id).classList.remove('err'));
+  ['rf-business','rf-contact','rf-email','rf-phone'].forEach(id => $('#'+id).classList.remove('err'));
   err.classList.remove('on');
 
   if(!business){ return flash($('#rf-business'), 'Business name is required.'); }
+  if(!contact){ return flash($('#rf-contact'), 'Your name is required.'); }
   if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){ return flash($('#rf-email'), 'Enter a valid email address.'); }
+  if(phone.replace(/\D/g,'').length < 8){ return flash($('#rf-phone'), 'Enter a valid phone number.'); }
 
   const cfg = window.LGR_SUPABASE || {};
   const btn = $('#modalClaim');

@@ -28,7 +28,7 @@
 // and it hands out the shape of our inventory to anyone who opens the page.
 //
 // Request (JSON):
-//   { niche_slug, postcode, business_name, contact_name, email, phone }
+//   { niche_slug, postcode, business_name, contact_name, email, phone }  (all required)
 //   (asset_id is still accepted, for Mission Control's own "send a checkout
 //    link for this specific engine" path. It is validated the same way.)
 // Response: { url } → the browser redirects to Stripe.
@@ -138,8 +138,11 @@ serve(async (req) => {
     const postcode = String(body.postcode || '').trim()
     const serviceType = String(service_type || 'residential_solar_battery').trim()
 
-    if (!business_name || !email) {
-      return json({ error: 'Missing required fields (business_name, email)' }, 400)
+    if (!business_name || !email || !String(contact_name || '').trim() || !String(phone || '').trim()) {
+      return json({ error: 'Missing required fields (business_name, contact_name, email, phone)' }, 400)
+    }
+    if (String(phone).replace(/\D/g, '').length < 8) {
+      return json({ error: 'Enter a valid phone number' }, 400)
     }
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(email).trim())) {
       return json({ error: 'Enter a valid email address' }, 400)
