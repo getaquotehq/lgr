@@ -37,7 +37,7 @@
 <link rel="icon" href="favicon.ico">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;450;500;600;700&family=IBM+Plex+Mono:wght@400;500&family=Orbitron:wght@500;600;700;800;900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;450;500;600;700&family=IBM+Plex+Mono:wght@400;500&family=Orbitron:wght@500;600;700;800;900&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
 <style>
   :root{
     --ink:#0D1117; --ink-2:#3A424D; --muted:#656D76; --faint:#98A0A8;
@@ -355,12 +355,13 @@
   .ad-txt{padding:0 14px 12px;font-size:.84rem;color:var(--ink-2);line-height:1.5}
   .ad-img{display:block;width:100%;height:auto;aspect-ratio:4/5;object-fit:cover;background:var(--surface-2);border-block:1px solid var(--line)}
   .ad-art{position:relative;container-type:inline-size}
-  .ad-art::before{content:"";position:absolute;inset:1px 0 auto;height:45%;background:linear-gradient(180deg,rgba(8,30,70,.32),rgba(8,30,70,0));pointer-events:none}
-  .ad-ovl{position:absolute;inset:0 0 auto;display:flex;flex-direction:column;align-items:flex-start;padding:7cqw 7cqw 0}
-  .ad-h{font-family:var(--sans);font-weight:700;font-size:7.2cqw;line-height:1.1;letter-spacing:-.025em;color:#fff}
-  .ad-sub{margin-top:2cqw;font-family:var(--sans);font-weight:400;font-size:3.7cqw;line-height:1.4;color:rgba(255,255,255,.92);max-width:31ch}
-  .ad-btn{display:inline-flex;align-items:center;gap:1.4cqw;margin-top:4.5cqw;font-family:var(--sans);font-weight:600;font-size:3.5cqw;letter-spacing:-.005em;color:#1a1204;background:#FBB43C;border-radius:2cqw;padding:2.4cqw 4cqw}
-  .ad-btn svg{width:3.2cqw;height:3.2cqw}
+  .ad-art::before{content:"";position:absolute;inset:1px 0 auto;height:50%;background:linear-gradient(180deg,rgba(6,24,56,.22),rgba(6,24,56,0));pointer-events:none}
+  .ad-ovl{position:absolute;inset:0 0 auto;display:flex;flex-direction:column;align-items:flex-start;text-align:left;padding:6cqw 7cqw 0}
+  .ad-h{font-family:'Instrument Serif',Georgia,serif;font-weight:400;font-size:11cqw;line-height:.94;letter-spacing:-.01em;color:#fff;text-shadow:0 1px 14px rgba(6,24,56,.18)}
+  .ad-h em{font-style:italic}
+  .ad-sub{margin-top:2.6cqw;font-family:var(--sans);font-weight:450;font-size:3.3cqw;line-height:1.45;color:rgba(255,255,255,.92);max-width:30ch}
+  .ad-btn{display:inline-flex;align-items:center;gap:1.6cqw;margin-top:3.8cqw;font-family:var(--sans);font-weight:550;font-size:3.2cqw;color:#0b1f3a;background:#fff;border-radius:999px;padding:2.1cqw 4cqw 2.1cqw 4.4cqw}
+  .ad-btn svg{width:3cqw;height:3cqw}
   .ad-foot{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 14px;background:var(--surface)}
   .ad-foot small{display:block;font-size:.66rem;color:var(--muted);text-transform:uppercase;letter-spacing:.05em}
   .ad-foot b{font-size:.86rem;color:var(--ink);font-weight:600}
@@ -554,7 +555,7 @@
               <div class="ad-art">
                 <img class="ad-img" src="lgr-solar-ad.webp" width="800" height="1000" loading="lazy" decoding="async" alt="Single-storey brick home with solar panels on the roof under a clear blue sky">
                 <div class="ad-ovl">
-                  <div class="ad-h">Sydney Homeowners</div>
+                  <div class="ad-h">Sydney<br><em>Homeowners</em></div>
                   <div class="ad-sub">Click Get Quote to book your <span style="white-space:nowrap">Obligation&#8209;Free</span> Solar Assessment</div>
                   <span class="ad-btn">Get Quote <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>
                 </div>
